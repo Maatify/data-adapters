@@ -1,0 +1,31 @@
+name: Run Adapter Tests
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7
+        ports: [ "6379:6379" ]
+      mongo:
+        image: mongo:7
+        ports: [ "27017:27017" ]
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: maatify_dev
+        ports: [ "3306:3306" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/phpunit --configuration phpunit.xml.dist
