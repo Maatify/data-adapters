@@ -14,6 +14,13 @@
     "maatify/common": "dev-main",
     "maatify/psr-logger": "dev-main"
   },
+  "suggest": {
+    "ext-redis": "or high-performance native RedisAdapter",
+    "ext-pdo": "Required for MySQLAdapter (PDO driver)",
+    "ext-mongodb": "Required for MongoAdapter",
+    "predis/predis": "Used as fallback when ext-redis is unavailable",
+    "doctrine/dbal": "Optional advanced SQL driver for MySQLDbalAdapter"
+  },
   "autoload": {
     "psr-4": {
       "Maatify\\DataAdapters\\": "src/"
