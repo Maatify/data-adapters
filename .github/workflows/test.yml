@@ -100,14 +100,26 @@ jobs:
           BRANCH="$GITHUB_REF_NAME"
           ACTOR="$GITHUB_ACTOR"
           URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          
+          DURATION=$(($(date +%s) - $(date -d "${GITHUB_RUN_STARTED_AT:-$(date -u)}" +%s)))
+          if [ "$DURATION" -lt 60 ]; then
+            DURATION_STR="${DURATION}s"
+          else
+            DURATION_STR="$(($DURATION / 60))m $(($DURATION % 60))s"
+          fi
 
           MESSAGE="📢 <b>Maatify CI Report</b>
           
           ${COLOR} ${STATUS}
           
           📦 <b>Project:</b> ${PROJECT}
-          🧱 <b>Branch:</b> ${BRANCH}\n👷‍♂️ <b>Committer:</b> ${ACTOR}
+          🧱 <b>Branch:</b> ${BRANCH}
+          👷‍♂️ <b>Committer:</b> ${ACTOR}
           
+          
+          ⏱ <b>Start:</b> ${START_TIME}<br>
+          🕒 <b>End:</b> ${END_TIME}<br>
+          📈 <b>Duration:</b> ${DURATION_STR}<br><br>
           🔗 <a href='${URL}'>View Run Log</a>"
           
 
