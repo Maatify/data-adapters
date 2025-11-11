@@ -95,22 +95,37 @@ jobs:
             STATUS="❌ Some tests failed. Please review the log."
             COLOR="🔴"
           fi
+          
+          
+          PROJECT="maatify/data-adapters"
+          BRANCH="$GITHUB_REF_NAME"
+          ACTOR="$GITHUB_ACTOR"
+          URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          # escape markdown v2 special chars safely
+          escape() {
+            echo "$1" | sed -E 's/([][(){}#+\-=|>_!`~.\\])/\\\1/g'
+          }
+
+          ESC_STATUS=$(escape "$STATUS")
+          ESC_PROJECT=$(escape "$PROJECT")
+          ESC_BRANCH=$(escape "$BRANCH")
+          ESC_ACTOR=$(escape "$ACTOR")
+          ESC_URL=$(escape "$URL")
 
           MESSAGE="📢 *Maatify CI Report*
   
-            ${COLOR} ${STATUS}
+            ${COLOR} ${ESC_STATUS}
             
-            📦 *Project:* maatify/data-adapters
-            🧱 *Branch:* ${GITHUB_REF_NAME}
-            👷‍♂️ *Committer:* ${GITHUB_ACTOR}
-            🔗 [View Run Log](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
-            
-          MESSAGE=$(echo "$MESSAGE" | sed -E 's/([_*\[\]()~`>#+=|{}.!-])/\\\1/g')
-            
+            📦 *Project:* ${ESC_PROJECT}
+            🧱 *Branch:* ${ESC_BRANCH}
+            👷‍♂️ *Committer:* ${ESC_ACTOR}
+            🔗 [View Run Log](${ESC_URL})"
+  
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d parse_mode="MarkdownV2" \
-            -d text="$MESSAGE"
+          -d "chat_id=${TELEGRAM_CHAT_ID}" \
+          -d "parse_mode=MarkdownV2" \
+          -d "text=${MESSAGE}"
 
       
       
