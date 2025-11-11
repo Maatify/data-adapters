@@ -102,13 +102,19 @@ jobs:
             echo "$text"
           }
 
+          escape_markdown() {
+            local text="$1"
+            text=$(echo "$text" | sed -E 's/([][()_~`>#+=|{}.!-])/\\\1/g')
+            echo "$text"
+          }
+
           ESCAPED_STATUS=$(escape_markdown "$STATUS")
           ESCAPED_PROJECT=$(escape_markdown "maatify/data-adapters")
           ESCAPED_BRANCH=$(escape_markdown "$GITHUB_REF_NAME")
           ESCAPED_ACTOR=$(escape_markdown "$GITHUB_ACTOR")
           ESCAPED_URL=$(escape_markdown "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
 
-          MESSAGE="📢 *Maatify CI Report*\n\n${COLOR} ${ESCAPED_STATUS}\n\n📦 *Project:* ${ESCAPED_PROJECT}\n🧱 *Branch:* ${ESCAPED_BRANCH}\n👷‍♂️ *Committer:* ${ESCAPED_ACTOR}\n🔗 [View Run Log](${ESCAPED_URL})"
+          MESSAGE="📢 *Maatify CI Report*\\n\\n${COLOR} ${ESCAPED_STATUS}\\n\\n📦 *Project:* ${ESCAPED_PROJECT}\\n🧱 *Branch:* ${ESCAPED_BRANCH}\\n👷‍♂️ *Committer:* ${ESCAPED_ACTOR}\\n🔗 [View Run Log](${ESCAPED_URL})"
 
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
