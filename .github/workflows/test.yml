@@ -96,12 +96,14 @@ jobs:
             COLOR="🔴"
           fi
 
-          MESSAGE="📢 <b>Maatify CI Report</b><br><br>${COLOR} ${STATUS}<br><br>📦 <b>Project:</b> maatify/data-adapters<br>🧱 <b>Branch:</b> ${GITHUB_REF_NAME}<br>👷‍♂️ <b>Committer:</b> ${GITHUB_ACTOR}<br>🔗 <a href='${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}'>View Run Log</a>"
+          MESSAGE="📢 <b>Maatify CI Report</b>\n\n${COLOR} ${STATUS}\n\n📦 <b>Project:</b> maatify/data-adapters\n🧱 <b>Branch:</b> ${GITHUB_REF_NAME}\n👷‍♂️ <b>Committer:</b> ${GITHUB_ACTOR}\n🔗 <a href=\"${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\">View Run Log</a>"
 
+          echo "🧪 Sending Telegram Notification..."
           curl -v --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="HTML" \
-            -d text="$MESSAGE"
+            --data-urlencode "text=${MESSAGE}"
+      
       
       
 
