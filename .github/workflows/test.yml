@@ -114,12 +114,12 @@ jobs:
           ESCAPED_ACTOR=$(escape_markdown "$GITHUB_ACTOR")
           ESCAPED_URL=$(escape_markdown "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
 
-          MESSAGE="📢 *Maatify CI Report*\\n\\n${COLOR} ${ESCAPED_STATUS}\\n\\n📦 *Project:* ${ESCAPED_PROJECT}\\n🧱 *Branch:* ${ESCAPED_BRANCH}\\n👷‍♂️ *Committer:* ${ESCAPED_ACTOR}\\n🔗 [View Run Log](${ESCAPED_URL})"
-
+          MESSAGE="📢 *Maatify CI Report*%0A%0A${COLOR} ${ESCAPED_STATUS}%0A%0A📦 *Project:* ${ESCAPED_PROJECT}%0A🧱 *Branch:* ${ESCAPED_BRANCH}%0A👷‍♂️ *Committer:* ${ESCAPED_ACTOR}%0A🔗 [View Run Log](${ESCAPED_URL})"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "parse_mode=MarkdownV2" \
             --data-urlencode "text=${MESSAGE}"
+
       
       
       
