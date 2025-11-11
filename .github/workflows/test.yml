@@ -96,6 +96,10 @@ jobs:
             COLOR="🔴"
           fi
 
+          escape_markdown() {
+            echo "$1" | sed 's/[_*\[\]()~`>#+=|{}.!-]/\\&/g'
+          }
+
           ESCAPED_STATUS=$(escape_markdown "$STATUS")
           ESCAPED_PROJECT=$(escape_markdown "maatify/data-adapters")
           ESCAPED_BRANCH=$(escape_markdown "$GITHUB_REF_NAME")
