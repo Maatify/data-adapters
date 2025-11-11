@@ -17,33 +17,24 @@ namespace Maatify\DataAdapters\Core;
 
 use Maatify\Common\Contracts\Adapter\AdapterInterface;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
+use Maatify\DataAdapters\Diagnostics\AdapterFailoverLog;
+use Maatify\DataAdapters\Fallback\FallbackManager;
+use Maatify\DataAdapters\Fallback\FallbackQueue;
+use Throwable;
 
 /**
  * 🧩 Abstract Class BaseAdapter
  *
  * 🎯 Purpose:
  * Serves as the **foundation class** for all data adapters within the Maatify ecosystem.
- * Implements shared logic, environment handling, and connection state management
- * for concrete adapter implementations (e.g., Redis, MySQL, MongoDB).
+ * Implements shared logic, environment handling, connection state management, and
+ * optional fallback recovery for concrete adapter implementations.
  *
  * ✅ Features:
  * - Centralized environment configuration via {@see EnvironmentConfig}.
  * - Common connection handling logic (connect/disconnect/isConnected).
  * - Standardized access to connection objects.
- * - Strict enforcement of required environment variables.
- *
- * ⚙️ Usage Example:
- * ```php
- * use Maatify\DataAdapters\Core\BaseAdapter;
- *
- * final class RedisAdapter extends BaseAdapter {
- *     public function connect(): void {
- *         // Implement Redis-specific connection logic here
- *     }
- * }
- * ```
- *
- * @package Maatify\DataAdapters\Core
+ * - Optional fallback resilience for Redis, MySQL, and Mongo adapters.
  */
 abstract class BaseAdapter implements AdapterInterface
 {
@@ -53,39 +44,30 @@ abstract class BaseAdapter implements AdapterInterface
     /** @var object|null 🔹 Holds the underlying connection instance (e.g., Redis, PDO, MongoDB). */
     protected ?object $connection = null;
 
+    /** @var bool 🔹 Determines if fallback mode is globally enabled. */
+    protected bool $fallbackEnabled = false;
+
+    /** @var FallbackManager|null 🔹 Optional fallback handler for intelligent recovery. */
+    protected ?FallbackManager $fallbackManager = null;
+
     /**
      * 🧠 Constructor
-     *
-     * Initializes the adapter with a configuration handler.
-     *
-     * @param EnvironmentConfig $config Environment configuration provider instance.
      */
     public function __construct(
-        protected readonly EnvironmentConfig $config
-    ) {}
+        protected readonly EnvironmentConfig $config,
+        ?FallbackManager $fallbackManager = null
+    ) {
+        $this->fallbackManager = $fallbackManager;
+        $this->fallbackEnabled = filter_var($_ENV['ADAPTER_FALLBACK_ENABLED'] ?? false, FILTER_VALIDATE_BOOL);
+    }
 
     /**
      * ⚙️ Establish connection to the target data source.
-     *
-     * Each extending adapter must implement its own connection logic.
-     *
-     * @return void
-     *
-     * @throws ConnectionException If connection fails.
      */
     abstract public function connect(): void;
 
     /**
      * 🔍 Check if the adapter is currently connected.
-     *
-     * @return bool True if the connection is active, false otherwise.
-     *
-     * ✅ Example:
-     * ```php
-     * if (! $adapter->isConnected()) {
-     *     $adapter->connect();
-     * }
-     * ```
      */
     public function isConnected(): bool
     {
@@ -94,16 +76,6 @@ abstract class BaseAdapter implements AdapterInterface
 
     /**
      * 🧠 Retrieve the underlying connection object.
-     *
-     * Allows low-level access to the native driver instance.
-     *
-     * @return object|null Connection object if connected, null otherwise.
-     *
-     * ✅ Example:
-     * ```php
-     * $client = $adapter->getConnection();
-     * $client->ping();
-     * ```
      */
     public function getConnection(): ?object
     {
@@ -112,15 +84,6 @@ abstract class BaseAdapter implements AdapterInterface
 
     /**
      * ❌ Gracefully terminate the connection and clear state.
-     *
-     * Ensures proper resource cleanup and connection state reset.
-     *
-     * @return void
-     *
-     * ✅ Example:
-     * ```php
-     * $adapter->disconnect();
-     * ```
      */
     public function disconnect(): void
     {
@@ -130,20 +93,6 @@ abstract class BaseAdapter implements AdapterInterface
 
     /**
      * 🧩 Retrieve a required environment variable from configuration.
-     *
-     * Ensures the presence of a mandatory configuration key and throws
-     * an exception if it is missing.
-     *
-     * @param string $key The name of the required configuration variable.
-     *
-     * @return string The corresponding environment value.
-     *
-     * @throws ConnectionException If the required key is missing.
-     *
-     * ✅ Example:
-     * ```php
-     * $host = $this->requireEnv('REDIS_HOST');
-     * ```
      */
     protected function requireEnv(string $key): string
     {
@@ -152,5 +101,53 @@ abstract class BaseAdapter implements AdapterInterface
             throw new ConnectionException("Missing required environment variable: {$key}");
         }
         return $value;
+    }
+
+    // =====================================================================
+    // 🧠 Optional Fallback Logic (Phase 6)
+    // =====================================================================
+
+    /**
+     * ✅ Whether fallback mode is globally enabled.
+     */
+    protected function isFallbackEnabled(): bool
+    {
+        return $this->fallbackEnabled === true;
+    }
+
+    /**
+     * 🧱 Assign or replace the active FallbackManager instance.
+     */
+    public function setFallbackManager(FallbackManager $manager): void
+    {
+        $this->fallbackManager = $manager;
+    }
+
+    /**
+     * 🚨 Unified fallback handler for connection or operation failures.
+     *
+     * Can be called from any adapter when an exception occurs.
+     */
+    protected function handleFailure(Throwable $e, string $operation, ?callable $callback = null): void
+    {
+        if (! $this->isFallbackEnabled()) {
+            throw $e;
+        }
+
+        $adapter = static::class;
+        $message = "{$operation} failed: {$e->getMessage()}";
+
+        // Log fallback event
+        AdapterFailoverLog::record($adapter, $message);
+
+        // Queue failed operation for later replay
+        if ($callback !== null) {
+            FallbackQueue::enqueue($adapter, $operation, ['callback' => $callback]);
+        }
+
+        // Trigger fallback activation
+        $this->fallbackManager?->activateFallback($adapter, 'PredisAdapter');
+
+        $this->connected = false;
     }
 }

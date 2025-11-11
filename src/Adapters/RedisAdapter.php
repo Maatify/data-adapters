@@ -26,29 +26,14 @@ use Throwable;
  * 🧩 Purpose:
  * Provides a native Redis implementation of {@see BaseAdapter} for managing
  * in-memory cache and data operations. Utilizes the PHP Redis extension for
- * optimal performance and reliability.
+ * optimal performance and reliability, with **optional Fallback Intelligence**
+ * handled by the BaseAdapter.
  *
  * ✅ Features:
  * - Secure connection handling with optional authentication.
  * - Built-in connection state tracking and health checks.
  * - Automatic reconnection logic for resilience.
- * - Extends shared adapter base class for unified structure.
- *
- * ⚙️ Example Usage:
- * ```php
- * use Maatify\DataAdapters\Adapters\RedisAdapter;
- * use Maatify\DataAdapters\Core\EnvironmentConfig;
- *
- * $config = new EnvironmentConfig(__DIR__ . '/../');
- * $redis = new RedisAdapter($config);
- * $redis->connect();
- *
- * if ($redis->healthCheck()) {
- *     echo "✅ Redis is connected and responding.";
- * }
- * ```
- *
- * @package Maatify\DataAdapters\Adapters
+ * - Optional fallback (Redis → Predis) when enabled via `.env`.
  */
 final class RedisAdapter extends BaseAdapter
 {
@@ -58,7 +43,7 @@ final class RedisAdapter extends BaseAdapter
      * Reads host, port, and optional password from environment variables
      * via {@see EnvironmentConfig}, and performs a connection and authentication.
      *
-     * @throws ConnectionException When connection or authentication fails.
+     * @throws ConnectionException|Throwable When connection or authentication fails.
      */
     public function connect(): void
     {
@@ -80,49 +65,32 @@ final class RedisAdapter extends BaseAdapter
 
             // ✅ Save connection and verify connectivity
             $this->connection = $redis;
-            $this->connected = $redis->ping() === '+PONG';
+            $this->connected  = $redis->ping() === '+PONG';
         } catch (Throwable $e) {
+            // 🔁 If fallback mode enabled, delegate to BaseAdapter handler
+            if ($this->isFallbackEnabled()) {
+                $this->handleFailure($e, 'connect', fn() => $this->connect());
+                return;
+            }
+
+            // 🚫 Otherwise behave exactly as before
             throw new ConnectionException("Redis connection failed: " . $e->getMessage());
         }
     }
 
     /**
-     * 🩺 **Perform a Redis health check.**
-     *
-     * 🎯 **Purpose:**
-     * Validates that the active Redis connection is alive and responsive.
-     * Used to ensure that adapter-dependent operations can proceed safely.
-     *
-     * 🧠 **Logic:**
-     * - Verifies that `$this->connection` is an instance of `Redis`.
-     * - Executes a `PING` command to confirm server responsiveness.
-     * - Interprets valid responses (`true`, `'PONG'`, or `'+PONG'`) as healthy.
-     * - Silently returns `false` on any exception or invalid state.
-     *
-     * @return bool `true` if Redis responds successfully; otherwise `false`.
-     *
-     * ✅ **Example:**
-     * ```php
-     * if (! $redis->healthCheck()) {
-     *     throw new RuntimeException('Redis is unavailable.');
-     * }
-     * ```
+     * 🩺 Perform a Redis health check.
      */
     public function healthCheck(): bool
     {
         try {
-            // 🧠 Ensure the connection object is valid before testing
             if (! $this->connection instanceof Redis) {
                 return false;
             }
 
-            // ⚙️ Perform a PING command to verify connectivity
             $pong = $this->connection->ping();
-
-            // ✅ Accept any known valid PONG responses
             return $pong === true || $pong === 'PONG' || $pong === '+PONG';
         } catch (Throwable) {
-            // 🚫 Any error during the ping indicates an unhealthy connection
             return false;
         }
     }
@@ -130,15 +98,22 @@ final class RedisAdapter extends BaseAdapter
     /**
      * ♻️ Attempt to reconnect to Redis.
      *
-     * Safely closes the current connection and reinitializes it.
-     *
      * @return bool True if reconnection succeeds.
+     * @throws Throwable
      */
     public function reconnect(): bool
     {
-        $this->disconnect();
-        $this->connect();
+        try {
+            $this->disconnect();
+            $this->connect();
+            return $this->connected;
+        } catch (Throwable $e) {
+            if ($this->isFallbackEnabled()) {
+                $this->handleFailure($e, 'reconnect', fn() => $this->reconnect());
+                return false;
+            }
 
-        return $this->connected;
+            throw new ConnectionException('Redis reconnection failed: ' . $e->getMessage());
+        }
     }
 }

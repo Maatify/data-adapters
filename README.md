@@ -958,17 +958,6 @@ This abstraction enables flexible logging strategies and prepares the project fo
 
 ---
 
-### 📜 Next Step → **Phase 5 — Integration & Unified Testing**
-
-In the next phase:
-
-* Integrate each adapter with maatify libraries (`rate-limiter`, `security-guard`, `mongo-activity`).
-* Simulate Redis→Predis fallback in test conditions.
-* Perform 10k req/sec stress tests.
-* Ensure PHPUnit coverage > 85%.
-
----
-
 ### 🧩 Phase 5 Summary — Integration & Unified Testing
 
 This phase validated full interoperability between **maatify/data-adapters** and other
@@ -988,8 +977,30 @@ multiple drivers and environments (Redis, Predis, MongoDB, MySQL PDO/DBAL).
 - Unified all mock + real tests under a single **PHPUnit** configuration and environment bootstrap.
 
 > ✅ **Phase 5 completed** — All adapters verified for stability, environment consistency, and future ecosystem integration readiness.
+
 ---
 
+### 🧩 Phase 6 Summary
 
-**End of Documentation – Phases 1 → 5**
+Phase 6 establishes the **intelligent failover and recovery foundation** for all Maatify Data Adapters.
+It enables the system to **gracefully handle adapter downtime** — particularly Redis — through automated fallback, queued operations, and seamless resynchronization once the primary service returns.
+
+This phase bridges the gap between **operational resilience** and **observability**, ensuring that no data is lost during outages, and all events are transparently logged for future analysis.
+It prepares the groundwork for **Phase 7 (Observability & Metrics)**, where real-time monitoring and performance insights will be layered on top of this recovery framework.
+
+---
+
+### 📜 Next Step → **Phase 7 — Observability & Metrics**
+
+In the next phase:
+
+* Integrate `maatify/psr-logger` for structured adapter-level logging and traceability.
+* Add latency, throughput, and failover metrics across all adapters.
+* Implement `MetricsCollector` and `MetricsFormatter` for Prometheus-ready data exports.
+* Expose `/metrics` endpoint for `maatify/admin-dashboard` integration.
+* Build monitoring dashboards for adapter health, latency trends, and recovery counts.
+
+---
+
+**End of Documentation – Phases 1 → 6**
 
