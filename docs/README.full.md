@@ -906,7 +906,7 @@ FALLBACK_QUEUE_DRIVER=sqlite
 ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
 ````
 
-> See detailed example in [`docs/examples/README.fallback.md`](../examples/README.fallback.md)
+> See detailed example in [`docs/examples/README.fallback.md`](./examples/README.fallback.md)
 
 ---
 
@@ -1139,7 +1139,7 @@ $this->assertSame(1, FallbackQueue::count());
 For practical examples of **manual and automatic pruning**,
 refer to:
 
-➡️ [`docs/examples/README.fallback.md`](../examples/README.fallback.md)
+➡️ [`docs/examples/README.fallback.md`](./examples/README.fallback.md)
 (section **“Phase 6.1 — 6.1.1 Examples (TTL & Automatic Pruning)”**)
 
 ```php
