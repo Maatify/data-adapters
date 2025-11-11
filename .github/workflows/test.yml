@@ -66,69 +66,74 @@ jobs:
       - name: 🧾 Summary Report
         if: always()
         run: |
-          echo "### 🧾 Adapter Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "📦 Environment: $APP_ENV" >> $GITHUB_STEP_SUMMARY
-          echo "🧱 Redis Host: $REDIS_HOST" >> $GITHUB_STEP_SUMMARY
-          echo "🗄️ MySQL Host: $MYSQL_HOST" >> $GITHUB_STEP_SUMMARY
-          echo "📁 Mongo Host: $MONGO_HOST" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "#### PHPUnit Results:" >> $GITHUB_STEP_SUMMARY
-          tail -n 20 phpunit.log >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if grep -q "FAILURES!" phpunit.log; then
-            echo "❌ Some tests failed." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ All tests passed successfully." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: 📲 Notify Telegram
-        if: always()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
-        run: |
-          STATUS="✅ Tests passed successfully!"
-          COLOR="🟢"
-          if grep -q "FAILURES!" phpunit.log; then
-            STATUS="❌ Some tests failed. Please review the log."
-            COLOR="🔴"
-          fi
-          
-          
-          PROJECT="maatify/data-adapters"
-          BRANCH="$GITHUB_REF_NAME"
-          ACTOR="$GITHUB_ACTOR"
-          URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-
-          escape() {
-            echo "$1" | sed -E 's/([_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!\\])/\\\1/g'
-          }
-
-          ESC_STATUS=$(escape "$STATUS")
-          ESC_PROJECT=$(escape "$PROJECT")
-          ESC_BRANCH=$(escape "$BRANCH")
-          ESC_ACTOR=$(escape "$ACTOR")
-          ESC_URL=$(escape "$URL")
-
-          MESSAGE="📢 *Maatify CI Report*
+            echo "### 🧾 Adapter Test Summary" >> $GITHUB_STEP_SUMMARY
+            echo "📦 Environment: $APP_ENV" >> $GITHUB_STEP_SUMMARY
+            echo "🧱 Redis Host: $REDIS_HOST" >> $GITHUB_STEP_SUMMARY
+            echo "🗄️ MySQL Host: $MYSQL_HOST" >> $GITHUB_STEP_SUMMARY
+            echo "📁 Mongo Host: $MONGO_HOST" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
   
-            ${COLOR} ${ESC_STATUS}
-            
-            📦 *Project:* ${ESC_PROJECT}
-            🧱 *Branch:* ${ESC_BRANCH}
-            👷‍♂️ *Committer:* ${ESC_ACTOR}
-            🔗 [View Run Log](${ESC_URL})"
+            echo "#### PHPUnit Results:" >> $GITHUB_STEP_SUMMARY
+            tail -n 20 phpunit.log >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
   
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            if grep -q "FAILURES!" phpunit.log; then
+              echo "❌ Some tests failed." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ All tests passed successfully." >> $GITHUB_STEP_SUMMARY
+            fi
+    
+          - name: 📲 Notify Telegram
+              if: always()
+              env:
+                TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
+                TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
+              run: |
+                set +e  # disable exit on error to allow fallback
+                
+                STATUS="✅ Tests passed successfully\\!"
+                COLOR="🟢"
+                if grep -q "FAILURES!" phpunit.log; then
+                  STATUS="❌ Some tests failed\\. Please review the log"
+                  COLOR="🔴"
+                fi
+                
+                PROJECT="maatify/data-adapters"
+                BRANCH="$GITHUB_REF_NAME"
+                ACTOR="$GITHUB_ACTOR"
+                URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+                
+                # 🧩 Safe MarkdownV2 escaping
+                escape() {
+                  echo "$1" | sed -E 's/([_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!\\])/\\\1/g'
+                }
+                
+                ESC_STATUS=$(escape "$STATUS")
+                ESC_PROJECT=$(escape "$PROJECT")
+                ESC_BRANCH=$(escape "$BRANCH")
+                ESC_ACTOR=$(escape "$ACTOR")
+                ESC_URL=$(escape "$URL")
+                
+                MESSAGE="📢 *Maatify CI Report*
+    
+          ${COLOR} ${ESC_STATUS}
+    
+          📦 *Project:* ${ESC_PROJECT}
+          🧱 *Branch:* ${ESC_BRANCH}
+          👷‍♂️ *Committer:* ${ESC_ACTOR}
+          🔗 [View Run Log](${ESC_URL})"
+          
+          echo "📨 Sending Telegram notification..."
+          RESPONSE=$(curl -s -o /tmp/tg_resp.json -w "%{http_code}" \
+          -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
           -d "chat_id=${TELEGRAM_CHAT_ID}" \
           -d "parse_mode=MarkdownV2" \
-          -d "text=${MESSAGE}"
-
-      
-      
-      
-      
-      
-
+          -d "text=${MESSAGE}")
+          
+          if [ "$RESPONSE" -ne 200 ]; then
+          echo "⚠️ Telegram notification failed (HTTP $RESPONSE)" >> $GITHUB_STEP_SUMMARY
+          echo "Response:" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/tg_resp.json >> $GITHUB_STEP_SUMMARY
+          else
+          echo "✅ Telegram notification sent successfully." >> $GITHUB_STEP_SUMMARY
+          fi
