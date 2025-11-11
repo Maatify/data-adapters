@@ -89,6 +89,8 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
+          START_TIME=$(date -u -d "${GITHUB_RUN_STARTED_AT:-$(date -u)}" +"%H:%M:%S UTC")
+          END_TIME=$(date -u +"%H:%M:%S UTC")
           STATUS="✅ Tests passed successfully!"
           COLOR="🟢"
           if grep -q "FAILURES!" phpunit.log; then
