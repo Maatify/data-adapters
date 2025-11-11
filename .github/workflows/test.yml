@@ -127,7 +127,10 @@ jobs:
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "parse_mode=MarkdownV2" \
             -d "text=${MESSAGE}")
-
+          
+          echo "Raw Telegram Response (HTTP $RESPONSE):"
+          cat /tmp/tg_resp.json
+  
           if [ "$RESPONSE" -ne 200 ]; then
             echo "⚠️ Telegram notification failed (HTTP $RESPONSE)" >> $GITHUB_STEP_SUMMARY
             echo "Response:" >> $GITHUB_STEP_SUMMARY
