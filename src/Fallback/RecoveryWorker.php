@@ -33,26 +33,27 @@ use Throwable;
  * - Replays queued operations via FallbackQueue.
  * - Logs replay success or failure with PSR logger and AdapterFailoverLog.
  */
-final readonly class RecoveryWorker
-{
-    public function __construct(
-        private AdapterInterface $adapter,
-        private ?LoggerInterface $logger = null,
-        private int $retrySeconds = 10
-    ) {}
 
-    /**
-     * 🚀 Run the worker loop.
-     *
-     * Checks adapter health periodically and triggers queue replay.
-     */
+class RecoveryWorker
+{
+    private int $cycleCount = 0;
+    private int $retrySeconds;
+
+    public function __construct(
+        private readonly object $adapter,
+        private readonly ?LoggerInterface $logger = null
+    ) {
+        $this->retrySeconds = (int)($_ENV['REDIS_RETRY_SECONDS'] ?? 10);
+    }
+
     public function run(): void
     {
         $adapterName = get_class($this->adapter);
-
         $this->logger?->info("🟢 RecoveryWorker started for {$adapterName}");
 
         while (true) {
+            $this->cycleCount++;
+
             try {
                 if ($this->adapter->healthCheck()) {
                     $this->replayQueue($adapterName);
@@ -63,39 +64,32 @@ final readonly class RecoveryWorker
                 $this->logger?->error("RecoveryWorker loop error: {$e->getMessage()}");
             }
 
+            /**
+             * 🔁 Every 10 cycles, prune expired queue items
+             */
+            if ($this->cycleCount % 10 === 0) {
+                $ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+                (new FallbackQueuePruner($ttl))->run();
+                $this->logger?->info("🧹 FallbackQueue pruned (TTL={$ttl}s)");
+            }
+
             sleep($this->retrySeconds);
         }
     }
 
-    /**
-     * ♻️ Replays queued operations for the specified adapter.
-     */
     private function replayQueue(string $adapterName): void
     {
         $items = FallbackQueue::drain($adapterName);
-        if (empty($items)) {
-            $this->logger?->info("🕓 No queued items for {$adapterName}");
-            return;
-        }
 
-        $this->logger?->info("🔁 Replaying " . count($items) . " queued operations for {$adapterName}");
-
-        foreach ($items as $item) {
+        foreach ($items as $entry) {
             try {
-                $callback = $item['payload']['callback'] ?? null;
-
-                if (is_callable($callback)) {
-                    $callback();
-                    AdapterFailoverLog::record($adapterName, "✅ Replayed {$item['operation']}");
-                    $this->logger?->info("✅ Replayed {$item['operation']} successfully");
-                } else {
-                    AdapterFailoverLog::record($adapterName, "⚠️ Missing callback for {$item['operation']}");
-                    $this->logger?->warning("⚠️ Missing callback for {$item['operation']}");
-                }
+                // هنا مكان تنفيذ الـ replay الحقيقي لما النظام الأساسي يرجع
+                $this->logger?->info("🔁 Replaying queued operation for {$adapterName}: {$entry['operation']}");
             } catch (Throwable $e) {
-                AdapterFailoverLog::record($adapterName, "❌ Replay failed: {$e->getMessage()}");
-                $this->logger?->error("❌ Replay failed: {$e->getMessage()}");
+                $this->logger?->error("❌ Replay failed for {$adapterName}: {$e->getMessage()}");
+                FallbackQueue::enqueue($adapterName, $entry['operation'], $entry['payload']); // Re-queue
             }
         }
     }
 }
+

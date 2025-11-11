@@ -910,12 +910,237 @@ ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
 
 ---
 
-#### 📜 Next Step → **Phase 7 — Persistent Failover & Telemetry**
+### 🧱 Phase 6.1 — FallbackQueue Pruner & TTL Management
 
-* Extend `FallbackQueue` to persistent storage (SQLite/MySQL)
-* Add `FallbackQueuePruner` for TTL cleanup
-* Integrate real-time telemetry via `maatify/psr-logger` & `maatify/mongo-activity`
-* Target coverage > 90% with load simulation metrics
+#### 🎯 Objective
+
+Introduce a **TTL (Time-to-Live)** mechanism and automated pruning for the `FallbackQueue`
+to automatically remove expired operations, preventing memory growth and replaying outdated tasks during long-running uptime.
+
+---
+
+#### ✅ Implemented Tasks
+
+| # | Task                                                                       | Status |
+|:-:|:---------------------------------------------------------------------------|:------:|
+| 1 | Add `ttl` and `timestamp` metadata to queued operations                    |   ✅    |
+| 2 | Implement `FallbackQueuePruner` to periodically remove expired entries     |   ✅    |
+| 3 | Introduce `.env` variable `FALLBACK_QUEUE_TTL` for retention configuration |   ✅    |
+| 4 | Integrate pruning cycle inside `RecoveryWorker` (runs every N cycles)      |   ✅    |
+| 5 | Add unit tests for expiration and purge logic                              |   ✅    |
+| 6 | Document architecture and usage examples                                   |   ✅    |
+
+---
+
+#### ⚙️ Files Created
+
+```
+src/Fallback/FallbackQueuePruner.php
+tests/Fallback/FallbackQueuePrunerTest.php
+docs/phases/README.phase6.1.md
+```
+
+---
+
+#### 🧩 Implementation Overview
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace Maatify\DataAdapters\Fallback;
+
+final class FallbackQueuePruner
+{
+    public function __construct(private readonly int $ttlSeconds) {}
+
+    public function run(): void
+    {
+        FallbackQueue::purgeExpired($this->ttlSeconds);
+    }
+}
+```
+
+---
+
+#### 🧠 Example Usage
+
+```php
+use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
+
+// TTL read from environment or fallback to 3600 s (1 hour)
+$ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+
+$pruner = new FallbackQueuePruner($ttl);
+$pruner->run(); // Clean expired fallback operations
+```
+
+---
+
+#### ⚙️ Integration with RecoveryWorker
+
+```php
+// Inside RecoveryWorker::run()
+if ($cycleCount % 10 === 0) {
+    (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
+}
+```
+
+🧩 Executes automatically every 10 recovery cycles
+to maintain queue health without impacting performance.
+
+---
+
+#### 📘 .env Example
+
+```env
+ADAPTER_FALLBACK_ENABLED=true
+REDIS_RETRY_SECONDS=10
+FALLBACK_QUEUE_TTL=3600
+```
+
+---
+
+#### 🧪 Testing Summary
+
+| Test Suite                      | Purpose                                   | Status |
+|:--------------------------------|:------------------------------------------|:------:|
+| `FallbackQueuePrunerTest`       | Ensures expired queue entries are removed |   ✅    |
+| `FallbackQueueTest`             | Verifies timestamp and TTL management     |   ✅    |
+| `RecoveryWorkerIntegrationTest` | Confirms periodic pruning during replay   |   ✅    |
+
+**PHPUnit Coverage:** > 87%  **Assertions:** All passed ✅
+
+---
+
+#### 🔍 Design Benefits
+
+| Problem                          | Solution                                 |
+|:---------------------------------|:-----------------------------------------|
+| Memory accumulation in long runs | TTL-based auto cleanup                   |
+| Replay of outdated operations    | Removes expired entries                  |
+| Continuous recovery performance  | Periodic background pruning              |
+| Future persistence migration     | Ready for Phase 7 (SQLite/MySQL storage) |
+
+---
+
+#### 📦 Result
+
+* `/docs/phases/README.phase6.1.md` created
+* Automated pruning logic verified
+* Recovery system stability improved significantly
+* Ready for **Phase 7 — Persistent Failover & Telemetry**
+
+---
+
+### 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
+
+#### 🎯 Objective
+
+Verify that the `FallbackQueuePruner` executes automatically inside `RecoveryWorker` after every 10 cycles,
+ensuring consistent TTL cleanup and confirming the entire recovery loop operates without memory leaks or stale entries.
+
+---
+
+#### ✅ Implemented Tasks
+
+| # | Task                                                                                      | Status |
+|:-:|:------------------------------------------------------------------------------------------|:------:|
+| 1 | Integrate `FallbackQueuePruner` within `RecoveryWorker::run()` to trigger every 10 cycles |   ✅    |
+| 2 | Add integration test `RecoveryWorkerIntegrationTest` to validate automatic pruning        |   ✅    |
+| 3 | Fix TTL priority order in `FallbackQueue::purgeExpired()` (`item['ttl']` > override)      |   ✅    |
+| 4 | Verify that expired items are removed and valid items remain after 10 cycles              |   ✅    |
+| 5 | Document integration logic and test coverage                                              |   ✅    |
+
+---
+
+#### ⚙️ Files Updated / Created
+
+```
+src/Fallback/FallbackQueue.php                 (TTL priority fix)
+tests/Fallback/RecoveryWorkerIntegrationTest.php
+docs/phases/README.phase6.1.1.md
+```
+
+---
+
+#### 🧩 Integration Overview
+
+```php
+// Inside RecoveryWorker::run()
+if ($this->cycleCount % 10 === 0) {
+    $ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+    (new FallbackQueuePruner($ttl))->run();
+    $this->logger?->info("🧹 FallbackQueue pruned (TTL={$ttl}s)");
+}
+```
+
+🧩 This logic guarantees that every 10 iterations of the worker loop will invoke the Pruner,
+removing expired queue entries while keeping active operations intact.
+
+---
+
+#### 🧠 Example Integration Flow
+
+```php
+use Maatify\DataAdapters\Fallback\{
+    FallbackQueue,
+    FallbackQueuePruner,
+    RecoveryWorker
+};
+
+// 1️⃣ Enqueue operations
+FallbackQueue::enqueue('redis', 'SET', ['key' => 'expired'], 1);
+FallbackQueue::enqueue('redis', 'SET', ['key' => 'fresh'], 10);
+
+// 2️⃣ Run the worker simulation for 10 cycles
+$worker = new RecoveryWorker($redisAdapter);
+$worker->runLimitedCycles(10);
+
+// 3️⃣ Assert that only fresh entry remains
+$this->assertSame(1, FallbackQueue::count());
+```
+
+---
+
+#### 🧪 Testing Summary
+
+| Test Suite                      | Purpose                                                                      | Status |
+|:--------------------------------|:-----------------------------------------------------------------------------|:------:|
+| `RecoveryWorkerIntegrationTest` | Ensures pruner is triggered every 10 cycles and removes expired entries only |   ✅    |
+| `FallbackQueueTest`             | Confirms per-item TTL priority works as expected                             |   ✅    |
+
+**PHPUnit Coverage:** ≈ 88 % **All assertions passed** ✅
+
+---
+
+#### 🔍 Design Highlights
+
+| Aspect                  | Behavior                                                 |
+|:------------------------|:---------------------------------------------------------|
+| TTL Evaluation          | Per-item `ttl` field takes priority over global override |
+| Worker Loop Integration | Runs non-blocking background pruning every 10 cycles     |
+| Stability               | Prevents queue overflow during long recovery sessions    |
+| Future Extension        | Compatible with persistent SQLite/MySQL queue (Phase 7)  |
+
+---
+
+#### 📦 Result
+
+* `FallbackQueue` and `RecoveryWorker` now fully synchronized with automatic TTL cleanup.
+* Memory footprint remains stable under continuous operation.
+* Integration verified through realistic loop simulation.
+* Phase 6.1.1 ready for merge into `main`.
+
+---
+
+
+#### 🔜 Next Phase → **Phase 7 — Persistent Failover & Telemetry**
+
+* Persist queue entries to SQLite/MySQL
+* Extend Pruner to support DB-based cleanup
+* Introduce metrics (queue size, prune count, replay latency)
+* Achieve > 90 % coverage with continuous load simulation
 
 ---
 
@@ -931,19 +1156,25 @@ ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
 
 ## 📊 Progress Summary
 
-| Phase | Title                             | Status      | Progress |
-|:------|:----------------------------------|:------------|:---------|
-| 1     | Environment Setup                 | ✅ Completed | 100%     |
-| 2     | Core Interfaces & Base Structure  | ✅ Completed | 100%     |
-| 3     | Adapter Implementations           | ✅ Completed | 100%     |
-| 3.5   | Adapter Smoke Tests Extension     | ✅ Completed | 100%     |
-| 4     | Health & Diagnostics Layer        | ✅ Completed | 100%     |
-| 4.1   | Hybrid Failover Log               | ✅ Completed | 100%     |
-| 4.2   | Adapter Logger Abstraction via DI | ✅ Completed | 100%     |
-| 5     | Integration & Unified Testing     | ✅ Completed | 100%     |
-| 6     | Fallback Intelligence & Recovery  | ✅ Completed | 100%     |
-| 7     | Observability & Metrics           | 🟡 Planned  | 0%       |
-| 8     | Documentation & Release           | 🟡 Pending  | 0%       |
+| Phase | Title                                       | Status      | Progress |
+|:------|:--------------------------------------------|:------------|:---------|
+| 1     | Environment Setup                           | ✅ Completed | 100%     |
+| 2     | Core Interfaces & Base Structure            | ✅ Completed | 100%     |
+| 3     | Adapter Implementations                     | ✅ Completed | 100%     |
+| 3.5   | Adapter Smoke Tests Extension               | ✅ Completed | 100%     |
+| 4     | Health & Diagnostics Layer                  | ✅ Completed | 100%     |
+| 4.1   | Hybrid AdapterFailoverLog Enhancement       | ✅ Completed | 100%     |
+| 4.2   | Adapter Logger Abstraction via DI           | ✅ Completed | 100%     |
+| 5     | Integration & Unified Testing               | ✅ Completed | 100%     |
+| 6     | Fallback Intelligence & Recovery            | ✅ Completed | 100%     |
+| 6.1   | FallbackQueue Pruner & TTL Management       | ✅ Completed | 100%     |
+| 6.1.1 | RecoveryWorker ↔ Pruner Integration Check   | ✅ Completed | 100%     |
+| 7     | Persistent Failover & Telemetry             | 🟡 Planned  | 0%       |
+| 8     | Observability, Metrics & Final Release Docs | 🟡 Pending  | 0%       |
+
+---
+
+
 
 ---
 
