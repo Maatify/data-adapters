@@ -96,29 +96,21 @@ jobs:
             COLOR="🔴"
           fi
 
-          escape_markdown() {
-            local text="$1"
-            text=$(echo "$text" | sed -E 's/([_*\[\]()~`>#+=\-|{}.!])/\\\1/g')
-            echo "$text"
-          }
-
-          escape_markdown() {
-            local text="$1"
-            text=$(echo "$text" | sed -E 's/([][()_~`>#+=|{}.!-])/\\\1/g')
-            echo "$text"
-          }
-
-          ESCAPED_STATUS=$(escape_markdown "$STATUS")
-          ESCAPED_PROJECT=$(escape_markdown "maatify/data-adapters")
-          ESCAPED_BRANCH=$(escape_markdown "$GITHUB_REF_NAME")
-          ESCAPED_ACTOR=$(escape_markdown "$GITHUB_ACTOR")
-          ESCAPED_URL=$(escape_markdown "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
-
-          MESSAGE="📢 *Maatify CI Report*%0A%0A${COLOR} ${ESCAPED_STATUS}%0A%0A📦 *Project:* ${ESCAPED_PROJECT}%0A🧱 *Branch:* ${ESCAPED_BRANCH}%0A👷‍♂️ *Committer:* ${ESCAPED_ACTOR}%0A🔗 [View Run Log](${ESCAPED_URL})"
+          MESSAGE="📢 *Maatify CI Report*
+  
+            ${COLOR} ${STATUS}
+            
+            📦 *Project:* maatify/data-adapters
+            🧱 *Branch:* ${GITHUB_REF_NAME}
+            👷‍♂️ *Committer:* ${GITHUB_ACTOR}
+            🔗 [View Run Log](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+            
+          MESSAGE=$(echo "$MESSAGE" | sed -E 's/([_*\[\]()~`>#+=|{}.!-])/\\\1/g')
+            
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "parse_mode=MarkdownV2" \
-            --data-urlencode "text=${MESSAGE}"
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="MarkdownV2" \
+            -d text="$MESSAGE"
 
       
       
