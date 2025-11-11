@@ -102,9 +102,8 @@ jobs:
           ACTOR="$GITHUB_ACTOR"
           URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
-          # escape markdown v2 special chars safely
           escape() {
-            echo "$1" | sed -E 's/([][(){}#+\-=|>_!`~.\\])/\\\1/g'
+            echo "$1" | sed -E 's/([_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!\\])/\\\1/g'
           }
 
           ESC_STATUS=$(escape "$STATUS")
