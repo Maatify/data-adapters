@@ -1,18 +1,21 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 20:52
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim (megyptm)
+ * @since       2025-11-08 20:52
+ * @see         https://www.maatify.dev Maatify.com
+ * @link        https://github.com/Maatify/data-adapters  view project on GitHub
+ * @note        Distributed in the hope that it will be useful - WITHOUT WARRANTY.
  */
 
 declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Tests\Adapters;
 
+use Exception;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
@@ -43,10 +46,13 @@ final class RedisAdapterTest extends TestCase
      *
      * Validates that {@see DatabaseResolver} returns a valid Redis-compatible
      * adapter (either RedisAdapter or PredisAdapter) which implements the
-     * required `connect()` method from {@see \Maatify\DataAdapters\Contracts\AdapterInterface}.
+     * required `connect()` method from {@see \Maatify\Common\Contracts\Adapter\AdapterInterface;
+    }.
      *
      * ✅ Expected Result:
      * - The resolved adapter must have a `connect` method.
+     *
+     * @throws Exception
      */
     public function testRedisFallbackResolution(): void
     {
@@ -54,7 +60,7 @@ final class RedisAdapterTest extends TestCase
         $resolver = new DatabaseResolver(new EnvironmentConfig(dirname(__DIR__, 3)));
 
         // ⚙️ Resolve Redis adapter (auto-selects Redis or Predis)
-        $adapter = $resolver->resolve(AdapterTypeEnum::Redis);
+        $adapter = $resolver->resolve(AdapterTypeEnum::REDIS);
 
         // ✅ Assert that the resolved adapter exposes the expected method
         $this->assertTrue(

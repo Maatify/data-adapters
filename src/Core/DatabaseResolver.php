@@ -1,37 +1,40 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 20:32
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim
+ * @since       2025-11-08 20:32
+ * @link        https://github.com/Maatify/data-adapters
  */
 
 declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Core;
 
-use Maatify\DataAdapters\Contracts\AdapterInterface;
+use Maatify\Common\Contracts\Adapter\AdapterInterface;
+use Maatify\DataAdapters\Adapters\MongoAdapter;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 
 /**
- * ⚙️ Class DatabaseResolver
+ * ⚙️ **Class DatabaseResolver**
  *
- * 🧩 Purpose:
- * Dynamically resolves and instantiates the correct database or cache adapter
- * (Redis, MongoDB, MySQL) based on environment configuration and enum-driven type safety.
+ * 🎯 **Purpose:**
+ * A centralized factory responsible for creating and returning the appropriate
+ * database or cache adapter instance (Redis, MongoDB, MySQL) based on the specified
+ * {@see AdapterTypeEnum}. This ensures consistent and safe connection handling
+ * across all Maatify data-related libraries.
  *
- * ✅ Features:
- * - Uses {@see AdapterTypeEnum} for strict adapter type resolution.
- * - Automatically selects Predis if the native Redis extension is unavailable.
- * - Supports both PDO and Doctrine DBAL for MySQL.
- * - Ensures centralized adapter instantiation for consistent configuration.
- * - Throws meaningful exceptions for unsupported or invalid adapter types.
+ * 🧠 **Core Features:**
+ * - Dynamically instantiates adapters using enum-driven resolution.
+ * - Auto-detects Redis implementation (native or Predis) depending on availability.
+ * - Supports multiple MySQL drivers (`PDO`, `Doctrine DBAL`).
+ * - Provides consistent, environment-based adapter configuration.
+ * - Offers an optional `$autoConnect` mode for instant connection handling.
  *
- * ⚙️ Example Usage:
+ * ✅ **Example Usage:**
  * ```php
  * use Maatify\DataAdapters\Core\DatabaseResolver;
  * use Maatify\DataAdapters\Core\EnvironmentConfig;
@@ -40,54 +43,65 @@ use Maatify\DataAdapters\Enums\AdapterTypeEnum;
  * $config = new EnvironmentConfig(__DIR__ . '/../');
  * $resolver = new DatabaseResolver($config);
  *
- * $redis = $resolver->resolve(AdapterTypeEnum::Redis);
+ * $redis = $resolver->resolve(AdapterTypeEnum::Redis, autoConnect: true);
  * $mongo = $resolver->resolve(AdapterTypeEnum::Mongo);
  * $mysql = $resolver->resolve(AdapterTypeEnum::MySQL);
  * ```
  *
- * @package Maatify\DataAdapters\Core
+ * 🧩 **Typical Use Case:**
+ * Acts as the entry point for dependency injection containers or service bootstraps
+ * needing dynamic adapter selection without hardcoding specific implementations.
  */
 final readonly class DatabaseResolver
 {
     /**
-     * 🧠 Constructor
+     * 🧱 **Constructor**
      *
-     * Initializes the resolver with a shared configuration provider
-     * that supplies environment-based connection settings.
+     * Accepts an instance of {@see EnvironmentConfig} to provide adapter-related
+     * environment values (like host, port, credentials, driver, etc.).
      *
-     * @param EnvironmentConfig $config The configuration loader for adapter environment variables.
+     * @param EnvironmentConfig $config Shared environment configuration handler.
      */
     public function __construct(private EnvironmentConfig $config) {}
 
     /**
-     * 🎯 Resolve and return the appropriate adapter instance.
+     * 🧩 **Resolve and instantiate the correct adapter.**
      *
-     * Uses a match expression on {@see AdapterTypeEnum} to select
-     * the correct driver and return an instantiated adapter.
+     * Selects the adapter implementation based on the given {@see AdapterTypeEnum}.
+     * If `$autoConnect` is true, automatically establishes the connection.
      *
-     * @param AdapterTypeEnum $type The adapter type to resolve (Redis, Mongo, MySQL).
+     * @param AdapterTypeEnum $type         The desired adapter type (Redis, Mongo, MySQL).
+     * @param bool            $autoConnect  Whether to automatically connect upon instantiation.
      *
-     * @return AdapterInterface The resolved adapter instance implementing {@see AdapterInterface}.
+     * @return AdapterInterface The fully configured adapter instance.
      *
-     * @throws ConnectionException If the adapter type is unsupported or unavailable.
+     * @throws ConnectionException If an unsupported adapter type is specified.
      */
-    public function resolve(AdapterTypeEnum $type): AdapterInterface
+    public function resolve(AdapterTypeEnum $type, bool $autoConnect = false): AdapterInterface
     {
-        return match ($type) {
-            AdapterTypeEnum::Redis  => $this->makeRedis(),
-            AdapterTypeEnum::Mongo  => $this->makeMongo(),
-            AdapterTypeEnum::MySQL  => $this->makeMySQL(),
+        $adapter = match ($type) {
+            AdapterTypeEnum::REDIS => $this->makeRedis(),
+            AdapterTypeEnum::MONGO => $this->makeMongo(),
+            AdapterTypeEnum::MYSQL => $this->makeMySQL(),
             default => throw new ConnectionException("Unsupported adapter: {$type->value}")
         };
+
+        // ⚙️ Optionally auto-connect the adapter upon creation
+        if ($autoConnect) {
+            $adapter->connect();
+        }
+
+        return $adapter;
     }
 
     /**
-     * 🔹 Create and return a Redis adapter instance.
+     * 🔹 **Create a Redis adapter instance.**
      *
-     * Uses the native Redis extension if installed; otherwise falls back to Predis.
-     * Ensures seamless operation across environments with or without Redis PECL.
+     * Automatically detects whether the native PHP `Redis` extension is installed.
+     * Falls back to `Predis` implementation when unavailable — ensuring portability
+     * between local and containerized environments.
      *
-     * @return AdapterInterface The Redis-compatible adapter.
+     * @return AdapterInterface A Redis-compatible adapter instance.
      */
     private function makeRedis(): AdapterInterface
     {
@@ -99,26 +113,35 @@ final readonly class DatabaseResolver
     }
 
     /**
-     * 🔹 Create and return a MongoDB adapter instance.
+     * 🔹 **Create a MongoDB adapter instance.**
      *
-     * @return AdapterInterface The MongoDB adapter configured with environment settings.
+     * Returns a new instance of {@see MongoAdapter} configured from environment variables.
+     *
+     * @return AdapterInterface The MongoDB adapter.
      */
     private function makeMongo(): AdapterInterface
     {
-        return new \Maatify\DataAdapters\Adapters\MongoAdapter($this->config);
+        return new MongoAdapter($this->config);
     }
 
     /**
-     * 🔹 Create and return a MySQL adapter instance.
+     * 🔹 **Create a MySQL adapter instance.**
      *
-     * Dynamically selects between `PDO` and `Doctrine DBAL` based on the `MYSQL_DRIVER` environment variable.
-     * Default driver is PDO unless explicitly overridden.
+     * Chooses between the `PDO` or `Doctrine DBAL` driver depending on the
+     * `MYSQL_DRIVER` environment variable. Defaults to `PDO` for simplicity.
      *
-     * @return AdapterInterface The MySQL adapter instance.
+     * Example:
+     * ```
+     * MYSQL_DRIVER=pdo
+     * MYSQL_DRIVER=dbal
+     * ```
+     *
+     * @return AdapterInterface The MySQL adapter (PDO or DBAL).
      */
     private function makeMySQL(): AdapterInterface
     {
         $driver = strtolower($this->config->get('MYSQL_DRIVER', 'pdo'));
+
         $class = $driver === 'dbal'
             ? '\\Maatify\\DataAdapters\\Adapters\\MySQLDbalAdapter'
             : '\\Maatify\\DataAdapters\\Adapters\\MySQLAdapter';

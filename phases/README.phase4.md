@@ -53,9 +53,9 @@ $resolver = new DatabaseResolver($config);
 $service  = new DiagnosticService($config, $resolver);
 
 $service->register([
-    AdapterTypeEnum::Redis,
-    AdapterTypeEnum::Mongo,
-    AdapterTypeEnum::MySQL
+    AdapterTypeEnum::REDIS,
+    AdapterTypeEnum::MONGO,
+    AdapterTypeEnum::MYSQL
 ]);
 
 echo $service->toJson();

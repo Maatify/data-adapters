@@ -1,19 +1,21 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 21:12
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim (megyptm)
+ * @since       2025-11-08 21:12
+ * @see         https://www.maatify.dev Maatify.com
+ * @link        https://github.com/Maatify/data-adapters  view project on GitHub
+ * @note        Distributed in the hope that it will be useful - WITHOUT WARRANTY.
  */
 
 declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Diagnostics;
 
-use Maatify\DataAdapters\Contracts\AdapterInterface;
+use Maatify\Common\Contracts\Adapter\AdapterInterface;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
@@ -161,4 +163,44 @@ final class DiagnosticService
     {
         return json_encode(['diagnostics' => $this->collect()], JSON_PRETTY_PRINT);
     }
+
+    /**
+     * 🧩 Retrieve the currently registered adapters.
+     *
+     * Useful for debugging, unit testing, or verifying that
+     * the `register()` method successfully mapped all adapters.
+     *
+     * @return array<string, AdapterInterface> The currently registered adapters.
+     *
+     * ✅ Example:
+     * ```php
+     * $diag->register(['redis', 'mysql']);
+     * print_r($diag->getAdapters());
+     * ```
+     */
+    public function getAdapters(): array
+    {
+        return $this->adapters;
+    }
+
+    /**
+     * 🧩 Retrieve the current EnvironmentConfig instance.
+     *
+     * Useful for debugging, advanced diagnostics, or accessing
+     * environment variables directly during tests.
+     *
+     * @return EnvironmentConfig The injected configuration handler.
+     *
+     * ✅ Example:
+     * ```php
+     * $env = $diag->getConfig();
+     * echo $env->get('APP_ENV');
+     * ```
+     */
+    public function getConfig(): EnvironmentConfig
+    {
+        return $this->config;
+    }
+
+
 }

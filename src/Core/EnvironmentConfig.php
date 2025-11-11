@@ -1,70 +1,84 @@
 <?php
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 20:30
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim
+ * @since       2025-11-08
+ * @link        https://github.com/Maatify/data-adapters
  */
 
 declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Core;
 
-use Dotenv\Dotenv;
+use Exception;
+use Maatify\Bootstrap\Core\EnvironmentLoader;
 
 /**
- * ⚙️ Class EnvironmentConfig
+ * 🧩 **Class EnvironmentConfig**
  *
- * 🧩 Purpose:
- * Provides a centralized and safe way to access environment variables across
- * all data adapters (Redis, MySQL, MongoDB, etc.), ensuring consistency in configuration loading.
+ * 🎯 **Purpose:**
+ * Centralized configuration handler responsible for safely loading
+ * and accessing environment variables (`.env`) for all Maatify libraries.
  *
- * ✅ Features:
- * - Automatically loads `.env` file if available.
- * - Supports fallback to system environment variables.
- * - Prevents missing configuration issues during adapter initialization.
+ * 🧠 **Core Behavior:**
+ * - Automatically loads `.env` only if environment variables are not yet initialized.
+ * - Acts as a consistent accessor layer for configuration values across libraries.
+ * - Provides safe retrieval methods (`get`, `has`, `all`) to prevent missing variable issues.
  *
- * ⚙️ Example Usage:
+ * ✅ **Example Usage:**
  * ```php
+ * use Maatify\DataAdapters\Core\EnvironmentConfig;
+ *
  * $env = new EnvironmentConfig(__DIR__ . '/../');
- * $host = $env->get('REDIS_HOST', '127.0.0.1');
- * if ($env->has('REDIS_PASSWORD')) {
- *     echo "Password is set.";
+ * $dbHost = $env->get('DB_HOST', '127.0.0.1');
+ * if ($env->has('REDIS_URL')) {
+ *     echo "Redis connected via: " . $env->get('REDIS_URL');
  * }
  * ```
  *
- * @package Maatify\DataAdapters\Core
+ * 🧩 **Typical Use Cases:**
+ * - When bootstrapping database, cache, or API adapters.
+ * - To safely read environment configuration in CLI or testing contexts.
  */
 final readonly class EnvironmentConfig
 {
     /**
-     * 🧠 Constructor
+     * 🧱 **Constructor**
      *
-     * Automatically loads environment variables from the given project root.
+     * Initializes the environment configuration.
+     * Automatically triggers the environment loader only once per process,
+     * avoiding redundant `.env` parsing.
      *
-     * @param string $root The base directory path containing the `.env` file.
+     * @param   string  $root  Root directory of the application or project (where `.env` resides).
+     *
+     * @throws Exception
      */
     public function __construct(private string $root)
     {
-        // 🔹 Load environment variables if `.env` file exists
-        if (file_exists($this->root . '/.env')) {
-            Dotenv::createImmutable($this->root)->load();
+        // 🧠 Initialize only once and only if not already loaded
+        if (empty($_ENV['APP_ENV'])) {
+            $loader = new EnvironmentLoader($this->root);
+            $loader->load();
         }
     }
 
     /**
-     * 🔍 Retrieve the value of a specific environment variable.
+     * 🔍 **Retrieve a variable safely**
      *
-     * Checks first in `$_ENV`, then in system environment variables.
-     * Returns the provided default value if not found.
+     * Fetches the value of an environment variable with optional fallback.
+     * Checks both `$_ENV` and `getenv()` to ensure compatibility across systems.
      *
-     * @param string $key     The name of the environment variable.
-     * @param string|null $default Optional default value if the key does not exist.
+     * @param string      $key      Environment variable name.
+     * @param string|null $default  Default value if not found.
      *
-     * @return string|null The variable’s value or the default.
+     * @return string|null Returns the variable value, or `$default` if missing.
+     *
+     * ✅ **Example:**
+     * ```php
+     * $env->get('DB_PASSWORD', 'secret');
+     * ```
      */
     public function get(string $key, ?string $default = null): ?string
     {
@@ -72,13 +86,42 @@ final readonly class EnvironmentConfig
     }
 
     /**
-     * ✅ Check if an environment variable is defined.
+     * ✅ **Check if a variable exists**
      *
-     * @param string $key The name of the environment variable.
-     * @return bool True if the variable exists, false otherwise.
+     * Verifies whether the specified environment key exists in either
+     * the current process environment or system-level configuration.
+     *
+     * @param string $key Environment variable key.
+     *
+     * @return bool Returns `true` if the variable exists, otherwise `false`.
+     *
+     * ✅ **Example:**
+     * ```php
+     * if ($env->has('APP_DEBUG')) {
+     *     echo "Debug mode enabled";
+     * }
+     * ```
      */
     public function has(string $key): bool
     {
         return isset($_ENV[$key]) || getenv($key) !== false;
+    }
+
+    /**
+     * 🧾 **Retrieve all environment variables**
+     *
+     * Returns the current environment map for debugging or inspection.
+     * Should not be exposed in production environments.
+     *
+     * @return array<string, string> Returns all environment variables.
+     *
+     * ✅ **Example:**
+     * ```php
+     * print_r($env->all());
+     * ```
+     */
+    public function all(): array
+    {
+        return $_ENV;
     }
 }

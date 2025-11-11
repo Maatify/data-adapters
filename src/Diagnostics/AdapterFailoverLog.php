@@ -1,12 +1,14 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 21:13
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim (megyptm)
+ * @since       2025-11-08 21:13
+ * @see         https://www.maatify.dev Maatify.com
+ * @link        https://github.com/Maatify/data-adapters  view project on GitHub
+ * @note        Distributed in the hope that it will be useful - WITHOUT WARRANTY.
  */
 
 declare(strict_types=1);

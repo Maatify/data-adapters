@@ -1,18 +1,21 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 20:55
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim (megyptm)
+ * @since       2025-11-08 20:55
+ * @see         https://www.maatify.dev Maatify.com
+ * @link        https://github.com/Maatify/data-adapters  view project on GitHub
+ * @note        Distributed in the hope that it will be useful - WITHOUT WARRANTY.
  */
 
 declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Tests\Adapters;
 
+use Exception;
 use Maatify\DataAdapters\Adapters\MongoAdapter;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +25,8 @@ use PHPUnit\Framework\TestCase;
  *
  * 🧩 Purpose:
  * Ensures that the {@see MongoAdapter} can be successfully instantiated and
- * exposes the required methods defined by the {@see \Maatify\DataAdapters\Contracts\AdapterInterface}.
+ * exposes the required methods defined by the {@see \Maatify\Common\Contracts\Adapter\AdapterInterface;
+}.
  *
  * ⚙️ Behavior:
  * - This test **does not** perform a live MongoDB connection.
@@ -51,6 +55,8 @@ final class MongoAdapterTest extends TestCase
      * ✅ Expected:
      * - Adapter instance of {@see MongoAdapter}.
      * - Both methods available.
+     *
+     * @throws Exception
      */
     public function testMongoAdapterClassLoads(): void
     {

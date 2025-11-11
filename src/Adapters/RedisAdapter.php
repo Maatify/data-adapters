@@ -1,12 +1,14 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 20:41
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim (megyptm)
+ * @since       2025-11-08 20:41
+ * @see         https://www.maatify.dev Maatify.com
+ * @link        https://github.com/Maatify/data-adapters  view project on GitHub
+ * @note        Distributed in the hope that it will be useful - WITHOUT WARRANTY.
  */
 
 declare(strict_types=1);
@@ -85,15 +87,44 @@ final class RedisAdapter extends BaseAdapter
     }
 
     /**
-     * 🩺 Check the health of the Redis connection.
+     * 🩺 **Perform a Redis health check.**
      *
-     * Performs a PING command if a connection is active to verify availability.
+     * 🎯 **Purpose:**
+     * Validates that the active Redis connection is alive and responsive.
+     * Used to ensure that adapter-dependent operations can proceed safely.
      *
-     * @return bool True if the Redis server responds with `+PONG`.
+     * 🧠 **Logic:**
+     * - Verifies that `$this->connection` is an instance of `Redis`.
+     * - Executes a `PING` command to confirm server responsiveness.
+     * - Interprets valid responses (`true`, `'PONG'`, or `'+PONG'`) as healthy.
+     * - Silently returns `false` on any exception or invalid state.
+     *
+     * @return bool `true` if Redis responds successfully; otherwise `false`.
+     *
+     * ✅ **Example:**
+     * ```php
+     * if (! $redis->healthCheck()) {
+     *     throw new RuntimeException('Redis is unavailable.');
+     * }
+     * ```
      */
     public function healthCheck(): bool
     {
-        return $this->connected && $this->connection?->ping() === '+PONG';
+        try {
+            // 🧠 Ensure the connection object is valid before testing
+            if (! $this->connection instanceof Redis) {
+                return false;
+            }
+
+            // ⚙️ Perform a PING command to verify connectivity
+            $pong = $this->connection->ping();
+
+            // ✅ Accept any known valid PONG responses
+            return $pong === true || $pong === 'PONG' || $pong === '+PONG';
+        } catch (Throwable) {
+            // 🚫 Any error during the ping indicates an unhealthy connection
+            return false;
+        }
     }
 
     /**

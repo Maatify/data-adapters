@@ -1,58 +1,44 @@
 <?php
+
 /**
- * Created by Maatify.dev
- * User: Maatify.dev
- * Date: 2025-11-08
- * Time: 20:08
- * Project: maatify:data-adapters
- * IDE: PhpStorm
- * https://www.Maatify.dev
+ * @copyright   ©2025 Maatify.dev
+ * @Library     maatify/data-adapters
+ * @Project     maatify:data-adapters
+ * @author      Mohamed Abdulalim
+ * @since       2025-11-08 20:08
+ * @link        https://github.com/Maatify/data-adapters
  */
 
 declare(strict_types=1);
 
-
-
-use Dotenv\Dotenv;
+use Maatify\Bootstrap\Core\EnvironmentLoader;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$envPath = dirname(__DIR__);
-
 /**
- * ⚙️ Environment Loader Script
+ * 🧩 **Environment Bootstrapping Script**
  *
- * 🧩 Purpose:
- * Loads environment variables for local development, testing, or fallback configurations.
- * This script ensures the proper `.env` file is loaded based on priority:
- * 1️⃣ `.env.local` → Preferred local environment (private or developer setup).
- * 2️⃣ `.env.testing` → Used for CI or unit testing environments.
- * 3️⃣ `.env.example` → Default fallback for missing configurations.
+ * 🎯 **Purpose:**
+ * Provides a minimal executable test script to validate environment
+ * loading functionality via {@see EnvironmentLoader}.
  *
- * ✅ Example:
+ * 🧠 **Behavior:**
+ * - Loads environment variables from the `.env` file located at the project root.
+ * - Ensures that configuration values are correctly parsed and stored in `$_ENV`.
+ * - Prints the currently active application environment (APP_ENV).
+ *
+ * ✅ **Usage:**
  * ```bash
- * php tests/bootstrap.php
+ * php tests/test_environment_loader.php
  * ```
- *
- * 🧠 Behavior:
- * - Automatically detects and loads the first available `.env` file.
- * - Outputs a message indicating which environment file was used.
- * - Displays the detected `APP_ENV` variable.
+ * Expected output:
+ * ```
+ * 🧪 Environment: development
+ * ```
  */
 
-// 👇 Load `.env.local` first (highest priority), then fallbacks
-if (file_exists($envPath . '/.env.local')) {
-    Dotenv::createImmutable($envPath, '.env.local')->load();
-    echo "✅ Loaded .env.local (private environment)\n";
-} elseif (file_exists($envPath . '/.env.testing')) {
-    Dotenv::createImmutable($envPath, '.env.testing')->load();
-    echo "✅ Loaded .env.testing\n";
-} elseif (file_exists($envPath . '/.env.example')) {
-    Dotenv::createImmutable($envPath, '.env.example')->load();
-    echo "✅ Loaded .env.example (fallback)\n";
-} else {
-    echo "⚠️ No environment file found.\n";
-}
+$loader = new EnvironmentLoader(dirname(__DIR__));
+$loader->load();
 
-// 🧪 Display active environment for debugging
-echo "🧪 Environment: " . ($_ENV['APP_ENV'] ?? 'unknown') . "\n";
+// 🧪 Display active environment for verification
+echo "🧪 Environment: " . ($_ENV['APP_ENV'] ?? 'unknown') . PHP_EOL;
