@@ -1134,6 +1134,35 @@ $this->assertSame(1, FallbackQueue::count());
 
 ---
 
+### 🧩 Example Usage Preview
+
+For practical examples of **manual and automatic pruning**,
+refer to:
+
+➡️ [`docs/examples/README.fallback.md`](../examples/README.fallback.md)
+(section **“Phase 6.1 — 6.1.1 Examples (TTL & Automatic Pruning)”**)
+
+```php
+use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
+
+// 🧹 Manual cleanup example
+$ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+(new FallbackQueuePruner($ttl))->run();
+```
+
+Or automatic cleanup inside `RecoveryWorker` after every 10 cycles:
+
+```php
+if ($cycleCount % 10 === 0) {
+    (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
+}
+```
+
+✅ Ensures expired fallback entries are cleaned seamlessly
+without impacting normal recovery operations.
+
+---
+
 
 #### 🔜 Next Phase → **Phase 7 — Persistent Failover & Telemetry**
 

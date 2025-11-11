@@ -143,3 +143,87 @@ docs/
 
 ---
 
+## 🧩 Phase 6.1 — 6.1.1 Examples (TTL & Automatic Pruning)
+
+### 🎯 Purpose
+
+Demonstrate how to manually and automatically clean expired fallback operations
+using `FallbackQueuePruner` — both standalone and inside the `RecoveryWorker`.
+
+---
+
+### 🧠 Example 1 — Manual Pruner Run (Phase 6.1)
+
+```php
+use Maatify\DataAdapters\Fallback\FallbackQueue;
+use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
+
+// 1️⃣ Queue operations with different TTLs
+FallbackQueue::enqueue('redis', 'SET', ['key' => 'temp'], 5);
+FallbackQueue::enqueue('redis', 'SET', ['key' => 'persistent'], 120);
+
+// 2️⃣ Wait so the first entry expires
+sleep(6);
+
+// 3️⃣ Run manual pruning
+$ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+(new FallbackQueuePruner($ttl))->run();
+
+echo 'Remaining items: ' . FallbackQueue::count(); // Output: 1
+```
+
+---
+
+### ⚙️ Example 2 — Automatic Pruning via RecoveryWorker (Phase 6.1.1)
+
+```php
+use Maatify\DataAdapters\Fallback\{FallbackQueue, FallbackQueuePruner, RecoveryWorker};
+
+// Mock adapter that always reports healthy
+$adapter = new class {
+    public function healthCheck(): bool { return true; }
+};
+
+// 1️⃣ Queue entries — one will expire quickly
+FallbackQueue::enqueue('redis', 'SET', ['key' => 'expire_me'], 1);
+FallbackQueue::enqueue('redis', 'SET', ['key' => 'keep_me'], 10);
+
+// 2️⃣ Simulate 10 worker cycles
+$worker = new RecoveryWorker($adapter);
+$reflection = new \ReflectionClass($worker);
+$cycleProp = $reflection->getProperty('cycleCount');
+$cycleProp->setAccessible(true);
+
+for ($i = 1; $i <= 10; $i++) {
+    $cycleProp->setValue($worker, $i);
+
+    if ($i % 10 === 0) {
+        (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
+    }
+}
+
+echo 'Remaining after 10 cycles: ' . FallbackQueue::count(); // Output: 1
+```
+
+---
+
+### 📘 Environment Example
+
+```env
+ADAPTER_FALLBACK_ENABLED=true
+REDIS_RETRY_SECONDS=10
+FALLBACK_QUEUE_TTL=3600
+```
+
+---
+
+### ✅ Expected Behavior
+
+| Step | Action                               | Expected Result                       |
+|:----:|:-------------------------------------|:--------------------------------------|
+|  1   | Queue entries with different TTLs    | All stored successfully               |
+|  2   | Wait for short TTL to expire         | Old entry becomes invalid             |
+|  3   | Run Pruner manually or automatically | Only valid (unexpired) entries remain |
+
+---
+

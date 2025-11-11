@@ -28,7 +28,7 @@ docs/phases/README.phase6.1.1.md
 ## 🧩 Implementation Highlights
 
 | Component             | Responsibility                                    |
-| --------------------- | ------------------------------------------------- |
+|-----------------------|---------------------------------------------------|
 | `FallbackQueue`       | Uses per-item TTL first → global override second. |
 | `RecoveryWorker`      | Runs pruner every 10 cycles without blocking.     |
 | `FallbackQueuePruner` | Executes `purgeExpired()` with safe TTL fallback. |
@@ -41,9 +41,38 @@ docs/phases/README.phase6.1.1.md
 |---------------------------------|-------------------------------------------------------|:------:|
 | `RecoveryWorkerIntegrationTest` | Ensures only fresh queue items remain after 10 cycles |   ✅    |
 
-✅ All assertions passed
-✅ Per-item TTL respected
+✅ All assertions passed  
+✅ Per-item TTL respected  
 ✅ Automatic cleanup confirmed under real loop simulation
+
+---
+
+### 🧩 Example Usage Preview
+
+For practical examples of manual and automatic pruning in action,
+see full examples in:
+
+➡️ [`docs/examples/README.fallback.md`](../examples/README.fallback.md)
+(section **“Phase 6.1 — 6.1.1 Examples (TTL & Automatic Pruning)”**)
+
+```php
+use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
+
+// Manual run example
+$ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+(new FallbackQueuePruner($ttl))->run();
+```
+
+Or automatic cleanup inside `RecoveryWorker` every 10 cycles:
+
+```php
+if ($cycleCount % 10 === 0) {
+    (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
+}
+```
+
+✅ Ensures old fallback operations are removed without manual intervention.
+See the full reference and test examples in `README.fallback.md`.
 
 ---
 
@@ -52,11 +81,5 @@ docs/phases/README.phase6.1.1.md
 * Full integration between `RecoveryWorker` and `FallbackQueuePruner` verified.
 * System is now stable for 24/7 operation without memory bloat.
 * Phase 6.1.1 ready to merge into `main`.
-
----
-
-### 🔜 Next Step → **Phase 7 — Persistent Failover & Telemetry**
-
-Extending queue persistence to SQLite/MySQL and adding real-time telemetry metrics (Queue Size, TTL Expiration Count, Recovery Latency).
 
 ---
