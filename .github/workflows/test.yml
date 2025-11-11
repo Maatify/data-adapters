@@ -97,7 +97,9 @@ jobs:
           fi
 
           escape_markdown() {
-            echo "$1" | sed 's/[_*\[\]()~`>#+=|{}.!-]/\\&/g'
+            local text="$1"
+            text=$(echo "$text" | sed -E 's/([_*\[\]()~`>#+=\-|{}.!])/\\\1/g')
+            echo "$text"
           }
 
           ESCAPED_STATUS=$(escape_markdown "$STATUS")
