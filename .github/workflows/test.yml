@@ -88,8 +88,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
-        run: | 
-          if grep -q "FAILURES!" phpunit.log; then
+        run: |
+          # Determine status
+            if grep -q "FAILURES!" phpunit.log; then
             STATUS="Some tests failed\\. Please review the log\\."
             COLOR="Red"
           else
@@ -102,39 +103,41 @@ jobs:
           ACTOR="${GITHUB_ACTOR}"
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
-          # Super-safe escape function (covers EVERY reserved MarkdownV2 char)
+          # Ultimate MarkdownV2 escape function (covers ALL 17 reserved chars)
           escape() {
             echo "$1" | sed -E 's/([_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\\!])/\\\1/g'
           }
 
+          # ESCAPE EVERYTHING THAT GOES INTO THE MESSAGE
           ESC_PROJECT=$(escape "$PROJECT")
           ESC_BRANCH=$(escape "$BRANCH")
           ESC_ACTOR=$(escape "$ACTOR")
           ESC_URL=$(escape "$RUN_URL")
+          ESC_STATUS=$(escape "$STATUS")
 
           MESSAGE="*Maatify CI Report*
-  
-          ${COLOR} *$STATUS*
-          
-          Project: ${ESC_PROJECT}
-          Branch: ${ESC_BRANCH}
-          Triggered by: ${ESC_ACTOR}
-            [View Full Run](${ESC_URL})"
-            
-            echo "Sending Telegram notification..."
-            HTTP_CODE=$(curl -s -o /tmp/tg_response.json -w "%{http_code}" \
+
+          ${COLOR} *$ESC_STATUS*
+
+          *Project:* ${ESC_PROJECT}
+          *Branch:* ${ESC_BRANCH}
+          *Triggered by:* ${ESC_ACTOR}
+          [View Run](${ESC_URL})"
+
+          echo "Sending Telegram notification..."
+          HTTP_CODE=$(curl -s -o /tmp/tg.json -w "%{http_code}" \
             -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode=MarkdownV2 \
             -d disable_web_page_preview=true \
             -d text="$MESSAGE")
-            
-            echo "Raw Telegram Response (HTTP $HTTP_CODE):"
-            cat /tmp/tg_response.json
-            
-            if [ "$HTTP_CODE" -eq 200 ]; then
+
+          echo "Raw Telegram Response (HTTP $HTTP_CODE):"
+          cat /tmp/tg.json
+
+          if [ "$HTTP_CODE" -eq 200 ]; then
             echo "Telegram notification sent successfully." >> $GITHUB_STEP_SUMMARY
-            else
+          else
             echo "Telegram notification failed (HTTP $HTTP_CODE)" >> $GITHUB_STEP_SUMMARY
-            cat /tmp/tg_response.json >> $GITHUB_STEP_SUMMARY
-            fi
+            cat /tmp/tg.json >> $GITHUB_STEP_SUMMARY
+          fi
