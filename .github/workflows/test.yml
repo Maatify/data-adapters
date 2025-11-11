@@ -117,9 +117,11 @@ jobs:
           👷‍♂️ <b>Committer:</b> ${ACTOR}
           
           
-          ⏱ <b>Start:</b> ${START_TIME}<br>
-          🕒 <b>End:</b> ${END_TIME}<br>
-          📈 <b>Duration:</b> ${DURATION_STR}<br><br>
+          ⏱ <b>Start:</b> ${START_TIME}
+          🕒 <b>End:</b> ${END_TIME}
+          📈 <b>Duration:</b> ${DURATION_STR}
+          
+          
           🔗 <a href='${URL}'>View Run Log</a>"
           
 
