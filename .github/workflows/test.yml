@@ -98,7 +98,7 @@ jobs:
 
           MESSAGE="📢 <b>Maatify CI Report</b><br><br>${COLOR} ${STATUS}<br><br>📦 <b>Project:</b> maatify/data-adapters<br>🧱 <b>Branch:</b> ${GITHUB_REF_NAME}<br>👷‍♂️ <b>Committer:</b> ${GITHUB_ACTOR}<br>🔗 <a href='${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}'>View Run Log</a>"
 
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          curl -v --fail -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="HTML" \
             -d text="$MESSAGE"
