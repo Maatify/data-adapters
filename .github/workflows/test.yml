@@ -101,7 +101,15 @@ jobs:
           ACTOR="$GITHUB_ACTOR"
           URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
-          MESSAGE="📢 <b>Maatify CI Report</b>\n\n${COLOR} ${STATUS}\n\n📦 <b>Project:</b> ${PROJECT}\n🧱 <b>Branch:</b> ${BRANCH}\n👷‍♂️ <b>Committer:</b> ${ACTOR}\n🔗 <a href='${URL}'>View Run Log</a>"
+          MESSAGE="📢 <b>Maatify CI Report</b>
+          
+          ${COLOR} ${STATUS}
+          
+          📦 <b>Project:</b> ${PROJECT}
+          🧱 <b>Branch:</b> ${BRANCH}\n👷‍♂️ <b>Committer:</b> ${ACTOR}
+          
+          🔗 <a href='${URL}'>View Run Log</a>"
+          
 
           echo "📨 Sending Telegram JSON notification..."
           PAYLOAD=$(jq -n \
