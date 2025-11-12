@@ -35,7 +35,7 @@ It acts as the foundational data layer for the entire **Maatify Ecosystem**.
 composer require maatify/data-adapters
 ```
 
-> Requires PHP ≥ 8.1 and extensions for `redis`, `pdo_mysql`, `mongodb` (optional).
+> Requires PHP ≥ 8.4 and extensions for `redis`, `pdo_mysql`, `mongodb` (optional).
 
 ---
 
