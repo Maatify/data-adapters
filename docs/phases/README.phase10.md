@@ -4,7 +4,7 @@
 **Base Version:** 1.0.0  
 **Maintainer:** Mohamed Abdulalim (megyptm)  
 **Project:** maatify/data-adapters  
-**Date:** 2025-11-12
+**Date:** 2025-11-13
 
 ---
 
@@ -174,5 +174,11 @@ docs/phases/
 
 ➡ **Phase 11 — Dynamic Database Registry (JSON Config)**
 Transition from environment-only profiles to a unified config file registry for scalable multi-tenant environments.
+
+---
+
+<p align="center">
+  <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
+</p>
 
 ---

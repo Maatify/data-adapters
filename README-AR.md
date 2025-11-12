@@ -2,9 +2,6 @@
 
 ---
 
-# 📦 maatify/data-adapters
-**Unified Data Connectivity & Diagnostics Layer**
-
 [![Version](https://img.shields.io/packagist/v/maatify/data-adapters?label=Version&color=4C1)](https://packagist.org/packages/maatify/data-adapters)
 [![PHP](https://img.shields.io/packagist/php-v/maatify/data-adapters?label=PHP&color=777BB3)](https://packagist.org/packages/maatify/data-adapters)
 [![Build](https://github.com/Maatify/data-adapters/actions/workflows/test.yml/badge.svg?label=Build&color=brightgreen)](https://github.com/Maatify/data-adapters/actions/workflows/test.yml)
@@ -17,6 +14,11 @@
 
 [![Changelog](https://img.shields.io/badge/Changelog-View-blue)](CHANGELOG.md)
 [![Security](https://img.shields.io/badge/Security-Policy-important)](SECURITY.md)
+
+---
+
+# 📦 maatify/data-adapters
+**طبقة موحَّدة لاتصال البيانات والتشخيص (Unified Data Connectivity & Diagnostics Layer)**
 
 ---
 
