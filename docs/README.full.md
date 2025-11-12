@@ -223,7 +223,8 @@ Ensure automatic pruning every 10 cycles.
 * Coverage ≈ 88 %.
 * Stable memory footprint during long-running recovery.
 
-📄 **Full Documentation:** [docs/phases/README.phase6.1.1.md](phases/README.phase6.1.1.md)
+📄 **Full Documentation:** [docs/phases/README.phase6.1.1.md](phases/README.phase6.1.1.md)  
+🧩 **Example Usage Preview** [`docs/examples/README.fallback.md`](./examples/README.fallback.md)
 
 ---
 
@@ -241,8 +242,8 @@ Expose adapter telemetry and metrics.
 * Created Prometheus formatter.
 * Tested metrics compatibility with admin dashboard.
 
-📄 **Full Documentation:** [docs/phases/README.phase7.md](phases/README.phase7.md)
-
+📄 **Full Documentation:** [docs/phases/README.phase7.md](phases/README.phase7.md)  
+🧩 **Example Usage Preview** [`docs/examples/README.telemetry.md`](./examples/README.telemetry.md)
 ---
 
 # 🧱 Phase 8: Documentation & Release

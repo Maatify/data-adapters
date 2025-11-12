@@ -53,7 +53,6 @@ For practical examples of manual and automatic pruning in action,
 see full examples in:
 
 ➡️ [`docs/examples/README.fallback.md`](../examples/README.fallback.md)
-(section **“Phase 6.1 — 6.1.1 Examples (TTL & Automatic Pruning)”**)
 
 ```php
 use Maatify\DataAdapters\Fallback\FallbackQueuePruner;

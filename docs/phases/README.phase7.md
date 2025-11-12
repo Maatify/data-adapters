@@ -132,7 +132,6 @@ For practical examples of telemetry setup and metrics export in action,
 see full examples in:
 
 ➡️ [`docs/examples/README.telemetry.md`](../examples/README.telemetry.md)
-(section **“Phase 7 — Telemetry & Metrics Example”**)
 
 ---
 
