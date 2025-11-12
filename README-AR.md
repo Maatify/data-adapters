@@ -366,9 +366,27 @@ $redis    = $resolver->resolve('redis');
 تُدار جميع إعدادات الاتصال من خلال ملف `.env` واحد مشترك بين جميع المشاريع:
 
 ```env
-REDIS_PRIMARY_HOST=127.0.0.1
-MYSQL_DSN=mysql:host=127.0.0.1;dbname=maatify
-MONGO_URI=mongodb://127.0.0.1:27017
+# Redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# MongoDB
+MONGO_HOST=127.0.0.1
+MONGO_PORT=27017
+MONGO_USER=
+MONGO_PASS=
+MONGO_DB=maatify_dev
+
+# MySQL
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASS=
+MYSQL_DB=maatify_dev
+MYSQL_DRIVER=dbal
+
+# Logs
 ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
 ```
 
