@@ -16,37 +16,29 @@ namespace Maatify\DataAdapters\Tests\Core;
 
 use Maatify\DataAdapters\Core\BaseAdapter;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Fallback\FallbackQueue;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use RuntimeException;
 
 final class BaseAdapterTest extends TestCase
 {
-    protected function setUp(): void
+    public function testEnvironmentConfigLoadsProperly(): void
     {
-        putenv('ADAPTER_FALLBACK_ENABLED=true');
-        FallbackQueue::clear();
+        $config = new EnvironmentConfig(__DIR__ . '/../../');
+        $this->assertInstanceOf(EnvironmentConfig::class, $config);
     }
 
-    /**
-     * @throws \Throwable
-     */
-    public function testHandleFailureQueuesOperation(): void
+    public function testHandleFailureRaisesException(): void
     {
         $config = new EnvironmentConfig(__DIR__ . '/../../');
         $adapter = $this->getMockForAbstractClass(BaseAdapter::class, [$config]);
 
         $error = new RuntimeException('Simulated failure');
-
         $ref = new ReflectionMethod($adapter, 'handleFailure');
         $ref->setAccessible(true);
+
+        $this->expectException(RuntimeException::class);
         $ref->invoke($adapter, $error, 'testOperation', fn() => true);
-
-        $items = FallbackQueue::drain(get_class($adapter));
-
-        $this->assertCount(1, $items);
-        $this->assertSame('testOperation', $items[0]['operation']);
     }
 
 }

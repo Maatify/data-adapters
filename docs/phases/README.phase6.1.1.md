@@ -1,3 +1,5 @@
+# (deprecated)
+
 # 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
 
 ## 🎯 Goal

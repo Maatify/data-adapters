@@ -1,3 +1,5 @@
+# (deprecated)
+
 # 🧱 Phase 6.1 — FallbackQueue Pruner & TTL Management
 
 ## 🎯 Goal

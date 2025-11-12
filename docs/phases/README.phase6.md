@@ -1,8 +1,8 @@
+# (deprecated)
 
 ---
 ![**Maatify.dev**](https://www.maatify.dev/assets/img/img/maatify_logo_white.svg)
 ---
-
 ## ⚙️ Maatify Data-Adapters
 **Phase ID:** 6  
 **Title:** Fallback Intelligence & Recovery  

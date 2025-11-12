@@ -627,108 +627,6 @@ Both **mock integrations** and **real integration templates** were established t
 
 ---
 
-### 🧱 Phase 6 — Fallback Intelligence & Recovery
-
-This phase introduced a **resilient fallback and recovery architecture** across all adapters (Redis, Mongo, MySQL).
-A unified mechanism now handles transient failures automatically using an adaptive queue and monitoring system.
-
-**Highlights**
-
-* Implemented `FallbackQueue`, `FallbackManager`, and `RecoveryWorker`
-* Redis fallback now automatically switches to Predis
-* Automatic replay of queued operations on recovery
-* Unified error handling via `BaseAdapter::handleFailure()`
-* Environment-configurable retry intervals (`REDIS_RETRY_SECONDS`)
-
-**Verification**  
-✅ Stress-tested under 10k ops/sec  
-✅ 85%+ PHPUnit coverage  
-✅ Auto-recovery verified
-
-📄 Full details: [`docs/phases/README.phase6.md`](docs/phases/README.phase6.md)
-
----
-
-### 🧱 Phase 6.1 — FallbackQueue Pruner & TTL Management
-
-### 🎯 Goal
-
-Add automatic TTL-based cleanup for `FallbackQueue` entries to prevent memory growth and stale data accumulation.
-
----
-
-### ✅ Implemented Tasks
-
-* Introduced `FallbackQueuePruner` class for scheduled cleanup.
-* Added `.env` variable `FALLBACK_QUEUE_TTL` for configurable retention.
-* Integrated with `RecoveryWorker` every 10 cycles for background pruning.
-* Ensured 87 % + test coverage across fallback components.
-
----
-
-### ⚙️ Example Usage
-
-```php
-use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
-
-$ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
-(new FallbackQueuePruner($ttl))->run();
-```
-
-✅ Expired operations automatically removed.  
-✅ Improves long-term stability and prepares for persistent failover in Phase 7.
-
----
-
-### 📘 Result
-
-* `/docs/phases/README.phase6.1.md` created
-* Cleanup system verified and integrated into RecoveryWorker.
-* Ready for next phase — **Telemetry & Persistence**.
-
-📄 Full details: [`docs/phases/README.phase6.1.md`](docs/phases/README.phase6.1.md)
-
----
-
-### 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
-
-### 🎯 Goal
-
-Validate automatic triggering of `FallbackQueuePruner` from `RecoveryWorker` every 10 cycles to ensure reliable queue cleanup.
-
----
-
-### ✅ Implemented Tasks
-
-* Integrated pruner inside recovery loop (cycle % 10 == 0).
-* Added integration tests verifying TTL and live cleanup.
-* Ensured per-item TTL priority respected.
-* Confirmed stability under continuous operation.
-
----
-
-### ⚙️ Example Usage
-
-```php
-if ($cycleCount % 10 === 0) {
-    (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
-}
-```
-
-✅ Automatic cleanup confirmed.  
-✅ System ready for long-term operation without memory bloat.
-
----
-
-### 📘 Result
-
-* `/docs/phases/README.phase6.1.1.md` created
-* Integration verified between `RecoveryWorker` and `FallbackQueuePruner`
-* Ready for next stage — **Phase 7: Observability & Metrics**
-
-📄 Full details: [`docs/phases/README.phase6.1.1.md`](docs/phases/README.phase6.1.1.md)
-
----
 
 ### 🧱 Phase 7 — Observability & Metrics
 
@@ -814,3 +712,5 @@ the capabilities of this library across multiple Maatify projects.
 <p align="center">
   <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
 </p>
+
+---
