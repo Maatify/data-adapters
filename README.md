@@ -9,14 +9,16 @@
 [![PHP](https://img.shields.io/packagist/php-v/maatify/data-adapters?label=PHP&color=777BB3)](https://packagist.org/packages/maatify/data-adapters)
 [![Build](https://github.com/Maatify/data-adapters/actions/workflows/test.yml/badge.svg?label=Build&color=brightgreen)](https://github.com/Maatify/data-adapters/actions/workflows/test.yml)
 [![Monthly Downloads](https://img.shields.io/packagist/dm/maatify/data-adapters?label=Monthly%20Downloads&color=00A8E8)](https://packagist.org/packages/maatify/data-adapters)
-[![Total Downloads](https://img.shields.io/packagist/dt/maatify/data-adapters?label=Total%20Downloads&color=2AA)](https://packagist.org/packages/maatify/data-adapters)
+[![Total Downloads](https://img.shields.io/packagist/dt/maatify/data-adapters?label=Total%20Downloads&color=2AA9E0)](https://packagist.org/packages/maatify/data-adapters)
 [![Stars](https://img.shields.io/github/stars/Maatify/data-adapters?label=Stars&color=FFD43B)](https://github.com/Maatify/data-adapters/stargazers)
 [![License](https://img.shields.io/github/license/Maatify/data-adapters?label=License&color=blueviolet)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Stable-success?style=flat-square)]()
 [![Code Quality](https://img.shields.io/codefactor/grade/github/Maatify/data-adapters/main)](https://www.codefactor.io/repository/github/Maatify/data-adapters)
 
----
+[![Changelog](https://img.shields.io/badge/Changelog-View-blue)](CHANGELOG.md)
+[![Security](https://img.shields.io/badge/Security-Policy-important)](SECURITY.md)
 
+---
 ## 🧭 Overview
 **maatify/data-adapters** provides a unified and extensible layer for managing connections  
 to multiple data sources — Redis, MongoDB, and MySQL — with built-in diagnostics,  
@@ -29,7 +31,7 @@ It acts as the foundational data layer for the entire **Maatify Ecosystem**.
 
 ```bash
 composer require maatify/data-adapters
-````
+```
 
 > Requires PHP ≥ 8.1 and extensions for `redis`, `pdo_mysql`, `mongodb` (optional).
 
@@ -322,7 +324,7 @@ $collector->record('redis', 'set', latencyMs: 2.15, success: true);
 $formatter = new PrometheusMetricsFormatter($collector);
 header('Content-Type: text/plain');
 echo $formatter->render();
-````
+```
 
 **Prometheus Output Example**
 
@@ -380,7 +382,7 @@ $container = $bootstrap->container();
 $config   = $container->get(EnvironmentConfig::class);
 $resolver = $container->get(DatabaseResolver::class);
 $redis    = $resolver->resolve('redis');
-````
+```
 
 No manual setup required — `.env` variables are loaded globally by `maatify/bootstrap`,
 and all diagnostics, failover, and recovery mechanisms are instantly available.
@@ -440,7 +442,7 @@ and automatic Redis failover across the entire **Maatify.dev** ecosystem.
 | 6.1   | Queue Pruner & TTL Management         | ✅ Completed |
 | 6.1.1 | RecoveryWorker ↔ Pruner Sync          | ✅ Completed |
 | 7     | Persistent Failover & Telemetry       | ✅ Completed |
-| 8     | Observability, Metrics & Docs         | 🟡 Pending  |
+| 8     | Documentation & Release               | 🟡 Pending  |
 
 ---
 
@@ -645,7 +647,7 @@ A unified mechanism now handles transient failures automatically using an adapti
 
 ---
 
-# 🧱 Phase 6.1 — FallbackQueue Pruner & TTL Management
+### 🧱 Phase 6.1 — FallbackQueue Pruner & TTL Management
 
 ### 🎯 Goal
 
@@ -669,7 +671,7 @@ use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
 
 $ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
 (new FallbackQueuePruner($ttl))->run();
-````
+```
 
 ✅ Expired operations automatically removed.  
 ✅ Improves long-term stability and prepares for persistent failover in Phase 7.
@@ -684,7 +686,7 @@ $ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
 
 ---
 
-# 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
+### 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
 
 ### 🎯 Goal
 
@@ -707,7 +709,7 @@ Validate automatic triggering of `FallbackQueuePruner` from `RecoveryWorker` eve
 if ($cycleCount % 10 === 0) {
     (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
 }
-````
+```
 
 ✅ Automatic cleanup confirmed.  
 ✅ System ready for long-term operation without memory bloat.
@@ -776,7 +778,6 @@ This final phase consolidated all previous stages and prepared the library for p
 
 ---
 
-
 ## 🪪 License
 
 **[MIT license](LICENSE)** © [Maatify.dev](https://www.maatify.dev)  
@@ -802,3 +803,8 @@ the capabilities of this library across multiple Maatify projects.
 > 🧩 This project represents a unified engineering effort led by Mohamed Abdulalim, ensuring every Maatify backend component  
 > shares a consistent, secure, and maintainable foundation.
 
+---
+
+<p align="center">
+  <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
+</p>
