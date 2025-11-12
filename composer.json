@@ -1,6 +1,6 @@
 {
   "name": "maatify/data-adapters",
-
+  "homepage": "https://github.com/Maatify/data-adapters",
   "title": "Maatify Data Adapters — Unified Data Connectivity & Diagnostics Layer",
   "description": "Unified data connectivity and diagnostics layer for Redis, MySQL, and MongoDB with automatic fallback recovery, telemetry-ready metrics, and environment auto-detection. Forms the foundation of the Maatify Data Infrastructure.",
   "keywords": [
