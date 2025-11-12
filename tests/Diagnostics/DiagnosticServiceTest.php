@@ -25,18 +25,23 @@ use PHPUnit\Framework\TestCase;
 /**
  * 🧪 **Class DiagnosticServiceTest**
  *
- * 🎯 **Purpose:**
- * Validates the behavior of {@see DiagnosticService}, ensuring it properly collects
- * and returns diagnostic data for multiple adapters within the Maatify ecosystem.
+ * 🧩 **Purpose:**
+ * Verifies that {@see DiagnosticService} functions correctly in a real environment
+ * by registering multiple adapters and ensuring diagnostic collection produces
+ * valid structured output.
  *
- * 🧠 **Core Verifications:**
- * - Confirms that the `collect()` method returns a well-structured array.
- * - Ensures that each diagnostic entry includes an `"adapter"` key.
- * - Verifies registration of multiple adapters (Redis, Mongo, MySQL).
+ * ✅ **Test Goals:**
+ * - Confirm that `collect()` returns an array structure.
+ * - Ensure each diagnostic entry includes the `"adapter"` key.
+ * - Validate adapter registration (Redis, Mongo, MySQL) using the resolver.
  *
- * 🧩 **When to Use:**
- * Use this test as part of system-level diagnostics validation to ensure the
- * environment configuration, resolver, and diagnostic layers interact correctly.
+ * 🧠 **Why This Matters:**
+ * Ensures that the integration between configuration, adapter resolver, and
+ * diagnostics layer behaves predictably in test or production environments.
+ *
+ * 🧰 **Typical Usage:**
+ * Run this test after configuration setup to verify correct `.env` variable loading
+ * and that the diagnostic service operates without runtime exceptions.
  *
  * ✅ **Example Run:**
  * ```bash
@@ -48,20 +53,18 @@ final class DiagnosticServiceTest extends TestCase
     /**
      * 🧩 **Test Diagnostic Array Structure**
      *
-     * Ensures that {@see DiagnosticService::collect()} returns a structured array
-     * with the expected keys after registering multiple adapters.
+     * Validates that {@see DiagnosticService::collect()} returns a structured array
+     * containing the required diagnostic keys and data for registered adapters.
      *
      * @throws Exception
-     *
-     * @return void
      */
     public function testDiagnosticsReturnsArray(): void
     {
-        // ⚙️ Initialize configuration and dependency resolver
+        // ⚙️ Initialize environment configuration and database resolver
         $config   = new EnvironmentConfig(dirname(__DIR__, 3));
         $resolver = new DatabaseResolver($config);
 
-        // 🧠 Instantiate and register adapters for diagnostics
+        // 🧠 Create diagnostic service and register adapter types
         $service = new DiagnosticService($config, $resolver);
         $service->register([
             AdapterTypeEnum::REDIS,
@@ -69,10 +72,10 @@ final class DiagnosticServiceTest extends TestCase
             AdapterTypeEnum::MYSQL,
         ]);
 
-        // 🧩 Collect diagnostic data
+        // 🧩 Collect diagnostics
         $result = $service->collect();
 
-        // ✅ Verify array structure and content
+        // ✅ Assertions: Ensure structure and key existence
         $this->assertIsArray(
             $result,
             '❌ Expected DiagnosticService::collect() to return an array.'

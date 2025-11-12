@@ -1,7 +1,7 @@
 <?php
 /**
  * @copyright   ©2025 Maatify.dev
- * @Liberary    maatify/data-adapters
+ * @Library     maatify/data-adapters
  * @Project     maatify:data-adapters
  * @author      Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
  * @since       2025-11-11 14:54
@@ -21,16 +21,24 @@ use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 
 /**
- * 🧪 Class RealMysqlDualConnectionTest
+ * 🧪 **Class RealMysqlDualConnectionTest**
  *
- * ✅ Purpose:
- * Dynamically verifies both PDO and DBAL MySQL connections
- * without changing the base `.env` file.
+ * 🎯 **Purpose:**
+ * Validates both PDO-based and Doctrine DBAL-based MySQL adapters
+ * by dynamically switching the `MYSQL_DRIVER` environment variable
+ * at runtime — without modifying the base `.env` file.
  *
- * Each test case overrides `MYSQL_DRIVER` at runtime,
- * ensuring that both adapters function correctly in a unified suite.
+ * 🧠 **Key Verifications:**
+ * - Confirms both `pdo` and `dbal` MySQL drivers connect successfully.
+ * - Ensures `healthCheck()` works consistently across driver types.
+ * - Guarantees interoperability for systems using either driver configuration.
  *
- * ⚙️ Example Run:
+ * 🧩 **Use Case:**
+ * This test is part of adapter reliability verification, ensuring
+ * that `maatify/data-adapters` maintains multi-driver compatibility
+ * across various MySQL setups.
+ *
+ * ✅ **Example Run:**
  * ```bash
  * vendor/bin/phpunit --filter RealMysqlDualConnectionTest
  * ```
@@ -38,25 +46,49 @@ use PHPUnit\Framework\TestCase;
 final class RealMysqlDualConnectionTest extends TestCase
 {
     /**
-     * @dataProvider provideDrivers
-     * @throws Exception
+     * 🧪 **Test Dual MySQL Driver Connectivity**
+     *
+     * Executes connection and health check logic for both
+     * PDO and DBAL adapters dynamically via environment switching.
+     *
+     * @param string $driver The database driver to test (`pdo` or `dbal`).
+     *
+     * @throws Exception If environment loading or connection fails.
+     *
+     * @return void
+     *
+     * ✅ **Example:**
+     * ```php
+     * $this->testMysqlConnection('pdo');
+     * $this->testMysqlConnection('dbal');
+     * ```
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideDrivers')]
     public function testMysqlConnection(string $driver): void
     {
-        // 🔄 Dynamically switch between PDO and DBAL
+        // 🔄 Dynamically switch driver for runtime testing
         putenv("MYSQL_DRIVER={$driver}");
 
+        // ⚙️ Initialize configuration and resolve adapter
         $config = new EnvironmentConfig(dirname(__DIR__, 2));
         $resolver = new DatabaseResolver($config);
         $adapter = $resolver->resolve(AdapterTypeEnum::MYSQL);
 
+        // 🚀 Attempt connection and validate health
         $adapter->connect();
         $this->assertTrue(
             $adapter->healthCheck(),
-            "MySQLAdapter ({$driver}) health check must return true."
+            "❌ MySQLAdapter ({$driver}) health check must return true."
         );
     }
 
+    /**
+     * 📦 **Data Provider for MySQL Driver Types**
+     *
+     * Supplies the list of driver types to test sequentially.
+     *
+     * @return array<int, array<int, string>> Driver list (`pdo`, `dbal`).
+     */
     public static function provideDrivers(): array
     {
         return [

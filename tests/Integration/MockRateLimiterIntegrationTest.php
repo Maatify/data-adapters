@@ -16,27 +16,29 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Integration;
 
 use Exception;
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 **Class MockRateLimiterIntegrationTest**
  *
  * 🎯 **Purpose:**
- * Performs a lightweight integration test to verify that the Redis adapter
- * can be correctly resolved through {@see DatabaseResolver} and exposes the
- * expected core methods used in the rate limiter subsystem.
+ * Validates the structural and interface-level integrity of the Redis adapter
+ * resolved via {@see DatabaseResolver}, without initiating a real Redis connection.
  *
- * 🧠 **Key Checks:**
- * - Ensures `connect()` and `healthCheck()` methods exist on the resolved adapter.
- * - Validates class resolution without requiring a live Redis connection.
- * - Serves as a mock-level integration test for CI/CD validation.
+ * 🧠 **Core Verifications:**
+ * - Confirms that the Redis adapter can be resolved successfully.
+ * - Verifies presence of the critical adapter methods:
+ *   - `connect()` — to establish connection logic.
+ *   - `healthCheck()` — to verify connection health status.
+ * - Ensures compatibility with the `maatify/rate-limiter` integration layer.
  *
- * 🧩 **Use Case:**
- * This test provides a non-destructive validation of Redis integration
- * for systems like `maatify/rate-limiter` that rely on adapter availability.
+ * 🧩 **Context:**
+ * Used in CI/CD pipelines and automated tests where Redis connectivity
+ * is mocked or unavailable, ensuring the adapter class remains
+ * autoloadable and API-compliant.
  *
  * ✅ **Example Run:**
  * ```bash
@@ -46,23 +48,30 @@ use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 final class MockRateLimiterIntegrationTest extends TestCase
 {
     /**
-     * 🧩 **Test Redis Mock Integration**
+     * 🧩 **Test: Redis Mock Integration**
      *
-     * Ensures that the Redis adapter can be resolved and exposes
-     * the required methods for rate-limiting behavior.
+     * Ensures the Redis adapter can be resolved and exposes
+     * all required methods necessary for rate-limiting functionality.
      *
-     * @throws Exception
+     * ⚙️ **What It Validates:**
+     * 1️⃣ The Redis adapter can be instantiated through {@see DatabaseResolver}.
+     * 2️⃣ The essential methods (`connect` and `healthCheck`) exist.
+     * 3️⃣ No live Redis connection is required.
+     *
+     * @throws Exception If environment loading or adapter resolution fails.
      *
      * @return void
      */
     public function testRedisMockIntegration(): void
     {
-        // ⚙️ Initialize configuration and resolve Redis adapter
+        // 🧱 Arrange: Initialize configuration and resolver
         $config = new EnvironmentConfig(__DIR__ . '/../../');
         $resolver = new DatabaseResolver($config);
+
+        // ⚙️ Act: Resolve Redis adapter
         $redis = $resolver->resolve(AdapterTypeEnum::REDIS);
 
-        // ✅ Verify existence of core adapter methods
+        // ✅ Assert: Check adapter method availability
         $this->assertTrue(
             method_exists($redis, 'connect'),
             '❌ Expected method connect() not found on Redis adapter.'

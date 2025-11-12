@@ -16,26 +16,29 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Integration;
 
 use Exception;
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 **Class MockSecurityGuardIntegrationTest**
  *
  * 🎯 **Purpose:**
- * Validates the integration between the {@see DatabaseResolver} and
- * the MySQL adapter in a controlled or mock testing environment.
+ * Validates the mock-level integration between the {@see DatabaseResolver}
+ * and the MySQL adapter implementation without requiring a real database connection.
  *
- * 🧠 **Core Verifications:**
- * - Confirms that the `MySQL` adapter can be properly resolved via the resolver.
- * - Ensures that essential methods (`connect`, `getConnection`) exist and are callable.
- * - Provides a lightweight integration baseline without performing a live DB connection.
+ * 🧠 **Core Validations:**
+ * - Ensures the `MySQL` adapter is correctly resolved via the resolver.
+ * - Confirms presence of essential connection methods:
+ *   - `connect()` → establishes database connection logic.
+ *   - `getConnection()` → retrieves underlying connection instance.
+ * - Acts as a CI/CD-safe test ensuring structural and interface compliance.
  *
- * 🧩 **When to Use:**
- * Ideal for CI/CD pipelines and environment validation where a real database connection
- * might not be available but adapter structure and interface compliance need verification.
+ * 🧩 **Use Case:**
+ * This mock test helps guarantee that the `maatify/security-guard`
+ * and related modules relying on MySQL adapters remain compatible
+ * even when no database is available.
  *
  * ✅ **Example Run:**
  * ```bash
@@ -47,23 +50,28 @@ final class MockSecurityGuardIntegrationTest extends TestCase
     /**
      * 🧩 **Test MySQL Mock Integration**
      *
-     * Ensures that the MySQL adapter is resolvable and exposes the expected
-     * connection interface without requiring a real database backend.
+     * Verifies that the MySQL adapter can be resolved from the {@see DatabaseResolver}
+     * and exposes the necessary interface methods used throughout the ecosystem.
      *
-     * @throws Exception
+     * ⚙️ **Validation Steps:**
+     * 1️⃣ Load environment configuration.
+     * 2️⃣ Resolve the MySQL adapter via {@see DatabaseResolver}.
+     * 3️⃣ Check for existence of critical methods (`connect`, `getConnection`).
+     *
+     * @throws Exception If environment or adapter resolution fails.
      *
      * @return void
      */
     public function testMySQLMockIntegration(): void
     {
-        // ⚙️ Initialize environment configuration and adapter resolver
+        // 🧱 Arrange: Initialize environment configuration and resolver
         $config = new EnvironmentConfig(__DIR__ . '/../../');
         $resolver = new DatabaseResolver($config);
 
-        // 🧠 Resolve MySQL adapter (no auto-connect)
+        // ⚙️ Act: Resolve MySQL adapter without auto-connection
         $mysql = $resolver->resolve(AdapterTypeEnum::MYSQL);
 
-        // ✅ Verify adapter structure and method presence
+        // ✅ Assert: Validate structural integrity and method availability
         $this->assertTrue(
             method_exists($mysql, 'connect'),
             '❌ Expected method connect() not found on MySQL adapter.'

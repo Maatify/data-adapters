@@ -16,29 +16,28 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Integration;
 
 use Exception;
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 **Class MockMongoActivityIntegrationTest**
  *
  * 🎯 **Purpose:**
- * Performs a lightweight mock integration test for the Mongo adapter,
- * verifying structural and interface-level integrity without requiring
- * a live MongoDB instance.
+ * Verifies the mock-level integration between {@see DatabaseResolver}
+ * and the Mongo adapter implementation without requiring an active MongoDB instance.
  *
- * 🧠 **Core Verifications:**
- * - Ensures that the {@see DatabaseResolver} can successfully resolve
- *   a Mongo adapter instance.
- * - Confirms that the adapter exposes critical methods used across
- *   the Maatify ecosystem — namely `connect()` and `healthCheck()`.
- * - Useful for CI/CD pipelines to guarantee adapter readiness in isolation.
+ * 🧠 **Key Verifications:**
+ * - Confirms that the Mongo adapter can be resolved successfully.
+ * - Ensures that it exposes core operational methods:
+ *   - `connect()` → establishes the database connection.
+ *   - `healthCheck()` → validates connection health.
  *
- * 🧩 **When to Use:**
- * Run this test as part of automated validation for adapters or
- * integration boundaries that rely on Mongo connectivity logic.
+ * 🧩 **Use Case:**
+ * This mock integration test serves as a **CI/CD-safe adapter readiness check**,
+ * validating adapter class structure and integration consistency independently
+ * of external dependencies.
  *
  * ✅ **Example Run:**
  * ```bash
@@ -48,23 +47,30 @@ use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 final class MockMongoActivityIntegrationTest extends TestCase
 {
     /**
-     * 🧩 **Test Mongo Mock Integration**
+     * 🧩 **Test: Mongo Adapter Structural Integrity**
      *
-     * Ensures that the Mongo adapter can be resolved and exposes
-     * the required methods for connection and health validation.
+     * Ensures that the Mongo adapter can be instantiated and exposes
+     * the expected methods essential for runtime interaction.
      *
-     * @throws Exception
+     * ⚙️ **What It Does:**
+     * 1️⃣ Loads environment configuration.
+     * 2️⃣ Resolves the Mongo adapter via {@see DatabaseResolver}.
+     * 3️⃣ Validates presence of key adapter methods.
+     *
+     * @throws Exception If the resolver or environment initialization fails.
      *
      * @return void
      */
     public function testMongoMockIntegration(): void
     {
-        // ⚙️ Initialize environment configuration and resolve adapter
+        // 🧱 Arrange: Setup configuration and resolver
         $config = new EnvironmentConfig(__DIR__ . '/../../');
         $resolver = new DatabaseResolver($config);
+
+        // ⚙️ Act: Resolve the Mongo adapter
         $mongo = $resolver->resolve(AdapterTypeEnum::MONGO);
 
-        // ✅ Confirm presence of expected methods
+        // ✅ Assert: Verify essential methods exist
         $this->assertTrue(
             method_exists($mongo, 'connect'),
             '❌ Expected method connect() not found on Mongo adapter.'

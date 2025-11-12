@@ -21,57 +21,79 @@ use Predis\Client;
 /**
  * 🧪 **Class RealPredisConnectionTest**
  *
- * 🧩 **Purpose:**
- * Validate a real Redis connection through {@see PredisAdapter} using
- * environment credentials defined in `.env.testing` or `.env.local`.
+ * 🎯 **Purpose:**
+ * Validates a real Redis connection using {@see PredisAdapter}, confirming connectivity,
+ * command execution, and overall adapter health using environment-based configuration.
  *
- * ✅ **Verifies:**
- * - Connection establishment to Redis using Predis client.
- * - Execution of basic Redis commands (`PING`, `SET`, `GET`).
- * - Successful `healthCheck()` response.
+ * 🧠 **Key Verifications:**
+ * - Confirms that a Predis client can connect to Redis.
+ * - Executes core Redis commands (`PING`, `SET`, `GET`) successfully.
+ * - Ensures `PredisAdapter::healthCheck()` returns `true`.
  *
- * ⚙️ **Example Run:**
- * ```bash
- * APP_ENV=testing vendor/bin/phpunit --filter RealPredisConnectionTest
- * ```
- *
- * ⚠️ **Requires:**
- * A running Redis instance and valid credentials in your `.env.testing` file:
+ * 🧩 **Requirements:**
+ * A running Redis instance with accessible credentials defined in `.env.testing` or `.env.local`:
  * ```
  * REDIS_HOST=127.0.0.1
  * REDIS_PORT=6379
  * REDIS_PASSWORD=
  * ```
+ *
+ * ✅ **Example Run:**
+ * ```bash
+ * APP_ENV=testing vendor/bin/phpunit --filter RealPredisConnectionTest
+ * ```
  */
 final class RealPredisConnectionTest extends TestCase
 {
     /**
-     * 🎯 **Test real Redis connection and ping command.**
+     * 🧩 **Test: Real Redis Connection via Predis**
+     *
+     * Establishes a live Redis connection through {@see PredisAdapter},
+     * validates connection health, and performs basic read/write operations.
+     *
+     * ⚙️ **Validation Steps:**
+     * 1️⃣ Load environment configuration.
+     * 2️⃣ Initialize {@see PredisAdapter} and connect.
+     * 3️⃣ Verify PING, SET, and GET operations.
+     * 4️⃣ Clean up any test data created.
+     *
+     * @return void
      */
     public function testPredisRealConnection(): void
     {
+        // 🧱 Arrange: Load environment and initialize adapter
         $config = new EnvironmentConfig(dirname(__DIR__, 2));
-
         $adapter = new PredisAdapter($config);
-        $adapter->connect();
 
+        // ⚙️ Act: Connect to Redis
+        $adapter->connect();
         $connection = $adapter->getConnection();
 
-        // ✅ Ensure connection object is valid
-        $this->assertInstanceOf(Client::class, $connection);
+        // ✅ Assert: Ensure valid Predis client
+        $this->assertInstanceOf(
+            Client::class,
+            $connection,
+            '❌ Expected Predis\Client instance for Redis connection.'
+        );
 
-        // 🩺 Verify connectivity using Redis PING
+        // 🩺 Health Check
         $pong = $connection->ping();
-        $this->assertSame('PONG', (string) $pong, 'Predis should respond with PONG');
+        $this->assertSame('PONG', (string)$pong, '❌ Predis should respond with PONG.');
 
-        // ⚙️ Check adapter-level health status
-        $this->assertTrue($adapter->healthCheck(), 'PredisAdapter health check must return true');
+        $this->assertTrue(
+            $adapter->healthCheck(),
+            '❌ PredisAdapter health check must return true.'
+        );
 
-        // 🧪 Optional basic SET/GET round-trip
+        // 🧪 Perform SET/GET round-trip
         $connection->set('maatify:test', 'connected');
-        $this->assertSame('connected', $connection->get('maatify:test'));
+        $this->assertSame(
+            'connected',
+            $connection->get('maatify:test'),
+            '❌ Expected "connected" value mismatch from Redis SET/GET round-trip.'
+        );
 
-        // 🧹 Clean up
+        // 🧹 Cleanup: remove test key
         $connection->del(['maatify:test']);
     }
 }
