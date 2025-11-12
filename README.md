@@ -684,6 +684,8 @@ $ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
 * Cleanup system verified and integrated into RecoveryWorker.
 * Ready for next phase — **Telemetry & Persistence**.
 
+📄 Full details: [`docs/phases/README.phase6.1.md`](docs/phases/README.phase6.1.md)
+
 ---
 
 ### 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
@@ -721,6 +723,8 @@ if ($cycleCount % 10 === 0) {
 * `/docs/phases/README.phase6.1.1.md` created
 * Integration verified between `RecoveryWorker` and `FallbackQueuePruner`
 * Ready for next stage — **Phase 7: Observability & Metrics**
+
+📄 Full details: [`docs/phases/README.phase6.1.1.md`](docs/phases/README.phase6.1.1.md)
 
 --
 
