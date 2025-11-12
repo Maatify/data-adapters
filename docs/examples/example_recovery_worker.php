@@ -31,6 +31,6 @@ $redis = $resolver->resolve(AdapterTypeEnum::REDIS, autoConnect: true);
 $logger = (new LoggerFactory())->create('recovery');
 
 // 🔁 Start recovery worker
-echo "🕓 Starting RecoveryWorker (retry every 10 seconds)...\n";
-$worker = new RecoveryWorker($redis, $logger, retrySeconds: 10);
+echo "🕓 Starting RecoveryWorker " . ($_ENV['REDIS_RETRY_SECONDS'] ?? 10) . "...\n";
+$worker = new RecoveryWorker($redis, $logger);
 $worker->run(); // Keeps running forever

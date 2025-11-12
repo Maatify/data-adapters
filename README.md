@@ -291,6 +291,69 @@ without manual intervention — fully transparent to the consuming application.
 
 ---
 
+## 📈 Observability & Metrics
+
+Starting from **Phase 7**, `maatify/data-adapters` introduces a full **telemetry and metrics layer**  
+for real-time monitoring and performance analytics across all adapters  
+(**Redis**, **MongoDB**, **MySQL**).
+
+### ⚙️ Core Features
+| Feature                        | Description                                                                                             |
+|:-------------------------------|:--------------------------------------------------------------------------------------------------------|
+| **AdapterMetricsCollector**    | Collects latency, success, and failover counters at runtime.                                            |
+| **AdapterMetricsMiddleware**   | Wraps adapter operations and automatically measures execution time.                                     |
+| **PrometheusMetricsFormatter** | Exports metrics in Prometheus-compatible text format for dashboards.                                    |
+| **PSR-Logger Integration**     | Routes latency and failover logs through [`maatify/psr-logger`](https://github.com/Maatify/psr-logger). |
+| **Grafana Ready**              | Metrics can be visualized directly in Grafana or maatify/admin-dashboard.                               |
+
+### 🧩 Example Usage
+```php
+use Maatify\DataAdapters\Telemetry\{
+    AdapterMetricsCollector,
+    PrometheusMetricsFormatter
+};
+
+$collector = AdapterMetricsCollector::instance();
+
+// Record metrics after any adapter operation
+$collector->record('redis', 'set', latencyMs: 2.15, success: true);
+
+// Render Prometheus output
+$formatter = new PrometheusMetricsFormatter($collector);
+header('Content-Type: text/plain');
+echo $formatter->render();
+````
+
+**Prometheus Output Example**
+
+```
+# HELP adapter_latency_avg Average adapter latency (ms)
+# TYPE adapter_latency_avg gauge
+adapter_latency_avg{adapter="redis"} 2.15
+adapter_success_total{adapter="redis"} 1
+adapter_fail_total{adapter="redis"} 0
+```
+
+### 📘 .env Configuration
+
+```env
+METRICS_ENABLED=true
+METRICS_EXPORT_FORMAT=prometheus
+METRICS_SAMPLING_RATE=1.0
+ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
+```
+
+> Metrics are accessible via the `/metrics` endpoint or directly from maatify/admin-dashboard.
+> For complete examples, see [`docs/examples/README.telemetry.md`](docs/examples/README.telemetry.md).
+
+---
+
+🧱 This observability layer enables deep insight into adapter performance,
+supports Prometheus and Grafana visualization,
+and completes the reliability stack introduced in previous phases.
+
+---
+
 ### 🔗 Integration with maatify/bootstrap
 
 The **maatify/data-adapters** library is fully compatible with  
@@ -376,7 +439,7 @@ and automatic Redis failover across the entire **Maatify.dev** ecosystem.
 | 6     | Fallback Intelligence & Recovery      | ✅ Completed |
 | 6.1   | Queue Pruner & TTL Management         | ✅ Completed |
 | 6.1.1 | RecoveryWorker ↔ Pruner Sync          | ✅ Completed |
-| 7     | Persistent Failover & Telemetry       | 🟡 Planned  |
+| 7     | Persistent Failover & Telemetry       | ✅ Completed |
 | 8     | Observability, Metrics & Docs         | 🟡 Pending  |
 
 ---

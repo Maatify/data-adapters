@@ -3,7 +3,7 @@
 
 # ⚙️ Maatify Data-Adapters — Fallback & Recovery Examples
 
-**Version:** 1.0.0  
+**Version:** 1.0.0-alpha  
 **Maintainer:** Mohamed Abdulalim (megyptm)  
 **Date:** 2025-11-11  
 **Status:** ✅ Verified & Tested
@@ -224,6 +224,27 @@ FALLBACK_QUEUE_TTL=3600
 |  1   | Queue entries with different TTLs    | All stored successfully               |
 |  2   | Wait for short TTL to expire         | Old entry becomes invalid             |
 |  3   | Run Pruner manually or automatically | Only valid (unexpired) entries remain |
+
+---
+
+## 📈 Ecosystem Integration
+
+Telemetry module feeds directly into:
+
+* **maatify/rate-limiter** → monitor blocked / allowed calls per adapter
+* **maatify/security-guard** → measure login throttling latency
+* **maatify/mongo-activity** → track logging write times
+* **maatify/admin-dashboard** → display graphs from `/metrics` endpoint
+
+---
+
+## 🧾 License & Credits
+
+**License:** MIT
+**Engineered by:** [Mohamed Abdulalim (megyptm)](https://www.maatify.dev)
+**Repository:** [maatify/data-adapters](https://github.com/Maatify/data-adapters)
+
+© 2025 Maatify.dev — Built for reliability, transparency & performance.
 
 ---
 
