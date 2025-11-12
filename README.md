@@ -726,7 +726,7 @@ if ($cycleCount % 10 === 0) {
 
 📄 Full details: [`docs/phases/README.phase6.1.1.md`](docs/phases/README.phase6.1.1.md)
 
---
+---
 
 ### 🧱 Phase 7 — Observability & Metrics
 
