@@ -105,7 +105,7 @@ FALLBACK_QUEUE_TTL=3600
 ## 🔍 Design Rationale
 
 | Concern                         | Resolution                          |
-| ------------------------------- | ----------------------------------- |
+|---------------------------------|-------------------------------------|
 | Memory usage over long runtime  | TTL-based auto-cleanup              |
 | Unnecessary replay of stale ops | Expired entries pruned              |
 | Background cleanup scheduling   | Integrated with RecoveryWorker      |

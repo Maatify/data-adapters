@@ -43,8 +43,8 @@ $redis->connect();
 
 ### 🧩 Verification Notes
 
-✅ Redis and Predis fallback tested
-✅ All classes autoload under `Maatify\\DataAdapters`
+✅ Redis and Predis fallback tested  
+✅ All classes autoload under `Maatify\\DataAdapters`  
 ✅ Composer suggestions added for optional drivers
 
 ---

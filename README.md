@@ -158,7 +158,7 @@ src/
 vendor/bin/phpunit
 ```
 
-**Coverage:** > 87 %
+**Coverage:** > 87 %  
 **Status:** ✅ All tests passing (integration, diagnostics, fallback)
 
 ---

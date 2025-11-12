@@ -104,18 +104,18 @@ echo $adapter->get('project'); // maatify/data-adapters
 
 ## 📦 Maintainer
 
-**Author:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))
-**Organization:** [Maatify.dev](https://www.maatify.dev)
-**License:** MIT
-**Version:** 1.0.0
-**Date:** 2025-11-12
+**Author:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
+**Organization:** [Maatify.dev](https://www.maatify.dev)  
+**License:** MIT  
+**Version:** 1.0.0  
+**Date:** 2025-11-12  
 **Status:** ✅ Ready for Packagist Release
 
 ---
 
 ### 🧾 Result
 
-✅ `README.phase8.md` created
-✅ `README.md`, `CHANGELOG.md`, and `VERSION` updated
+✅ `README.phase8.md` created  
+✅ `README.md`, `CHANGELOG.md`, and `VERSION` updated  
 ✅ Project `maatify/data-adapters` is now **ready for Packagist release** under `v1.0.0`
 

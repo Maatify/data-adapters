@@ -130,10 +130,6 @@ OK (7 tests, 12 assertions)
 * `/docs/phases/README.phase4.1.md` created
 * `README.md` updated under Completed Phases:
 
-```markdown
-|  4.1  | Hybrid AdapterFailoverLog Enhancement | ✅ Completed |
-```
-
 ---
 
 ### 📊 Phase Summary Update

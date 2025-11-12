@@ -42,8 +42,8 @@ $adapter->connect();
 
 ### 🧩 Verification Notes
 
-✅ Namespace autoload checked
-✅ BaseAdapter instantiated successfully
+✅ Namespace autoload checked  
+✅ BaseAdapter instantiated successfully  
 ✅ EnvironmentConfig loaded `.env` values
 
 ---

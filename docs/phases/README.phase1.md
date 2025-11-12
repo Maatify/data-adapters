@@ -43,9 +43,9 @@ vendor/bin/phpunit
 
 ### 🧩 Verification Notes
 
-✅ Composer autoload verified
-✅ PHPUnit functional
-✅ Docker containers running
+✅ Composer autoload verified  
+✅ PHPUnit functional  
+✅ Docker containers running  
 ✅ CI syntax OK
 
 ---
