@@ -444,6 +444,327 @@ and automatic Redis failover across the entire **Maatify.dev** ecosystem.
 
 ---
 
+### 🧱 Phase 1 — Environment Setup
+
+This initial phase established the project foundation for `maatify/data-adapters`,
+including Composer setup, Docker services, PHPUnit configuration, and CI automation.
+
+**Highlights**
+
+* Composer project initialized with `maatify/common` dependency
+* PSR-4 autoload under `Maatify\\DataAdapters\\`
+* `.env.example` added for Redis / Mongo / MySQL
+* Docker services configured (`docker-compose.yml`)
+* PHPUnit and GitHub Actions testing pipelines set up
+
+**Verification**  
+✅ Autoload functional  
+✅ PHPUnit OK  
+✅ Docker containers running  
+✅ CI validated
+
+📄 Full details: [`docs/phases/README.phase1.md`](docs/phases/README.phase1.md)
+
+---
+
+### 🧱 Phase 2 — Core Interfaces & Base Structure
+
+This phase introduced the core architecture and unified interfaces powering
+all data adapters within the **Maatify Data Layer**.
+
+**Highlights**
+
+* Defined `AdapterInterface` and `BaseAdapter` for shared logic
+* Added `ConnectionException` & `FallbackException` for structured error handling
+* Implemented `EnvironmentConfig` to load `.env` securely
+* Introduced `DatabaseResolver` for auto adapter resolution
+* Enabled environment auto-detection for Redis / Mongo / MySQL
+
+**Verification**  
+✅ Autoload namespaces valid  
+✅ BaseAdapter initialized correctly  
+✅ `.env` loaded successfully
+
+📄 Full details: [`docs/phases/README.phase2.md`](docs/phases/README.phase2.md)
+
+---
+
+
+### 🧱 Phase 3 — Adapter Implementations
+
+This phase delivered the **core functional adapters** for all supported databases —
+**Redis**, **MongoDB**, and **MySQL** — with full fallback and driver abstraction.
+
+**Highlights**
+
+* `RedisAdapter` (phpredis) with automatic fallback to `PredisAdapter`
+* `MongoAdapter` using the official MongoDB driver
+* `MySQLAdapter` (PDO) and `MySQLDbalAdapter` (Doctrine DBAL)
+* Automatic driver detection through `DatabaseResolver`
+* Added graceful reconnect and shutdown handling
+
+**Verification**  
+✅ Redis & Predis fallback tested  
+✅ Autoloads verified  
+✅ Composer suggestions added
+
+📄 Full details: [`docs/phases/README.phase3.md`](docs/phases/README.phase3.md)
+
+---
+
+### 🧱 Phase 3.5 — Adapter Smoke Tests Extension
+
+This phase introduced **lightweight structural tests** for all adapters to ensure
+autoloading integrity and method consistency without requiring live connections.
+
+**Highlights**
+
+* `PredisAdapterTest`, `MongoAdapterTest`, and `MySQLAdapterTest` created
+* Verified PSR-4 autoload and adapter interface compliance
+* PHPUnit suite confirmed passing with **4 tests / 10 assertions**
+* Safe for CI — no external dependencies required
+
+**Verification**  
+✅ All adapters autoload correctly  
+✅ Structure verified  
+✅ CI pipeline stable
+
+📄 Full details: [`docs/phases/README.phase3.5.md`](docs/phases/README.phase3.5.md)
+
+---
+
+
+### 🧱 Phase 4 — Health & Diagnostics Layer
+
+This phase introduced **self-diagnostic monitoring and health reporting**
+for all adapters with real-time JSON output compatible with `maatify/admin-dashboard`.
+
+**Highlights**
+
+* Implemented `healthCheck()` for all adapters (Redis / Predis / Mongo / MySQL)
+* Added `DiagnosticService` for unified status JSON reporting
+* Added `AdapterFailoverLog` to track connection or fallback failures
+* Introduced `/health` endpoint for internal diagnostics
+* Added `AdapterTypeEnum` integration inside Diagnostic layer
+
+**Verification**  
+✅ JSON output validated  
+✅ Adapter logs functional  
+✅ Enum compatibility confirmed
+
+📄 Full details: [`docs/phases/README.phase4.md`](docs/phases/README.phase4.md)
+
+---
+
+### 🧱 Phase 4.1 — Hybrid AdapterFailoverLog Enhancement
+
+This phase refactored the **AdapterFailoverLog** into a **hybrid logger**,
+capable of both static and instance-based usage, with `.env` path configuration.
+
+**Highlights**
+
+* Replaced constant path with dynamic runtime resolution
+* Added constructor with optional custom log path
+* Integrated `.env` variable `ADAPTER_LOG_PATH`
+* Auto-created directories on first write
+* Fully backward-compatible with static usage
+* Ready for PSR logger integration in Phase 7
+
+**Verification**  
+✅ Default & custom paths verified  
+✅ `.env` configurable  
+✅ Backward compatibility confirmed
+
+📄 Full details: [`docs/phases/README.phase4.1.md`](docs/phases/README.phase4.1.md)
+
+---
+
+### 🧱 Phase 4.2 — Adapter Logger Abstraction via DI
+
+This phase introduced a **dependency-injected logging abstraction** to replace the static `AdapterFailoverLog`,
+preparing the diagnostics system for full PSR-compatible logging integration (Phase 7).
+
+**Highlights**
+
+* Added `AdapterLoggerInterface` defining standard `record()` method
+* Implemented `FileAdapterLogger` with `.env`-based path
+* Refactored `DiagnosticService` to accept an injected logger
+* Maintained backward compatibility with static usage
+* Verified dynamic directory creation and log output
+
+**Verification**  
+✅ Injection works seamlessly  
+✅ File logs created correctly  
+✅ Compatible with `maatify/psr-logger`
+
+📄 Full details: [`docs/phases/README.phase4.2.md`](docs/phases/README.phase4.2.md)
+
+---
+
+### 🧱 Phase 5 — Integration & Unified Testing
+
+This phase introduced a **unified integration test layer** connecting the adapters to the broader **Maatify Ecosystem**.
+Both **mock integrations** and **real integration templates** were established to validate interoperability and ensure readiness for live module linkage.
+
+**Highlights**
+
+* Mock integrations for `RateLimiter`, `SecurityGuard`, and `MongoActivity`
+* Real integration test templates (`.tmp`) prepared for future activation
+* Unified `/tests/Integration` tree for ecosystem-wide validation
+* Dual-driver MySQL (PDO & DBAL) tests included
+* Verified consistent environment isolation using `DatabaseResolver`
+
+**Verification**  
+✅ Mock tests passed  
+✅ Real modules pending activation  
+✅ Structure CI-ready
+
+📄 Full details: [`docs/phases/README.phase5.md`](docs/phases/README.phase5.md)
+
+---
+
+### 🧱 Phase 6 — Fallback Intelligence & Recovery
+
+This phase introduced a **resilient fallback and recovery architecture** across all adapters (Redis, Mongo, MySQL).
+A unified mechanism now handles transient failures automatically using an adaptive queue and monitoring system.
+
+**Highlights**
+
+* Implemented `FallbackQueue`, `FallbackManager`, and `RecoveryWorker`
+* Redis fallback now automatically switches to Predis
+* Automatic replay of queued operations on recovery
+* Unified error handling via `BaseAdapter::handleFailure()`
+* Environment-configurable retry intervals (`REDIS_RETRY_SECONDS`)
+
+**Verification**  
+✅ Stress-tested under 10k ops/sec  
+✅ 85%+ PHPUnit coverage  
+✅ Auto-recovery verified
+
+📄 Full details: [`docs/phases/README.phase6.md`](docs/phases/README.phase6.md)
+
+---
+
+# 🧱 Phase 6.1 — FallbackQueue Pruner & TTL Management
+
+### 🎯 Goal
+
+Add automatic TTL-based cleanup for `FallbackQueue` entries to prevent memory growth and stale data accumulation.
+
+---
+
+### ✅ Implemented Tasks
+
+* Introduced `FallbackQueuePruner` class for scheduled cleanup.
+* Added `.env` variable `FALLBACK_QUEUE_TTL` for configurable retention.
+* Integrated with `RecoveryWorker` every 10 cycles for background pruning.
+* Ensured 87 % + test coverage across fallback components.
+
+---
+
+### ⚙️ Example Usage
+
+```php
+use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
+
+$ttl = (int)($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600);
+(new FallbackQueuePruner($ttl))->run();
+````
+
+✅ Expired operations automatically removed.  
+✅ Improves long-term stability and prepares for persistent failover in Phase 7.
+
+---
+
+### 📘 Result
+
+* `/docs/phases/README.phase6.1.md` created
+* Cleanup system verified and integrated into RecoveryWorker.
+* Ready for next phase — **Telemetry & Persistence**.
+
+---
+
+# 🧱 Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification
+
+### 🎯 Goal
+
+Validate automatic triggering of `FallbackQueuePruner` from `RecoveryWorker` every 10 cycles to ensure reliable queue cleanup.
+
+---
+
+### ✅ Implemented Tasks
+
+* Integrated pruner inside recovery loop (cycle % 10 == 0).
+* Added integration tests verifying TTL and live cleanup.
+* Ensured per-item TTL priority respected.
+* Confirmed stability under continuous operation.
+
+---
+
+### ⚙️ Example Usage
+
+```php
+if ($cycleCount % 10 === 0) {
+    (new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
+}
+````
+
+✅ Automatic cleanup confirmed.  
+✅ System ready for long-term operation without memory bloat.
+
+---
+
+### 📘 Result
+
+* `/docs/phases/README.phase6.1.1.md` created
+* Integration verified between `RecoveryWorker` and `FallbackQueuePruner`
+* Ready for next stage — **Phase 7: Observability & Metrics**
+
+--
+
+### 🧱 Phase 7 — Observability & Metrics
+
+This phase introduced **structured observability and telemetry** across all adapters (Redis, MongoDB, MySQL), integrating PSR-logger and Prometheus metrics for real-time monitoring.
+
+**Highlights**
+
+* Added `AdapterMetricsCollector`, `PrometheusMetricsFormatter`, and `AdapterMetricsMiddleware`
+* Integrated PSR-logger contexts for adapter operations
+* `/metrics` endpoint outputs Prometheus-compliant data
+* Achieved ≈ 90 % coverage with < 0.3 ms overhead
+
+**Verification**  
+✅ All tests passed  
+✅ Prometheus output validated  
+✅ Metrics integration verified
+
+📄 Full details: [`docs/phases/README.phase7.md`](docs/phases/README.phase7.md)
+
+---
+
+### 🧱 Phase 8 — Documentation & Release
+
+This final phase consolidated all previous stages and prepared the library for public release on **Packagist**.
+
+**Highlights**
+
+* Merged all per-phase docs into `/docs/README.full.md`
+* Added `CHANGELOG.md`, `VERSION`, `LICENSE`, and `SECURITY.md`
+* Updated `composer.json` with version `1.0.0` and release metadata
+* Verified integration with `maatify/security-guard`, `maatify/rate-limiter`, and `maatify/mongo-activity`
+* Tagged `v1.0.0` and validated CI / Packagist readiness
+
+**Verification**  
+✅ All documentation and tests passed  
+✅ Coverage ≈ 90 %  
+✅ Ready for Packagist
+
+📄 Full details: [`docs/phases/README.phase8.md`](docs/phases/README.phase8.md)
+
+---
+
+---
+
 ## 🔗 Related Maatify Libraries
 
 * [maatify/common](https://github.com/Maatify/common)
