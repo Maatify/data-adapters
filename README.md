@@ -20,6 +20,8 @@
 
 ---
 
+> 🔗 [بالعربي 🇸🇦 ](./README-AR.md)
+
 ## 🧭 Overview
 
 **maatify/data-adapters** provides a unified and extensible layer for managing connections  
