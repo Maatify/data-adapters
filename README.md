@@ -23,8 +23,8 @@
 ## 🧭 Overview
 
 **maatify/data-adapters** provides a unified and extensible layer for managing connections  
-to multiple data sources — Redis, MongoDB, and MySQL — with built-in diagnostics,  
-fallback recovery, and environment auto-detection.  
+to multiple data sources — Redis, MongoDB, and MySQL — with centralized diagnostics, 
+environment auto-detection.
 It acts as the foundational data layer for the entire **Maatify Ecosystem**.
 
 ---
@@ -85,35 +85,6 @@ echo $diagnostic->toJson();
 
 ---
 
-## 💾 Fallback & Recovery System
-
-When a primary adapter fails (e.g., Redis or MySQL),
-the system automatically switches to a fallback driver (Predis, SQLite, etc.),
-queues failed operations, and replays them once the connection recovers.
-
-**Example .env**
-
-```env
-REDIS_PRIMARY_HOST=127.0.0.1
-REDIS_FALLBACK_DRIVER=predis
-FALLBACK_QUEUE_TTL=3600
-ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
-```
-
----
-
-## 🧠 Intelligent Queue Pruning
-
-Expired fallback operations are pruned automatically
-every 10 recovery cycles using `FallbackQueuePruner`,
-ensuring memory stability during long runtimes.
-
-```php
-(new FallbackQueuePruner($_ENV['FALLBACK_QUEUE_TTL'] ?? 3600))->run();
-```
-
----
-
 ## 🧱 Architecture Overview
 
 ```
@@ -129,16 +100,12 @@ src/
 │   ├─ MySQLAdapter.php
 │   └─ MySQLDbalAdapter.php
 ├─ Diagnostics/
-│   ├─ DiagnosticService.php
-│   ├─ AdapterFailoverLog.php
-│   └─ Logger/
-│       ├─ FileAdapterLogger.php
-│       └─ Contracts/AdapterLoggerInterface.php
-└─ Fallback/
-    ├─ FallbackQueue.php
-    ├─ FallbackManager.php
-    ├─ FallbackQueuePruner.php
-    └─ RecoveryWorker.php
+    ├─ DiagnosticService.php
+    ├─ AdapterFailoverLog.php
+    └─ Logger/
+       ├─ FileAdapterLogger.php
+       └─ Contracts/AdapterLoggerInterface.php
+
 ```
 
 ---
@@ -148,11 +115,9 @@ src/
 | Variable                | Description                    |
 |:------------------------|:-------------------------------|
 | `REDIS_PRIMARY_HOST`    | Redis primary host             |
-| `REDIS_FALLBACK_DRIVER` | Fallback driver (e.g., predis) |
 | `MYSQL_DSN`             | MySQL DSN connection string    |
 | `MONGO_URI`             | MongoDB URI connection         |
 | `ADAPTER_LOG_PATH`      | Path for failover logs         |
-| `FALLBACK_QUEUE_TTL`    | Queue retention (seconds)      |
 
 ---
 
@@ -167,54 +132,14 @@ vendor/bin/phpunit
 
 ---
 
-### 🔄 Redis Fallback & Recovery System
-
-The **fallback mechanism** in `maatify/data-adapters` currently applies **only to Redis connections**.  
-It ensures continuous operation even if the primary Redis server (via `phpredis`) becomes unreachable.
-
----
-
-#### ⚙️ Redis Failover Flow
-
-```mermaid
-flowchart TD
-    A[Client Request] --> B[RedisAdapter : phpredis]
-    B -->|✅ Connected| Z[Command Executed]
-    B -->|❌ Failure| C[handleFailure]
-    C --> D[FallbackManager::activatePredis]
-    D --> E[PredisAdapter : fallback]
-    E -->|Reconnect| F[Resume Operations]
-    F --> G[RecoveryWorker Monitors Health]
-    G -->|Redis Restored| H[Replay Queued Ops from FallbackQueue]
-    H --> I[Pruner Clears Expired Entries]
-    I --> Z
-```
-
----
-
-#### 🧩 Key Components (Redis only)
-
-| Component                                  | Description                                                  |
-|:-------------------------------------------|:-------------------------------------------------------------|
-| **RedisAdapter**                           | Primary adapter using `phpredis` extension                   |
-| **PredisAdapter**                          | Secondary adapter (PHP fallback)                             |
-| **FallbackManager**                        | Switches between primary and fallback adapters               |
-| **FallbackQueue**                          | Stores failed Redis operations for later replay              |
-| **RecoveryWorker**                         | Replays queued operations once Redis reconnects              |
-| **FallbackQueuePruner**                    | Removes expired queued items periodically                    |
-| **AdapterFailoverLog / FileAdapterLogger** | Logs fallback activation, reconnection, and recovery results |
-
----
-
 #### 🧠 Example `.env`
 
 ```env
-REDIS_PRIMARY_HOST=127.0.0.1
-REDIS_PRIMARY_PORT=6379
-REDIS_FALLBACK_DRIVER=predis
-REDIS_RETRY_SECONDS=10
-FALLBACK_QUEUE_TTL=3600
+REDIS_DRIVER=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
+
 ```
 
 ---
@@ -236,62 +161,9 @@ try {
     $redis->set('session:123', 'active');
 } catch (ConnectionException $e) {
     // Automatically falls back to PredisAdapter
-    echo "⚠️ Redis fallback engaged: {$e->getMessage()}";
+    echo "⚠️ RedisAdapter failed using phpredis — switching to PredisAdapter.";
 }
 ```
-
----
-
-#### 🧾 Automatic Recovery
-
-Once the primary Redis server becomes available again,
-the **RecoveryWorker** replays all queued operations and prunes expired ones.
-
-```php
-use Maatify\DataAdapters\Fallback\RecoveryWorker;
-use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
-
-$worker = new RecoveryWorker($redis);
-$worker->run(); // retries queued ops and clears expired ones
-```
-
-🧹 `FallbackQueuePruner` runs every 10 cycles automatically to clean expired entries.
-
----
-
-#### 📊 Behavior Summary
-
-| Event                           | Response                                   |
-|:--------------------------------|:-------------------------------------------|
-| `phpredis` connection fails     | Switches automatically to `PredisAdapter`  |
-| Operation fails during fallback | Added to `FallbackQueue`                   |
-| Redis connection restored       | `RecoveryWorker` replays queued operations |
-| Expired queue entries           | Cleaned by `FallbackQueuePruner`           |
-| All transitions                 | Logged via `AdapterFailoverLog`            |
-
----
-
-#### 🔍 Scope Limitation
-
-> 🧱 Currently, fallback logic applies **only to RedisAdapter**
-> MySQL and MongoDB adapters rely on **diagnostic self-checks only** (no fallback queue or replay).
-> Cross-adapter fallback may be added in future versions (Phase 7).
-
----
-
-#### 🧠 Example Log Output
-
-```
-[2025-11-11 17:42:02] [REDIS] Connection timeout – switching to PredisAdapter
-[2025-11-11 17:42:03] [REDIS] Fallback active – operations queued
-[2025-11-11 17:45:18] [REDIS] Primary reconnected – replaying 12 queued ops
-[2025-11-11 17:45:19] [REDIS] Queue pruned (TTL=3600s)
-```
-
----
-
-🧩 This Redis-only fallback architecture provides **graceful degradation** and **automatic recovery**
-without manual intervention — fully transparent to the consuming application.
 
 ---
 
@@ -395,7 +267,7 @@ and all diagnostics, failover, and recovery mechanisms are instantly available.
 
 | Module                      | Integration                                                      |
 |:----------------------------|:-----------------------------------------------------------------|
-| **maatify/rate-limiter**    | Uses `RedisAdapter` with fallback for request limiting           |
+| **maatify/rate-limiter**    | Uses `RedisAdapter` (phpredis / predis) for request limiting     |
 | **maatify/security-guard**  | Connects via `MySQLAdapter` for credential checks                |
 | **maatify/mongo-activity**  | Uses `MongoAdapter` for structured event logging                 |
 | **maatify/common-security** | Reads adapters through the shared container                      |
@@ -409,7 +281,6 @@ All connection parameters are managed from a single `.env` file shared across pr
 
 ```env
 REDIS_PRIMARY_HOST=127.0.0.1
-REDIS_FALLBACK_DRIVER=predis
 MYSQL_DSN=mysql:host=127.0.0.1;dbname=maatify
 MONGO_URI=mongodb://127.0.0.1:27017
 ADAPTER_LOG_PATH=/var/logs/maatify/adapters/
@@ -422,7 +293,7 @@ through the container — **no duplicate setup or credentials required.**
 
 🧱 **maatify/data-adapters** therefore acts as the *central data layer*
 linking Redis, MySQL, and MongoDB connectivity with unified diagnostics,
-and automatic Redis failover across the entire **Maatify.dev** ecosystem.
+and unified Redis connectivity with optional Predis driver support across the entire **Maatify.dev** ecosystem.
 
 ---
 
@@ -440,9 +311,6 @@ and automatic Redis failover across the entire **Maatify.dev** ecosystem.
 | 4.1   | Hybrid AdapterFailoverLog Enhancement | ✅ Completed |
 | 4.2   | Adapter Logger Abstraction via DI     | ✅ Completed |
 | 5     | Integration & Unified Testing         | ✅ Completed |
-| 6     | Fallback Intelligence & Recovery      | ✅ Completed |
-| 6.1   | Queue Pruner & TTL Management         | ✅ Completed |
-| 6.1.1 | RecoveryWorker ↔ Pruner Sync          | ✅ Completed |
 | 7     | Persistent Failover & Telemetry       | ✅ Completed |
 | 8     | Documentation & Release               | 🟡 Pending  |
 
@@ -501,7 +369,7 @@ This phase delivered the **core functional adapters** for all supported database
 
 **Highlights**
 
-* `RedisAdapter` (phpredis) with automatic fallback to `PredisAdapter`
+* `RedisAdapter` (phpredis by default, auto-switches to `PredisAdapter` when native extension is unavailable)
 * `MongoAdapter` using the official MongoDB driver
 * `MySQLAdapter` (PDO) and `MySQLDbalAdapter` (Doctrine DBAL)
 * Automatic driver detection through `DatabaseResolver`
@@ -662,7 +530,7 @@ This final phase consolidated all previous stages and prepared the library for p
 
 **Verification**  
 ✅ All documentation and tests passed  
-✅ Coverage ≈ 90 %  
+✅ Coverage > 90 %  
 ✅ Ready for Packagist
 
 📄 Full details: [`docs/phases/README.phase8.md`](docs/phases/README.phase8.md)

@@ -29,9 +29,6 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 | **4.1**   | Hybrid AdapterFailoverLog Enhancement            | ✅      | Dynamic log path with .env support & auto-creation                      |
 | **4.2**   | Adapter Logger Abstraction via DI                | ✅      | AdapterLoggerInterface + FileAdapterLogger (Dependency Injection)       |
 | **5**     | Integration & Unified Testing                    | ✅      | Ecosystem integration tests (RateLimiter, SecurityGuard, MongoActivity) |
-| **6**     | Fallback Intelligence & Recovery                 | ✅      | FallbackManager, FallbackQueue, RecoveryWorker                          |
-| **6.1**   | FallbackQueue Pruner & TTL Management            | ✅      | TTL expiry system + FallbackQueuePruner auto-cleanup                    |
-| **6.1.1** | RecoveryWorker ↔ Pruner Integration Verification | ✅      | Verified automatic trigger every 10 cycles                              |
 | **7**     | Observability & Metrics                          | ✅      | AdapterMetricsCollector, Prometheus export, PSR Logger context          |
 | **8**     | Documentation & Release                          | ✅      | README, CHANGELOG, LICENSE, Packagist ready                             |
 
@@ -96,29 +93,6 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 
 ---
 
-### **Phase 6 — Fallback Intelligence & Recovery**
-- Introduced `FallbackQueue`, `FallbackManager`, and `RecoveryWorker`.  
-- Enabled automatic failover for Redis (primary → Predis).  
-- Added reflection-tested `handleFailure()` in BaseAdapter.  
-- Verified replay and queue drain functionality.
-
----
-
-### **Phase 6.1 — FallbackQueue Pruner & TTL Management**
-- Added TTL and timestamps to queue entries.  
-- Implemented `FallbackQueuePruner` with .env (`FALLBACK_QUEUE_TTL`).  
-- Integrated pruner into `RecoveryWorker` (auto cleanup every 10 cycles).  
-- Added unit tests for TTL expiry and purge behavior.
-
----
-
-### **Phase 6.1.1 — RecoveryWorker ↔ Pruner Integration Verification**
-- Verified automatic pruner trigger inside `RecoveryWorker::run()`.  
-- Confirmed per-item TTL priority and safe cleanup.  
-- Integration tests confirmed memory stability in continuous loops.
-
----
-
 ### **Phase 7 — Observability & Metrics**
 - Introduced `AdapterMetricsCollector` for latency & success metrics.  
 - Added `PrometheusMetricsFormatter` for monitoring dashboards.  
@@ -132,6 +106,34 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 - Added `CHANGELOG.md`, `LICENSE`, `SECURITY.md`, `VERSION`.  
 - Updated `composer.json` metadata and Packagist release.  
 - Tagged `v1.0.0` and validated build via GitHub Actions.
+
+---
+## [1.1.0] — 2025-11-12
+### 🧩 Phase 9 — Deprecated Legacy Fallback Layer Removal
+
+#### 🔥 Removed
+- **Removed entire fallback subsystem** (`FallbackQueue`, `FallbackQueuePruner`, `RecoveryWorker`, `SqliteFallbackStorage`, `MysqlFallbackStorage`).
+- **Removed `handleFailure()`**, `isFallbackEnabled()`, and `setFallbackManager()` from `BaseAdapter`.
+- **Deleted all tests under** `tests/Fallback/` and updated `BaseAdapterTest` accordingly.
+- **Removed .env variables:**  
+  `FALLBACK_STORAGE_DRIVER`, `FALLBACK_STORAGE_PATH`, `FALLBACK_QUEUE_TTL`, `REDIS_RETRY_SECONDS`, `ADAPTER_FALLBACK_ENABLED`.
+
+#### ⚙️ Updated
+- `BaseAdapter` simplified to handle only connection lifecycle and configuration.
+- `BaseAdapterTest` refactored to validate `requireEnv()` behavior and environment integrity.
+- `README.md` and `README.full.md` cleaned from deprecated fallback flow diagrams.
+- `EnvironmentConfig` untouched but now used consistently across all adapters.
+
+#### ✅ Impact
+- **Reduced complexity:** no background workers or fallback managers.
+- **Stabilized behavior:** adapters now fail fast with proper exceptions.
+- **Improved reliability:** simpler tests, no filesystem dependency.
+- **Prepared foundation** for multi-profile MySQL (Phase 10) and dynamic registry (Phase 11).
+
+---
+
+> 🧭 Next: Phase 10 — Multi-Profile MySQL Connections  
+> Enables multiple database profiles via `mysql.{profile}` syntax and prefixed environment variables.
 
 ---
 
@@ -155,7 +157,7 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 ---
 
 ## 🪄 Future Roadmap
-- **v1.1.0:** SQLite/MySQL persistent FallbackQueue  
+- **v1.1.0:** Multi-Profile MySQL Connections + Dynamic Database Registry
 - **v1.2.0:** Real-time Telemetry API endpoints  
 - **v1.3.0:** Distributed Health Cluster Monitor  
 - **v2.0.0:** Async adapter engine with Swoole support  
