@@ -1,6 +1,29 @@
 {
   "name": "maatify/data-adapters",
-  "description": "Unified multi-driver data-adapter layer for Redis, MongoDB, and MySQL within the Maatify ecosystem.",
+
+  "title": "Maatify Data Adapters — Unified Data Connectivity & Diagnostics Layer",
+  "description": "Unified data connectivity and diagnostics layer for Redis, MySQL, and MongoDB with automatic fallback recovery, telemetry-ready metrics, and environment auto-detection. Forms the foundation of the Maatify Data Infrastructure.",
+  "keywords": [
+    "maatify",
+    "data adapters",
+    "database resolver",
+    "redis adapter",
+    "mysql adapter",
+    "mongodb adapter",
+    "predis fallback",
+    "fallback recovery",
+    "diagnostics",
+    "metrics",
+    "telemetry",
+    "observability",
+    "connection pooling",
+    "phpredis",
+    "pdo",
+    "doctrine dbal",
+    "maatify bootstrap",
+    "maatify common",
+    "maatify ecosystem"
+  ],
   "type": "library",
   "license": "MIT",
   "authors": [

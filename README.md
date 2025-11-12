@@ -19,7 +19,9 @@
 [![Security](https://img.shields.io/badge/Security-Policy-important)](SECURITY.md)
 
 ---
+
 ## 🧭 Overview
+
 **maatify/data-adapters** provides a unified and extensible layer for managing connections  
 to multiple data sources — Redis, MongoDB, and MySQL — with built-in diagnostics,  
 fallback recovery, and environment auto-detection.  
