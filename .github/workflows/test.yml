@@ -89,8 +89,17 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
-          START_TIME=$(date -u -d "${GITHUB_RUN_STARTED_AT:-$(date -u)}" +"%H:%M:%S UTC")
+          START_TIME=$(date -u -d "@$START_TS" +"%H:%M:%S UTC")
+          END_TS=$(date +%s)
           END_TIME=$(date -u +"%H:%M:%S UTC")
+
+          DURATION=$((END_TS - START_TS))
+          if [ "$DURATION" -lt 60 ]; then
+            DURATION_STR="${DURATION}s"
+          else
+            DURATION_STR="$(($DURATION / 60))m $(($DURATION % 60))s"
+          fi
+          
           STATUS="✅ Tests passed successfully!"
           COLOR="🟢"
           
