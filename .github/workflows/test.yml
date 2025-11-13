@@ -89,7 +89,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
-          START_TIME=$(date -u -d "@$START_TS" +"%H:%M:%S UTC")
+          run: echo "START_TS=$(date +%s)" >> $GITHUB_ENV
           END_TS=$(date +%s)
           END_TIME=$(date -u +"%H:%M:%S UTC")
 
