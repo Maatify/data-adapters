@@ -37,8 +37,8 @@ jobs:
         ports: [ "3306:3306" ]
 
     steps:
-      - name: 🧩 Export Workflow Start Time
-        run: echo "WF_START=${{ github.run_started_at }}" >> $GITHUB_ENV
+      - name: ⏱️ Job Start Timestamp
+        run: echo "JOB_START=$(date +%s)" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
 
@@ -93,7 +93,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
           
-          START_TS=$(date -u -d "$WF_START" +%s)
+          START_TS=$JOB_START
           
           END_TS=$(date +%s)
           
