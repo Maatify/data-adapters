@@ -1,5 +1,9 @@
 # 🧾 CHANGELOG — maatify/data-adapters
 
+All notable changes to this project will be documented in this file.
+
+---
+
 **Project:** maatify/data-adapters  
 **Version:** 1.0.0  
 **Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
@@ -8,6 +12,36 @@
 **Release Date:** 2025-11-12  
 
 ---
+
+## [1.1.0] — 2025-11-13
+### 🚀 Phase 10 — Multi-Profile MySQL Connections
+
+#### Added
+- ✨ Support for **multiple MySQL profiles** using dotted notation  
+  (`mysql.main`, `mysql.logs`, `mysql.analytics`, ...).
+- New method: `EnvironmentConfig::getMySQLConfig($profile)`  
+  to load environment variables based on prefix (e.g., `MYSQL_LOGS_HOST`).
+- Automatic fallback to legacy `MYSQL_*` variables when no profile prefix exists.
+- DatabaseResolver upgraded to parse `mysql.<profile>` and inject profile-specific config.
+- Independent adapter instances per profile with internal caching.
+
+#### Documentation
+- Added page: `docs/mysql-profiles.md` (profile structure, examples, diagrams).
+- Updated README with new usage examples and environment notes.
+
+#### Tests
+- Added:
+    - `MySQLProfileResolverTest`
+    - `EnvironmentFallbackTest`
+    - `ProfileCachingTest`
+    - `MultiProfileConnectionTest`
+
+#### Coverage
+- 📈 Overall test coverage: **87%+**
+
+---
+
+
 
 ## 🧱 Version 1.0.0 — Stable Release
 
