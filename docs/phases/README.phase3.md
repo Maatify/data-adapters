@@ -53,3 +53,13 @@ $redis->connect();
 
 * `/docs/phases/README.phase3.md` generated
 * `README.md` updated (Phase 3 completed)
+
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

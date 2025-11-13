@@ -55,3 +55,13 @@ vendor/bin/phpunit
 * `/docs/phases/README.phase1.md` generated
 * `README.md` updated between markers
 * Phase ready for development
+
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

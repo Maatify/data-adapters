@@ -249,8 +249,12 @@ Enable **smart adapter fallback** and **auto-recovery mechanisms** to handle dow
 
 ---
 
-**© 2025 Maatify.dev**
-Engineered by **Mohamed Abdulalim (megyptm)** — [https://www.maatify.dev](https://www.maatify.dev)
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
 
 ---
+
 

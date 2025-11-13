@@ -84,3 +84,12 @@ See the full reference and test examples in `README.fallback.md`.
 * Phase 6.1.1 ready to merge into `main`.
 
 ---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---
+

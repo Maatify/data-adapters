@@ -52,3 +52,13 @@ $adapter->connect();
 
 * `/docs/phases/README.phase2.md` created
 * `README.md` updated (Phase 2 completed)
+
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

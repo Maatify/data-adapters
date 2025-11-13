@@ -49,3 +49,11 @@ tests/Adapters/MySQLAdapterTest.php
 |  3.5  | Adapter Smoke Tests Extension    | ✅ Completed | `README.phase3.5.md` |
 
 ---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

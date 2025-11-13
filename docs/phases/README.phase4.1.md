@@ -149,3 +149,13 @@ In the next phase:
 * Simulate Redis→Predis fallback in test conditions.
 * Perform 10k req/sec stress tests.
 * Ensure PHPUnit coverage > 85%.
+
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

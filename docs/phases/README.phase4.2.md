@@ -176,3 +176,12 @@ echo $diagnostic->toJson();
 |  4.1  | Hybrid AdapterFailoverLog Enhancement | ✅ Completed |
 |  4.2  | Adapter Logger Abstraction via DI     | ✅ Completed |
 
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

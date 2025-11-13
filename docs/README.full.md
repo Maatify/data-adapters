@@ -992,6 +992,14 @@ echo $adapter->get('key'); // maatify
 
 ---
 
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---
+
 ## 🧱 Authors & Credits
 
 This library is part of the **Maatify.dev Core Ecosystem**, designed and maintained under the technical supervision of:
@@ -1009,5 +1017,3 @@ the capabilities of this library across multiple Maatify projects.
 > shares a consistent, secure, and maintainable foundation.
 
 ---
-
-<!-- include: _footer.md -->

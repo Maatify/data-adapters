@@ -132,7 +132,11 @@ FALLBACK_QUEUE_TTL=3600
 
 ---
 
-**© 2025 Maatify.dev**
-Engineered by **Mohamed Abdulalim (megyptm)** — [https://www.maatify.dev](https://www.maatify.dev)
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
 
 ---
+
