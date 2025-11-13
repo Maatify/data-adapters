@@ -94,10 +94,10 @@ jobs:
         run: |
           
           START_TS=$JOB_START
-          echo START_TS
+          echo "Start: START_TS"
           
           END_TS=$(date +%s)
-          echo END_TS
+          echo "End: $END_TS"
           
           START_TIME=$(date -u -d "@START_TS" +"%H:%M:%S UTC")
           
