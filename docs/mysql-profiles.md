@@ -210,7 +210,7 @@ This prepares the library for advanced use cases and improves maintainability ac
 ---
 
 **© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 
 📘 Full documentation & source code:  
 https://github.com/Maatify/data-adapters

@@ -4,7 +4,7 @@
 **Phase ID:** 5  
 **Title:** Integration & Unified Testing  
 **Version:** 1.0.0  
-**Maintainer:** Mohamed Abdulalim (megyptm)  
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
 **Date:** 2025-11-11  
 **Status:** ✅ Completed (awaiting live module linking)
 
@@ -250,7 +250,7 @@ Enable **smart adapter fallback** and **auto-recovery mechanisms** to handle dow
 ---
 
 **© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 
 📘 Full documentation & source code:  
 https://github.com/Maatify/data-adapters

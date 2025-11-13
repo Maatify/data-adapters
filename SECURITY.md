@@ -77,12 +77,12 @@ or visit [https://www.maatify.dev/security](https://www.maatify.dev/security).
 ---
 
 > 🧩 *maatify/data-adapters — Unified Data Connectivity & Diagnostics Layer*  
-> © 2025 Maatify.dev • Maintained by Mohamed Abdulalim (megyptm)
+> © 2025 Maatify.dev • Maintained by Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))
 
 ---
 
 **© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 
 📘 Full documentation & source code:  
 https://github.com/Maatify/data-adapters

@@ -5,7 +5,7 @@
 **Phase ID:** 7
 **Title:** Observability & Metrics
 **Version:** 1.0.0-alpha
-**Maintainer:** Mohamed Abdulalim (megyptm)
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))
 **Date:** 2025-11-12
 **Status:** ✅ Completed (Tests Passed & Integration Verified)
 
@@ -153,7 +153,7 @@ bridging real-time telemetry for `maatify/rate-limiter`, `maatify/security-guard
 ---
 
 **© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 
 📘 Full documentation & source code:  
 https://github.com/Maatify/data-adapters

@@ -7,7 +7,7 @@
 **Phase ID:** 6  
 **Title:** Fallback Intelligence & Recovery  
 **Version:** 1.0.0-alpha  
-**Maintainer:** Mohamed Abdulalim (megyptm)  
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
 **Date:** 2025-11-11  
 **Status:** ✅ Completed (Tests Passed & Integration Ready)
 
@@ -120,7 +120,7 @@ ready for direct use by `maatify/rate-Limiter`, `maatify/security-guard`, and `m
 ---
 
 **© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 
 📘 Full documentation & source code:  
 https://github.com/Maatify/data-adapters

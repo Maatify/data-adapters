@@ -2,7 +2,7 @@
 
 **Version:** 1.1.0  
 **Base Version:** 1.0.0  
-**Maintainer:** Mohamed Abdulalim (megyptm)  
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
 **Project:** maatify/data-adapters  
 **Date:** 2025-11-12
 
@@ -227,7 +227,7 @@ Finalize examples, update README, bump version, and publish the new release to P
 ---
 
 **© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 
 📘 Full documentation & source code:  
 https://github.com/Maatify/data-adapters
