@@ -89,16 +89,16 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
-          if [ -z "$JOB_START_TS" ]; then
-            JOB_START_TS=$(date +%s)
-          fi
+          
+          START_ISO="${{ github.run_started_at }}"
+          START_TS=$(date -u -d "$START_ISO" +%s)
       
           END_TS=$(date +%s)
       
-          START_TIME=$(date -u -d "@$JOB_START_TS" +"%H:%M:%S UTC")
+          START_TIME=$(date -u -d "@START_TS" +"%H:%M:%S UTC")
           END_TIME=$(date -u +"%H:%M:%S UTC")
       
-          DURATION=$((END_TS - JOB_START_TS))
+          DURATION=$((END_TS - START_TS))
       
           if [ "$DURATION" -lt 60 ]; then
           DURATION_STR="${DURATION}s"
