@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      GH_RUN_START: ${{ github.run_started_at }}
       APP_ENV: testing
       REDIS_HOST: 127.0.0.1
       MYSQL_HOST: 127.0.0.1
@@ -93,11 +94,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
           
-          START_TS=$JOB_START
-          echo "Start: $START_TS"
+          START_TS=$(date -u -d "$GH_RUN_START" +%s)
           
           END_TS=$(date +%s)
-          echo "End: $END_TS"
           
           START_TIME=$(date -u -d "@$START_TS" +"%H:%M:%S UTC")
           
