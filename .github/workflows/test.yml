@@ -90,8 +90,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
           
-          START_ISO="${{ github.run_started_at }}"
-          START_TS=$(date -u -d "$START_ISO" +%s)
+          START_TS=$(date -u -d "${{ github.run_started_at }}" +%s)
       
           END_TS=$(date +%s)
       
