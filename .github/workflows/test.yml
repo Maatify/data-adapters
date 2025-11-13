@@ -89,17 +89,27 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
-          echo "START_TS=$(date +%s)" >> $GITHUB_ENV
+          if [ -z "$JOB_START_TS" ]; then
+            JOB_START_TS=$(date +%s)
+          fi
+      
           END_TS=$(date +%s)
+      
+          START_TIME=$(date -u -d "@$JOB_START_TS" +"%H:%M:%S UTC")
           END_TIME=$(date -u +"%H:%M:%S UTC")
-        
-          DURATION=$((END_TS - START_TS))
+      
+          DURATION=$((END_TS - JOB_START_TS))
+      
           if [ "$DURATION" -lt 60 ]; then
           DURATION_STR="${DURATION}s"
           else
           DURATION_STR="$(($DURATION / 60))m $(($DURATION % 60))s"
           fi
-          
+      
+          echo "Start: $START_TIME"
+          echo "End: $END_TIME"
+          echo "Duration: $DURATION_STR"
+
           STATUS="✅ Tests passed successfully!"
           COLOR="🟢"
           
@@ -115,12 +125,6 @@ jobs:
           ACTOR="$GITHUB_ACTOR"
           URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           
-          DURATION=$(($(date +%s) - $(date -d "${GITHUB_RUN_STARTED_AT:-$(date -u)}" +%s)))
-          if [ "$DURATION" -lt 60 ]; then
-            DURATION_STR="${DURATION}s"
-          else
-            DURATION_STR="$(($DURATION / 60))m $(($DURATION % 60))s"
-          fi
 
           MESSAGE="📢 <b>${HEADER}</b>
           
