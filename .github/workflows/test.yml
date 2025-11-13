@@ -156,9 +156,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
-          echo "Raw Telegram Response (HTTP $RESPONSE):"
-          cat /tmp/tg_resp.json
-
           if [ "$RESPONSE" -ne 200 ]; then
             echo "⚠️ Telegram notification failed (HTTP $RESPONSE)" >> $GITHUB_STEP_SUMMARY
             cat /tmp/tg_resp.json >> $GITHUB_STEP_SUMMARY

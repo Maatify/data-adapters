@@ -43,10 +43,7 @@ final class MysqlDsnAdapterTest extends TestCase
         $adapter = new MySQLAdapter(new EnvironmentConfig(__DIR__), 'main');
 
         $cfg = $adapter->debugConfig();
-        var_dump($cfg->pass);
-        var_dump(getenv('MYSQL_MAIN_PASS'));
-        var_dump($_ENV['MYSQL_MAIN_PASS']);
-        var_dump($_SERVER['MYSQL_MAIN_PASS']);
+
         $this->assertSame(
             'mysql:host=10.0.0.1;dbname=main;charset=utf8mb4',
             $cfg->dsn
