@@ -39,9 +39,34 @@ All notable changes to this project will be documented in this file.
 #### Coverage
 - 📈 Overall test coverage: **87%+**
 
+> 🧭 Next: Phase 11 — Dynamic Database Registry  
+> Introduces a JSON/YAML-based registry for defining multiple database connections at runtime,  
+> with priority rules (runtime JSON → .env → defaults) and optional hot-reload support.
+
 ---
 
+### 🧩 Phase 9 — Deprecated Legacy Fallback Layer Removal
 
+#### 🔥 Removed
+- **Removed entire fallback subsystem** (`FallbackQueue`, `FallbackQueuePruner`, `RecoveryWorker`, `SqliteFallbackStorage`, `MysqlFallbackStorage`).
+- **Removed `handleFailure()`**, `isFallbackEnabled()`, and `setFallbackManager()` from `BaseAdapter`.
+- **Deleted all tests under** `tests/Fallback/` and updated `BaseAdapterTest` accordingly.
+- **Removed .env variables:**  
+  `FALLBACK_STORAGE_DRIVER`, `FALLBACK_STORAGE_PATH`, `FALLBACK_QUEUE_TTL`, `REDIS_RETRY_SECONDS`, `ADAPTER_FALLBACK_ENABLED`.
+
+#### ⚙️ Updated
+- `BaseAdapter` simplified to handle only connection lifecycle and configuration.
+- `BaseAdapterTest` refactored to validate `requireEnv()` behavior and environment integrity.
+- `README.md` and `README.full.md` cleaned from deprecated fallback flow diagrams.
+- `EnvironmentConfig` untouched but now used consistently across all adapters.
+
+#### ✅ Impact
+- **Reduced complexity:** no background workers or fallback managers.
+- **Stabilized behavior:** adapters now fail fast with proper exceptions.
+- **Improved reliability:** simpler tests, no filesystem dependency.
+- **Prepared foundation** for multi-profile MySQL (Phase 10) and dynamic registry (Phase 11).
+
+---
 
 ## 🧱 Version 1.0.0 — Stable Release
 
@@ -140,34 +165,6 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 - Added `CHANGELOG.md`, `LICENSE`, `SECURITY.md`, `VERSION`.  
 - Updated `composer.json` metadata and Packagist release.  
 - Tagged `v1.0.0` and validated build via GitHub Actions.
-
----
-## [1.1.0] — 2025-11-12
-### 🧩 Phase 9 — Deprecated Legacy Fallback Layer Removal
-
-#### 🔥 Removed
-- **Removed entire fallback subsystem** (`FallbackQueue`, `FallbackQueuePruner`, `RecoveryWorker`, `SqliteFallbackStorage`, `MysqlFallbackStorage`).
-- **Removed `handleFailure()`**, `isFallbackEnabled()`, and `setFallbackManager()` from `BaseAdapter`.
-- **Deleted all tests under** `tests/Fallback/` and updated `BaseAdapterTest` accordingly.
-- **Removed .env variables:**  
-  `FALLBACK_STORAGE_DRIVER`, `FALLBACK_STORAGE_PATH`, `FALLBACK_QUEUE_TTL`, `REDIS_RETRY_SECONDS`, `ADAPTER_FALLBACK_ENABLED`.
-
-#### ⚙️ Updated
-- `BaseAdapter` simplified to handle only connection lifecycle and configuration.
-- `BaseAdapterTest` refactored to validate `requireEnv()` behavior and environment integrity.
-- `README.md` and `README.full.md` cleaned from deprecated fallback flow diagrams.
-- `EnvironmentConfig` untouched but now used consistently across all adapters.
-
-#### ✅ Impact
-- **Reduced complexity:** no background workers or fallback managers.
-- **Stabilized behavior:** adapters now fail fast with proper exceptions.
-- **Improved reliability:** simpler tests, no filesystem dependency.
-- **Prepared foundation** for multi-profile MySQL (Phase 10) and dynamic registry (Phase 11).
-
----
-
-> 🧭 Next: Phase 10 — Multi-Profile MySQL Connections  
-> Enables multiple database profiles via `mysql.{profile}` syntax and prefixed environment variables.
 
 ---
 
