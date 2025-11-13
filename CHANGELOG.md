@@ -78,18 +78,20 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 
 ### 📚 Phase Overview
 
-| Phase     | Title                                            | Status | Key Highlights                                                          |
-|:----------|:-------------------------------------------------|:-------|:------------------------------------------------------------------------|
-| **1**     | Environment Setup                                | ✅      | Composer init, Docker, CI, PHPUnit bootstrap                            |
-| **2**     | Core Interfaces & Base Structure                 | ✅      | AdapterInterface, BaseAdapter, DatabaseResolver, EnvironmentConfig      |
-| **3**     | Adapter Implementations                          | ✅      | Redis, Predis, Mongo, MySQL (PDO + DBAL) drivers                        |
-| **3.5**   | Adapter Smoke Tests Extension                    | ✅      | Added Predis, Mongo, MySQL smoke tests (no connections)                 |
-| **4**     | Health & Diagnostics Layer                       | ✅      | DiagnosticService, healthCheck(), AdapterFailoverLog                    |
-| **4.1**   | Hybrid AdapterFailoverLog Enhancement            | ✅      | Dynamic log path with .env support & auto-creation                      |
-| **4.2**   | Adapter Logger Abstraction via DI                | ✅      | AdapterLoggerInterface + FileAdapterLogger (Dependency Injection)       |
-| **5**     | Integration & Unified Testing                    | ✅      | Ecosystem integration tests (RateLimiter, SecurityGuard, MongoActivity) |
-| **7**     | Observability & Metrics                          | ✅      | AdapterMetricsCollector, Prometheus export, PSR Logger context          |
-| **8**     | Documentation & Release                          | ✅      | README, CHANGELOG, LICENSE, Packagist ready                             |
+| Phase   | Title                                 | Status | Key Highlights                                                          |
+|:--------|:--------------------------------------|:-------|:------------------------------------------------------------------------|
+| **1**   | Environment Setup                     | ✅      | Composer init, Docker, CI, PHPUnit bootstrap                            |
+| **2**   | Core Interfaces & Base Structure      | ✅      | AdapterInterface, BaseAdapter, DatabaseResolver, EnvironmentConfig      |
+| **3**   | Adapter Implementations               | ✅      | Redis, Predis, Mongo, MySQL (PDO + DBAL) drivers                        |
+| **3.5** | Adapter Smoke Tests Extension         | ✅      | Added Predis, Mongo, MySQL smoke tests (no connections)                 |
+| **4**   | Health & Diagnostics Layer            | ✅      | DiagnosticService, healthCheck(), AdapterFailoverLog                    |
+| **4.1** | Hybrid AdapterFailoverLog Enhancement | ✅      | Dynamic log path with .env support & auto-creation                      |
+| **4.2** | Adapter Logger Abstraction via DI     | ✅      | AdapterLoggerInterface + FileAdapterLogger (Dependency Injection)       |
+| **5**   | Integration & Unified Testing         | ✅      | Ecosystem integration tests (RateLimiter, SecurityGuard, MongoActivity) |
+| **7**   | Observability & Metrics               | ✅      | AdapterMetricsCollector, Prometheus export, PSR Logger context          |
+| **8**   | Documentation & Release               | ✅      | README, CHANGELOG, LICENSE, Packagist ready                             |
+| **9**   | Removal of Legacy Fallback Layer      | ✅      | Removed fallback system, cleaned BaseAdapter, removed fallback tests    |
+| **10**  | Multi-Profile MySQL Connections       | ✅      | mysql.logs, mysql.main, prefixed env, profile resolver                  |
 
 ---
 
@@ -188,7 +190,7 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 ---
 
 ## 🪄 Future Roadmap
-- **v1.1.0:** Multi-Profile MySQL Connections + Dynamic Database Registry
+- **v1.2.0:** Dynamic Database Registry (runtime JSON/YAML + hot reload)
 - **v1.2.0:** Real-time Telemetry API endpoints  
 - **v1.3.0:** Distributed Health Cluster Monitor  
 - **v2.0.0:** Async adapter engine with Swoole support  
