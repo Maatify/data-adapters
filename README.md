@@ -167,5 +167,3 @@ Special thanks to the Maatify.dev engineering team and open-source contributors.
 <p align="center">
   <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
 </p>
-
----
