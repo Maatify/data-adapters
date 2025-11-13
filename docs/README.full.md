@@ -257,7 +257,6 @@ tests/Adapters/MySQLAdapterTest.php
 
 ---
 
-
 # 🧱 Phase 4 — Health & Diagnostics Layer
 
 ### 🎯 Goal
@@ -839,7 +838,6 @@ echo $formatter->render();
 
 ---
 
-
 # 🧱 Phase 8 — Documentation & Release
 
 ### ⚙️ Goal
@@ -915,6 +913,57 @@ For practical usage demonstrations including connection, fallback, recovery, and
 
 ---
 
+# 🧱 Phase 10 — DSN Support for All Adapters
+
+### 🎯 Goal
+
+Introduce **first-class DSN support** across MySQL, MongoDB, and Redis adapters, enabling single-line connection configuration and reducing reliance on multiple environment variables.
+
+---
+
+### ✅ Key Additions
+
+* Added DSN parsing for all adapters.
+* Added `EnvironmentConfig::getDsnConfig()` with profile awareness.
+* Implemented DSN priority logic (DSN → env vars → defaults).
+* Added adapter-level DSN initialization:
+  * PDO MySQL
+  * Doctrine DBAL
+  * MongoDB Client
+  * Redis / Predis
+* Extended resolver to support profile-based routing:
+
+  ```
+  mysql.main
+  mongo.logs
+  redis.cache
+  ```
+
+* Full backward compatibility with old `*_HOST`, `*_PORT`, `*_DB` environment variables.
+* Added complete DSN test suite for resolution and adapter initialization.
+
+---
+
+### 💡 Highlights
+
+* Cleaner `.env` using `*_DSN` variables.
+* Supports multi-profile configuration (`mysql.main`, `mongo.logs`, `redis.cache`).
+* Simplifies adapter bootstrapping and centralizes connection logic.
+* Forms the foundation for:
+  * Phase 11 — Multi-profile MySQL
+  * Phase 12 — Multi-profile MongoDB
+  * Phase 13 — Dynamic Registry & Overrides
+
+---
+
+### 📁 Documentation
+
+Full details:  
+`/docs/phases/README.phase10.md`
+
+---
+
+
 # 🧾 Testing & Verification Summary
 
 | Layer               | Coverage | Status    |
@@ -930,19 +979,19 @@ For practical usage demonstrations including connection, fallback, recovery, and
 
 # 📜 Changelog Summary (v1.0.0)
 
-| Phase | Title             | Key Additions                 |
-|-------|-------------------|-------------------------------|
-| 1     | Environment Setup | Composer, CI, Docker          |
-| 2     | Core Interfaces   | AdapterInterface, BaseAdapter |
-| 3     | Implementations   | Redis, Predis, Mongo, MySQL   |
-| 4     | Diagnostics       | Health checks, failover log   |
-| 4.1   | Hybrid Logging    | Env-aware log paths           |
-| 4.2   | DI Logger         | AdapterLoggerInterface        |
-| 5     | Integration       | Unified adapter testing       |
-| 7     | Telemetry         | Prometheus metrics            |
-| 8     | Release           | Docs + Packagist              |
-| 9     | Remove Fallback   | Remove Fallback               |
-
+| Phase | Title             | Key Additions                         |
+|-------|-------------------|---------------------------------------|
+| 1     | Environment Setup | Composer, CI, Docker                  |
+| 2     | Core Interfaces   | AdapterInterface, BaseAdapter         |
+| 3     | Implementations   | Redis, Predis, Mongo, MySQL           |
+| 4     | Diagnostics       | Health checks, failover log           |
+| 4.1   | Hybrid Logging    | Env-aware log paths                   |
+| 4.2   | DI Logger         | AdapterLoggerInterface                |
+| 5     | Integration       | Unified adapter testing               |
+| 7     | Telemetry         | Prometheus metrics                    |
+| 8     | Release           | Docs + Packagist                      |
+| 9     | Remove Fallback   | Remove Fallback                       |
+| 10    | DSN Support       | Unified DSN parsing + profile routing |
 
 ---
 
@@ -968,20 +1017,20 @@ echo $adapter->get('key'); // maatify
 
 # 🧭 Project Summary
 
-| Phase | Status | Description                 |
-|-------|--------|-----------------------------|
-| 1     | ✅      | Environment Setup           |
-| 2     | ✅      | Core Interfaces & Structure |
-| 3     | ✅      | Adapters Implementation     |
-| 3.5   | ✅      | Smoke Tests                 |
-| 4     | ✅      | Diagnostics Layer           |
-| 4.1   | ✅      | Hybrid Logging              |
-| 4.2   | ✅      | DI Logger                   |
-| 5     | ✅      | Integration Tests           |
-| 7     | ✅      | Observability & Metrics     |
-| 8     | ✅      | Documentation & Release     |
-| 9     | ✅      | Remove Fallback             |
-
+| Phase | Status | Description                  |
+|-------|--------|------------------------------|
+| 1     | ✅      | Environment Setup            |
+| 2     | ✅      | Core Interfaces & Structure  |
+| 3     | ✅      | Adapters Implementation      |
+| 3.5   | ✅      | Smoke Tests                  |
+| 4     | ✅      | Diagnostics Layer            |
+| 4.1   | ✅      | Hybrid Logging               |
+| 4.2   | ✅      | DI Logger                    |
+| 5     | ✅      | Integration Tests            |
+| 7     | ✅      | Observability & Metrics      |
+| 8     | ✅      | Documentation & Release      |
+| 9     | ✅      | Remove Fallback              |
+| 10    | ✅      | DSN Support for All Adapters |
 ---
 
 # 🪄 Final Result

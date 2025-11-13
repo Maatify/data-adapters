@@ -69,7 +69,7 @@ final class MockSecurityGuardIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // ⚙️ Act: Resolve MySQL adapter without auto-connection
-        $mysql = $resolver->resolve(AdapterTypeEnum::MYSQL);
+        $mysql = $resolver->resolve("MYSQL");
 
         // ✅ Assert: Validate structural integrity and method availability
         $this->assertTrue(

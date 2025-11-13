@@ -60,7 +60,7 @@ final class RedisAdapterTest extends TestCase
         $resolver = new DatabaseResolver(new EnvironmentConfig(dirname(__DIR__, 3)));
 
         // ⚙️ Resolve Redis adapter (auto-selects Redis or Predis)
-        $adapter = $resolver->resolve(AdapterTypeEnum::REDIS);
+        $adapter = $resolver->resolve("redis");
 
         // ✅ Assert that the resolved adapter exposes the expected method
         $this->assertTrue(

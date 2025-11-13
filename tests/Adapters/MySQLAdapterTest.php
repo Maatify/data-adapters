@@ -53,8 +53,10 @@ final class MySQLAdapterTest extends TestCase
      *
      * @return void
      */
+
     public function testMySQLAdapterClassLoads(): void
     {
+
         // ⚙️ Initialize environment config (without connecting)
         $config = new EnvironmentConfig(dirname(__DIR__, 3));
 

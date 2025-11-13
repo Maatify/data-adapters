@@ -69,7 +69,7 @@ final class MockRateLimiterIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // ⚙️ Act: Resolve Redis adapter
-        $redis = $resolver->resolve(AdapterTypeEnum::REDIS);
+        $redis = $resolver->resolve("REDIS");
 
         // ✅ Assert: Check adapter method availability
         $this->assertTrue(

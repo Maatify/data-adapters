@@ -67,9 +67,9 @@ final class DiagnosticServiceTest extends TestCase
         // 🧠 Create diagnostic service and register adapter types
         $service = new DiagnosticService($config, $resolver);
         $service->register([
-            AdapterTypeEnum::REDIS,
-            AdapterTypeEnum::MONGO,
-            AdapterTypeEnum::MYSQL,
+            "redis",
+            "mongo",
+            "mysql",
         ]);
 
         // 🧩 Collect diagnostics

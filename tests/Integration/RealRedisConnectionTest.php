@@ -17,7 +17,6 @@ namespace Maatify\DataAdapters\Tests\Integration;
 use Exception;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 use Redis;
 
@@ -61,7 +60,7 @@ final class RealRedisConnectionTest extends TestCase
         // ⚙️ Initialize configuration and resolve adapter
         $config = new EnvironmentConfig(dirname(__DIR__, 2));
         $resolver = new DatabaseResolver($config);
-        $adapter = $resolver->resolve(AdapterTypeEnum::REDIS);
+        $adapter = $resolver->resolve("redis");
 
         // 🧠 Establish real connection
         $adapter->connect();

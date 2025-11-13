@@ -16,135 +16,114 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Core;
 
 use Maatify\Common\Contracts\Adapter\AdapterInterface;
+use Maatify\Common\DTO\ConnectionConfigDTO;
+use Maatify\Common\Enums\ConnectionTypeEnum;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 
-/**
- * ⚙️ **Abstract Class BaseAdapter**
- *
- * 🎯 **Purpose:**
- * Provides a shared foundation for all adapter implementations (e.g., Redis, MySQL, MongoDB)
- * with lifecycle management, connection validation, and environment-based configuration loading.
- *
- * 🧩 **Key Features:**
- * - Unified connection lifecycle (`connect`, `disconnect`, `isConnected`).
- * - Safe access to configuration variables.
- * - Common error handling through {@see ConnectionException}.
- * - Centralized structure for consistent adapter behavior.
- *
- * ✅ **Example Usage:**
- * ```php
- * class MyCustomAdapter extends BaseAdapter
- * {
- *     public function connect(): void
- *     {
- *         // Implement connection logic here...
- *     }
- * }
- * ```
- */
+
 abstract class BaseAdapter implements AdapterInterface
 {
-    /**
-     * 🔹 **Connection State Flag**
-     *
-     * Indicates whether the adapter is currently connected.
-     *
-     * @var bool
-     */
     protected bool $connected = false;
 
-    /**
-     * 🔹 **Underlying Connection Instance**
-     *
-     * Holds the native client or connection object (e.g., Redis, PDO, MongoDB).
-     *
-     * @var object|null
-     */
-    protected ?object $connection = null;
+    protected mixed $connection = null;
 
-    /**
-     * 🧩 **Constructor**
-     *
-     * Accepts a shared {@see EnvironmentConfig} instance to load adapter configuration.
-     *
-     * @param EnvironmentConfig $config Shared configuration manager for environment variables.
-     */
+    protected ?string $profile;
+
     public function __construct(
-        protected readonly EnvironmentConfig $config
-    ) {}
-
-    // =====================================================================
-    // 🔹 Core Adapter Lifecycle
-    // =====================================================================
-
-    /**
-     * ⚙️ **Establish Connection**
-     *
-     * Must be implemented by all concrete adapter subclasses.
-     * Responsible for initializing and authenticating the connection.
-     *
-     * @throws ConnectionException If the connection fails to establish.
-     *
-     * @return void
-     */
-    abstract public function connect(): void;
-
-    /**
-     * 🔍 **Check Connection Status**
-     *
-     * Returns whether the adapter is currently connected to its data source.
-     *
-     * @return bool `true` if connected, otherwise `false`.
-     */
-    public function isConnected(): bool
-    {
-        return $this->connected;
+        protected readonly EnvironmentConfig $config,
+        ?string $profile = null
+    ) {
+        $this->profile = $profile;
     }
 
     /**
-     * 🧠 **Retrieve the Underlying Connection Object**
-     *
-     * Provides access to the raw connection object (e.g., Redis, PDO).
-     * Useful for low-level operations or debugging.
-     *
-     * @return object|null The connection object, or `null` if disconnected.
+     * Resolve connection config (DSN-first strategy).
      */
-    public function getConnection(): ?object
+/*    protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
     {
-        return $this->connection;
+        // 1 — Try DSN
+        $dsnKey = strtoupper($type->value . ($this->profile ? "_{$this->profile}" : "") . "_DSN");
+        $dsnVal = $this->config->get($dsnKey);
+
+        if ($dsnVal) {
+            return new ConnectionConfigDTO(
+                dsn: $dsnVal,
+                user: $this->config->get($type->envPrefix() . '_USER'),
+                pass: $this->config->get($type->envPrefix() . '_PASS'),
+                database: $this->config->get($type->envPrefix() . '_DB'),
+                profile: $this->profile
+            );
+        }
+
+        // 2 — Legacy env fallback
+        return new ConnectionConfigDTO(
+            dsn: null,
+            host: $this->config->get($type->envPrefix() . '_HOST'),
+            port: $this->config->get($type->envPrefix() . '_PORT'),
+            user: $this->config->get($type->envPrefix() . '_USER'),
+            pass: $this->config->get($type->envPrefix() . '_PASS'),
+            database: $this->config->get($type->envPrefix() . '_DB'),
+            profile: $this->profile
+        );
+    }*/
+    protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
+    {
+        // -------------------------------
+        // 1) Build dynamic profile prefix
+        // -------------------------------
+        //
+        // Example:
+        //   type = "mysql"
+        //   profile = "main"
+        //
+        // Result:
+        //   MYSQL_MAIN_DSN
+        //   MYSQL_MAIN_USER
+        //   MYSQL_MAIN_PASS
+        //   MYSQL_MAIN_DB
+        //
+        $prefix = strtoupper($type->value);
+        if ($this->profile) {
+            $prefix .= '_' . strtoupper($this->profile);
+        }
+
+        // Build keys:
+        $dsnKey  = $prefix . '_DSN';
+        $userKey = $prefix . '_USER';
+        $passKey = $prefix . '_PASS';
+        $dbKey   = $prefix . '_DB';
+        $hostKey = $prefix . '_HOST';
+        $portKey = $prefix . '_PORT';
+
+        // ---------------------------------------
+        // 2) Try DSN mode first (highest priority)
+        // ---------------------------------------
+        $dsnVal = $this->config->get($dsnKey);
+
+        if ($dsnVal) {
+            return new ConnectionConfigDTO(
+                dsn:      $dsnVal,
+                user:     $this->config->get($userKey),
+                pass:     $this->config->get($passKey),
+                database: $this->config->get($dbKey),
+                profile:  $this->profile
+            );
+        }
+
+        // --------------------------------------------
+        // 3) Legacy mode (separate host/port/user/pass)
+        // --------------------------------------------
+        return new ConnectionConfigDTO(
+            dsn:      null,
+            host:     $this->config->get($hostKey),
+            port:     $this->config->get($portKey),
+            user:     $this->config->get($userKey),
+            pass:     $this->config->get($passKey),
+            database: $this->config->get($dbKey),
+            profile:  $this->profile
+        );
     }
 
-    /**
-     * ❌ **Disconnect from Data Source**
-     *
-     * Safely terminates the connection by resetting the connection reference
-     * and connection status flag.
-     *
-     * @return void
-     */
-    public function disconnect(): void
-    {
-        $this->connection = null;
-        $this->connected = false;
-    }
-
-    /**
-     * 🧩 **Require Environment Configuration Key**
-     *
-     * Retrieves a configuration value by key and throws a {@see ConnectionException}
-     * if the key is missing or undefined.
-     *
-     * @param string $key Configuration key to retrieve.
-     *
-     * @throws ConnectionException If the key is not found in configuration.
-     *
-     * @return string The retrieved configuration value.
-     *
-     * ✅ **Example:**
-     * ```php
-     * $host = $this->requireEnv('REDIS_HOST');
-     * ```
-     */
     protected function requireEnv(string $key): string
     {
         $value = $this->config->get($key);
@@ -154,5 +133,47 @@ abstract class BaseAdapter implements AdapterInterface
         }
 
         return $value;
+    }
+
+    abstract public function connect(): void;
+
+    abstract public function reconnect(): bool;
+
+    abstract public function healthCheck(): bool;
+
+    public function isConnected(): bool
+    {
+        return $this->connected;
+    }
+
+    public function getConnection(): ?object
+    {
+        return $this->connection;
+    }
+
+    public function disconnect(): void
+    {
+        $this->connection = null;
+        $this->connected = false;
+    }
+
+    /** @internal For PHPUnit tests only */
+    public function debugConfig(): ConnectionConfigDTO
+    {
+        return $this->resolveConfig(ConnectionTypeEnum::from($this->getType()));
+    }
+
+    /** @internal */
+    protected function getType(): string
+    {
+        return match (true) {
+            $this instanceof \Maatify\DataAdapters\Adapters\MySQLAdapter,
+                $this instanceof \Maatify\DataAdapters\Adapters\MySQLDbalAdapter => 'mysql',
+
+            $this instanceof \Maatify\DataAdapters\Adapters\MongoAdapter => 'mongo',
+
+            $this instanceof \Maatify\DataAdapters\Adapters\RedisAdapter,
+                $this instanceof \Maatify\DataAdapters\Adapters\PredisAdapter => 'redis',
+        };
     }
 }

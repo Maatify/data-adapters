@@ -68,7 +68,7 @@ final class MockMongoActivityIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // ⚙️ Act: Resolve the Mongo adapter
-        $mongo = $resolver->resolve(AdapterTypeEnum::MONGO);
+        $mongo = $resolver->resolve("MONGO");
 
         // ✅ Assert: Verify essential methods exist
         $this->assertTrue(

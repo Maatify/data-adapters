@@ -236,6 +236,32 @@ This final phase consolidated all previous stages and prepared the library for p
 
 ---
 
+### 🧱 Phase 10 — DSN Support for All Adapters
+
+This phase introduces **first-class DSN configuration** across all supported adapters, providing cleaner environment configuration and enabling multi-profile database setups.
+
+**Highlights**
+
+* Added unified DSN parsing for **MySQL (PDO/DBAL)**, **MongoDB**, and **Redis**
+* Introduced `EnvironmentConfig::getDsnConfig()` with profile awareness
+* Implemented DSN priority system (DSN → env vars → defaults)
+* Extended `DatabaseResolver` to support string-based routing:
+
+    * `mysql.main`, `mysql.logs`, `mongo.activity`, `redis`
+* Enhanced all adapters to accept DSN directly without additional parsing
+* Full backward compatibility with legacy `MYSQL_HOST`, `MONGO_HOST`, etc.
+* New DSN-based test suite added for resolution and adapter initialization
+
+**Verification**
+✅ DSN resolution logic validated
+✅ All DSN adapter tests passed
+✅ Backward compatibility confirmed
+🟡 Final integration pending (Phase 11 & 12 multi-profile extensions)
+
+📄 Full details: [`phases/README.phase10.md`](phases/README.phase10.md)
+
+---
+
 **© 2025 Maatify.dev**  
 Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
 

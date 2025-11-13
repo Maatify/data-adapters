@@ -18,47 +18,8 @@ use Maatify\DataAdapters\Core\EnvironmentConfig;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
 
-/**
- * 🧪 **Class RealPredisConnectionTest**
- *
- * 🎯 **Purpose:**
- * Validates a real Redis connection using {@see PredisAdapter}, confirming connectivity,
- * command execution, and overall adapter health using environment-based configuration.
- *
- * 🧠 **Key Verifications:**
- * - Confirms that a Predis client can connect to Redis.
- * - Executes core Redis commands (`PING`, `SET`, `GET`) successfully.
- * - Ensures `PredisAdapter::healthCheck()` returns `true`.
- *
- * 🧩 **Requirements:**
- * A running Redis instance with accessible credentials defined in `.env.testing` or `.env.local`:
- * ```
- * REDIS_HOST=127.0.0.1
- * REDIS_PORT=6379
- * REDIS_PASSWORD=
- * ```
- *
- * ✅ **Example Run:**
- * ```bash
- * APP_ENV=testing vendor/bin/phpunit --filter RealPredisConnectionTest
- * ```
- */
 final class RealPredisConnectionTest extends TestCase
 {
-    /**
-     * 🧩 **Test: Real Redis Connection via Predis**
-     *
-     * Establishes a live Redis connection through {@see PredisAdapter},
-     * validates connection health, and performs basic read/write operations.
-     *
-     * ⚙️ **Validation Steps:**
-     * 1️⃣ Load environment configuration.
-     * 2️⃣ Initialize {@see PredisAdapter} and connect.
-     * 3️⃣ Verify PING, SET, and GET operations.
-     * 4️⃣ Clean up any test data created.
-     *
-     * @return void
-     */
     public function testPredisRealConnection(): void
     {
         // 🧱 Arrange: Load environment and initialize adapter

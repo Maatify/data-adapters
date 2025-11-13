@@ -34,7 +34,8 @@
   ],
   "require": {
     "php": ">=8.4",
-    "maatify/bootstrap": "^1.0"
+    "maatify/bootstrap": "^1.0",
+    "maatify/common": "^1.0"
   },
   "suggest": {
     "ext-redis": "or high-performance native RedisAdapter",
