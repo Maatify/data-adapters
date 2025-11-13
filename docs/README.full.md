@@ -992,5 +992,22 @@ echo $adapter->get('key'); // maatify
 
 ---
 
-**Maatify.dev © 2025** — *Unified Data Connectivity & Diagnostics Layer*
+## 🧱 Authors & Credits
 
+This library is part of the **Maatify.dev Core Ecosystem**, designed and maintained under the technical supervision of:
+
+**👤 Mohamed Abdulalim** — *Backend Lead & Technical Architect*  
+Lead architect of the **Maatify Backend Infrastructure**, responsible for the overall architecture, core library design,  
+and technical standardization across all backend modules within the Maatify ecosystem.  
+🔗 [www.Maatify.dev](https://www.maatify.dev) | ✉️ [mohamed@maatify.dev](mailto:mohamed@maatify.dev)
+
+**🤝 Contributors:**  
+The **Maatify.dev Engineering Team** and open-source collaborators who continuously help refine, test, and extend  
+the capabilities of this library across multiple Maatify projects.
+
+> 🧩 This project represents a unified engineering effort led by Mohamed Abdulalim, ensuring every Maatify backend component  
+> shares a consistent, secure, and maintainable foundation.
+
+---
+
+<!-- include: _footer.md -->

@@ -119,3 +119,12 @@ echo $adapter->get('project'); // maatify/data-adapters
 ✅ `README.md`, `CHANGELOG.md`, and `VERSION` updated  
 ✅ Project `maatify/data-adapters` is now **ready for Packagist release** under `v1.0.0`
 
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---

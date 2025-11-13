@@ -152,7 +152,11 @@ bridging real-time telemetry for `maatify/rate-limiter`, `maatify/security-guard
 
 ---
 
-**© 2025 Maatify.dev**
-Engineered by **Mohamed Abdulalim (megyptm)** — [https://www.maatify.dev](https://www.maatify.dev)
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
 
 ---
+
