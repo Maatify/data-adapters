@@ -5,12 +5,14 @@
 [![Version](https://img.shields.io/packagist/v/maatify/data-adapters?label=Version&color=4C1)](https://packagist.org/packages/maatify/data-adapters)
 [![PHP](https://img.shields.io/packagist/php-v/maatify/data-adapters?label=PHP&color=777BB3)](https://packagist.org/packages/maatify/data-adapters)
 [![Build](https://github.com/Maatify/data-adapters/actions/workflows/test.yml/badge.svg?label=Build&color=brightgreen)](https://github.com/Maatify/data-adapters/actions/workflows/test.yml)
+
 [![Monthly Downloads](https://img.shields.io/packagist/dm/maatify/data-adapters?label=Monthly%20Downloads&color=00A8E8)](https://packagist.org/packages/maatify/data-adapters)
 [![Total Downloads](https://img.shields.io/packagist/dt/maatify/data-adapters?label=Total%20Downloads&color=2AA9E0)](https://packagist.org/packages/maatify/data-adapters)
-[![Stars](https://img.shields.io/github/stars/Maatify/data-adapters?label=Stars&color=FFD43B)](https://github.com/Maatify/data-adapters/stargazers)
+
+[![Stars](https://img.shields.io/github/stars/Maatify/data-adapters?label=Stars&color=FFD43B&cacheSeconds=3600)](https://github.com/Maatify/data-adapters/stargazers)
 [![License](https://img.shields.io/github/license/Maatify/data-adapters?label=License&color=blueviolet)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Stable-success?style=flat-square)]()
-[![Code Quality](https://img.shields.io/codefactor/grade/github/Maatify/data-adapters/main)](https://www.codefactor.io/repository/github/Maatify/data-adapters)
+[![Code Quality](https://img.shields.io/codefactor/grade/github/Maatify/data-adapters/main?color=brightgreen)](https://www.codefactor.io/repository/github/Maatify/data-adapters)
 
 [![Changelog](https://img.shields.io/badge/Changelog-View-blue)](CHANGELOG.md)
 [![Security](https://img.shields.io/badge/Security-Policy-important)](SECURITY.md)
