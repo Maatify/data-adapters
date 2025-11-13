@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GH_RUN_START: ${{ github.run_started_at }}
+      GH_START_ISO: ${{ github.event.head_commit.timestamp }}
       APP_ENV: testing
       REDIS_HOST: 127.0.0.1
       MYSQL_HOST: 127.0.0.1
@@ -38,9 +38,6 @@ jobs:
         ports: [ "3306:3306" ]
 
     steps:
-      - name: ⏱️ Job Start Timestamp
-        run: echo "JOB_START=$(date +%s)" >> $GITHUB_ENV
-
       - uses: actions/checkout@v4
 
       - uses: shivammathur/setup-php@v2
@@ -94,7 +91,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
         run: |
           
-          START_TS=$(date -u -d "$GH_RUN_START" +%s)
+          START_TS=$(date -u -d "$GH_START_ISO" +%s)
           
           END_TS=$(date +%s)
           
