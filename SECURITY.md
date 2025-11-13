@@ -78,3 +78,18 @@ or visit [https://www.maatify.dev/security](https://www.maatify.dev/security).
 
 > 🧩 *maatify/data-adapters — Unified Data Connectivity & Diagnostics Layer*  
 > © 2025 Maatify.dev • Maintained by Mohamed Abdulalim (megyptm)
+
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---
+
+<p align="center">
+  <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
+</p>
+

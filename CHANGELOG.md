@@ -166,3 +166,17 @@ Includes support for Redis (phpredis + Predis fallback), MongoDB, and MySQL (PDO
 
 > 🧩 *maatify/data-adapters — Unified Data Connectivity & Diagnostics Layer*  
 > © 2025 Maatify.dev • Authored by Mohamed Abdulalim (@megyptm)
+
+---
+
+**© 2025 Maatify.dev**  
+Engineered by **Mohamed Abdulalim (megyptm)** — https://www.maatify.dev
+
+📘 Full documentation & source code:  
+https://github.com/Maatify/data-adapters
+
+---
+
+<p align="center">
+  <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
+</p>
