@@ -21,13 +21,13 @@ $config   = new EnvironmentConfig(__DIR__);
 $resolver = new DatabaseResolver($config);
 
 // Redis Example
-$redis = $resolver->resolve(AdapterTypeEnum::REDIS);
+$redis = $resolver->resolve("redis");
 $redis->connect();
 $redis->set('maatify:demo', 'ok');
 echo $redis->get('maatify:demo'); // ok
 
 // MySQL Example
-$mysql = $resolver->resolve(AdapterTypeEnum::MYSQL);
+$mysql = $resolver->resolve("mysql");
 $pdo   = $mysql->getConnection();
 $stmt  = $pdo->query("SELECT NOW()");
 echo $stmt->fetchColumn();
@@ -38,61 +38,7 @@ echo $stmt->fetchColumn();
 
 ---
 
-## 2️⃣ Fallback & Auto-Recovery (Redis → Predis)
-
-When the primary Redis server fails, the system automatically switches to Predis and queues operations until recovery.
-
-```php
-use Maatify\DataAdapters\Fallback\RecoveryWorker;
-use Maatify\DataAdapters\Core\DatabaseResolver;
-use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
-use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
-
-$config   = new EnvironmentConfig(__DIR__);
-$resolver = new DatabaseResolver($config);
-$redis    = $resolver->resolve(AdapterTypeEnum::REDIS);
-
-try {
-    $redis->connect();
-    $redis->set('maatify:test', 'fallback-check');
-} catch (ConnectionException $e) {
-    echo "⚠️ Fallback activated: {$e->getMessage()}";
-}
-
-// Background recovery
-$worker = new RecoveryWorker($redis);
-$worker->run();
-```
-
-🧩 `RecoveryWorker` will replay queued operations once the primary reconnects.
-🧹 Expired entries are cleaned automatically by `FallbackQueuePruner`.
-
----
-
-## 3️⃣ Fallback Queue Pruning & TTL (Phases 6.1 + 6.1.1)
-
-Demonstrates the automatic cleanup of expired operations using the `FallbackQueuePruner`.
-
-```php
-// Phase 6.1 + 6.1.1: Automatic TTL cleanup and RecoveryWorker integration
-use Maatify\DataAdapters\Fallback\FallbackQueuePruner;
-
-$ttl    = $_ENV['FALLBACK_QUEUE_TTL'] ?? 3600; // 1 hour default
-$pruner = new FallbackQueuePruner($ttl);
-$pruner->run();
-
-echo "🧹 Expired fallback entries removed.";
-````
-
-✅ Automatically triggered every 10 cycles by RecoveryWorker (Phase 6.1.1)
-✅ Prevents memory overgrowth
-✅ Ensures stable queue size in long-running services
-
-
----
-
-## 4️⃣ Telemetry & Metrics (Prometheus)
+## 2️⃣ Telemetry & Metrics (Prometheus)
 
 Records adapter latency and success metrics, then exports them in Prometheus format.
 
@@ -126,7 +72,7 @@ adapter_success_total{adapter="redis"} 1
 
 ---
 
-## 5️⃣ Full Integration Example
+## 3️⃣ Full Integration Example
 
 A real-world integration showing **connection → fallback → recovery → telemetry → logging**.
 
