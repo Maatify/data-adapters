@@ -963,35 +963,105 @@ Full details:
 
 ---
 
+# 🧱 Phase 11 — Multi-Profile MySQL Connections
 
-# 🧾 Testing & Verification Summary
+### 🎯 Goal
 
-| Layer               | Coverage | Status    |
-|---------------------|----------|-----------|
-| Core Interfaces     | 100 %    | ✅         |
-| Adapters            | 95 %     | ✅         |
-| Diagnostics         | 90 %     | ✅         |
-| Metrics             | 85 %     | ✅         |
-| Integration         | 85 %+    | ✅         |
-| Overall             | ≈ 90 %   | 🟢 Stable |
+Introduce **dynamic multi-profile MySQL support**, enabling isolated configurations per profile using routes such as:
+
+```
+mysql.main
+mysql.logs
+mysql.analytics
+mysql.<custom>
+```
+
+This phase adds a unified configuration builder for MySQL and extends full DSN/legacy compatibility across all profiles.
 
 ---
 
-# 📜 Changelog Summary (v1.0.0)
+### ✅ Key Additions
 
-| Phase | Title             | Key Additions                         |
-|-------|-------------------|---------------------------------------|
-| 1     | Environment Setup | Composer, CI, Docker                  |
-| 2     | Core Interfaces   | AdapterInterface, BaseAdapter         |
-| 3     | Implementations   | Redis, Predis, Mongo, MySQL           |
-| 4     | Diagnostics       | Health checks, failover log           |
-| 4.1   | Hybrid Logging    | Env-aware log paths                   |
-| 4.2   | DI Logger         | AdapterLoggerInterface                |
-| 5     | Integration       | Unified adapter testing               |
-| 7     | Telemetry         | Prometheus metrics                    |
-| 8     | Release           | Docs + Packagist                      |
-| 9     | Remove Fallback   | Remove Fallback                       |
-| 10    | DSN Support       | Unified DSN parsing + profile routing |
+* Added **`MySqlConfigBuilder`** as the centralized resolver for all MySQL profiles.
+
+* Enabled **dynamic unlimited profile names** (not limited to `main`, `logs`, `analytics`).
+
+* Updated both MySQL adapters (`MySQLAdapter`, `MySQLDbalAdapter`) to:
+
+    * Override `resolveConfig()`
+    * Merge `BaseAdapter` config + Builder config
+    * Apply strict **DSN → builder → legacy** priority
+
+* Added string-route support in resolver:
+
+  ```
+  mysql.main
+  mysql.logs
+  mysql.billing
+  mysql.reporting
+  ```
+
+* Added full PHPUnit suite for:
+
+    * DSN overrides
+    * Legacy fallback
+    * Dynamic profiles
+    * Doctrine DSN parsing
+    * DBAL adapter profile resolution
+
+---
+
+### 💡 Highlights
+
+* Fully dynamic profile handling — no hardcoded list.
+* Perfect DSN-first logic across all MySQL adapters.
+* Centralized MySQL config logic → easier maintenance.
+* Zero impact on Redis/Mongo adapters.
+* Full backward compatibility remains intact.
+* Foundation for:
+
+    * Phase 12 — Multi-profile MongoDB
+    * Phase 13 — Dynamic Registry
+
+---
+
+### 📁 Documentation
+
+Full details:
+`/docs/phases/README.phase11.md`
+
+---
+
+
+# 🧾 Testing & Verification Summary (Updated After Phase 11)
+
+| Layer           | Coverage | Status    |
+|-----------------|----------|-----------|
+| Core Interfaces | 100 %    | ✅ Stable  |
+| Adapters        | 96 %     | ✅ Stable  |
+| Diagnostics     | 90 %     | ✅ Stable  |
+| Metrics         | 85 %     | ✅ Stable  |
+| Integration     | 87 %     | ✅ Stable  |
+| Overall         | ≈ 91 %   | 🟢 Stable |
+
+---
+
+# 📜 Changelog Summary (v1.0.0 → v1.1.0)
+
+| Phase  | Title                   | Key Additions                                               |
+|--------|-------------------------|-------------------------------------------------------------|
+| 1      | Environment Setup       | Composer, CI, Docker                                        |
+| 2      | Core Interfaces         | AdapterInterface, BaseAdapter                               |
+| 3      | Implementations         | Redis, Predis, Mongo, MySQL                                 |
+| 4      | Diagnostics             | Health checks, failover log                                 |
+| 4.1    | Hybrid Logging          | Env-aware log paths                                         |
+| 4.2    | DI Logger               | AdapterLoggerInterface                                      |
+| 5      | Integration             | Unified adapter testing                                     |
+| 7      | Telemetry               | Prometheus metrics                                          |
+| 8      | Release                 | Docs + Packagist                                            |
+| 9      | Remove Fallback         | Removal of fallback system (Redis Predis auto mode removed) |
+| 10     | DSN Support             | Full DSN parsing + profile routing for all adapters         |
+| **11** | **Multi-Profile MySQL** | Dynamic MySQL profiles + unified MySQLConfigBuilder         |
 
 ---
 
@@ -1031,11 +1101,12 @@ echo $adapter->get('key'); // maatify
 | 8     | ✅      | Documentation & Release      |
 | 9     | ✅      | Remove Fallback              |
 | 10    | ✅      | DSN Support for All Adapters |
+| 11    | ✅      | Multi-Profile MySQL Support  |
 ---
 
 # 🪄 Final Result
 
-✅ All eight phases completed.  
+✅ All eleven phases completed.  
 ✅ Documentation fully generated.  
 ✅ Version 1.0.0 tagged and ready for Packagist.
 

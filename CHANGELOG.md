@@ -12,6 +12,23 @@ All notable changes to this project will be documented in this file.
 **Release Date:** 2025-11-12  
 
 ---
+## [1.1.0] — 2025-11-14
+### Phase 11 — Multi-Profile MySQL Resolution
+### Added
+- `MySqlConfigBuilder` for centralized MySQL config.
+- Support for dynamic profiles (`mysql.reporting`, `mysql.billing`, etc.).
+- Full DSN priority handling (PDO DSN + Doctrine URL DSN).
+- New test suite: `MysqlProfileResolverTest`.
+
+### Changed
+- `MySQLAdapter` now overrides `resolveConfig()` to merge builder + BaseAdapter.
+- `MySQLDbalAdapter` now uses builder for consistent profile resolution.
+
+### Notes
+- Backward compatible with all previous env formats.
+- Redis and Mongo remain unchanged.
+
+---
 
 ## [1.1.0] — 2025-11-13
 ### 🚀 Phase 10 — Multi-Profile MySQL Connections

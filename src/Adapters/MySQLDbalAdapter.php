@@ -17,69 +17,80 @@ namespace Maatify\DataAdapters\Adapters;
 
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
+use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\Common\Enums\ConnectionTypeEnum;
 use Maatify\DataAdapters\Core\BaseAdapter;
+use Maatify\DataAdapters\Core\Config\MySqlConfigBuilder;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 use Throwable;
 
 final class MySQLDbalAdapter extends BaseAdapter
 {
+    protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
+    {
+        $legacy = parent::resolveConfig($type);
+
+        $builder = new MySqlConfigBuilder($this->config);
+        $mysql   = $builder->build($this->profile ?? 'main');
+
+        return new ConnectionConfigDTO(
+            dsn:      $mysql->dsn      ?? $legacy->dsn,
+            host:     $mysql->host     ?? $legacy->host,
+            port:     $mysql->port     ?? $legacy->port,
+            user:     $legacy->user,
+            pass:     $legacy->pass,
+            database: $mysql->database ?? $legacy->database,
+            options:  $legacy->options,
+            driver:   'dbal',
+            profile:  $legacy->profile
+        );
+    }
+
     public function connect(): void
     {
         $cfg = $this->resolveConfig(ConnectionTypeEnum::MYSQL);
 
         try {
-            // =====================================================
-            // 1) DSN MODE
-            // =====================================================
-            if ($cfg->dsn) {
-
-                // Case A: Doctrine-style URL (mysql://...)
-                if (str_starts_with($cfg->dsn, 'mysql://')) {
-                    $params = [
-                        'url'    => $cfg->dsn,
-                        'driver' => 'pdo_mysql',
-                    ];
-
-                } else {
-                    // Case B: PDO-style DSN (official format we support)
-                    // Convert "mysql:host=...;dbname=..." → array parts
-                    $dsn = str_replace('mysql:', '', $cfg->dsn);
-                    $dsn = str_replace(';', '&', $dsn);
-
-                    parse_str($dsn, $pdo);
-
-                    $params = [
-                        'host'     => $pdo['host']     ?? $cfg->host,
-                        'port'     => isset($pdo['port']) ? (int)$pdo['port'] : (int)$cfg->port,
-                        'dbname'   => $pdo['dbname']   ?? $cfg->database,
-                        'user'     => $cfg->user,
-                        'password' => $cfg->pass,
-                        'driver'   => 'pdo_mysql',
-                        'charset'  => $pdo['charset']  ?? 'utf8mb4',
-                    ];
-                }
-
-            } else {
-                // =====================================================
-                // 2) LEGACY MODE (HOST / PORT / USER / PASS)
-                // =====================================================
+            // Doctrine URL DSN
+            if ($cfg->dsn && str_starts_with($cfg->dsn, 'mysql://')) {
                 $params = [
+                    'url'    => $cfg->dsn,
+                    'driver' => 'pdo_mysql',
+                ];
+            }
+            // PDO-style DSN
+            elseif ($cfg->dsn) {
+                $dnsBody = str_replace('mysql:', '', $cfg->dsn);
+                $dnsBody = str_replace(';', '&', $dnsBody);
+
+                parse_str($dnsBody, $pdo);
+
+                $params = [
+                    'host'     => $pdo['host'] ?? $cfg->host,
+                    'port'     => isset($pdo['port']) ? (int)$pdo['port'] : (int)$cfg->port,
+                    'dbname'   => $pdo['dbname'] ?? $cfg->database,
+                    'user'     => $cfg->user,
+                    'password' => $cfg->pass,
+                    'driver'   => 'pdo_mysql',
+                    'charset'  => 'utf8mb4',
+                ];
+            }
+            // legacy
+            else {
+                $params = [
+                    'host'     => $cfg->host,
+                    'port'     => (int)$cfg->port,
                     'dbname'   => $cfg->database,
                     'user'     => $cfg->user,
                     'password' => $cfg->pass,
-                    'host'     => $cfg->host,
-                    'port'     => (int)$cfg->port,
                     'driver'   => 'pdo_mysql',
                     'charset'  => 'utf8mb4',
                 ];
             }
 
-            // Create DBAL connection
             $this->connection = DriverManager::getConnection($params, new Configuration());
-
-            // Validate connection
             $this->connection->executeQuery('SELECT 1');
+
             $this->connected = $this->connection->isConnected();
 
         } catch (Throwable $e) {
@@ -90,7 +101,7 @@ final class MySQLDbalAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            return (int)$this->connection->executeQuery('SELECT 1')->fetchOne() === 1;
+            return (int)$this->connection?->executeQuery('SELECT 1')->fetchOne() === 1;
         } catch (Throwable) {
             return false;
         }

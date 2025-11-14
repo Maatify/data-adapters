@@ -20,7 +20,6 @@ use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\Common\Enums\ConnectionTypeEnum;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 
-
 abstract class BaseAdapter implements AdapterInterface
 {
     protected bool $connected = false;
@@ -39,33 +38,6 @@ abstract class BaseAdapter implements AdapterInterface
     /**
      * Resolve connection config (DSN-first strategy).
      */
-/*    protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
-    {
-        // 1 — Try DSN
-        $dsnKey = strtoupper($type->value . ($this->profile ? "_{$this->profile}" : "") . "_DSN");
-        $dsnVal = $this->config->get($dsnKey);
-
-        if ($dsnVal) {
-            return new ConnectionConfigDTO(
-                dsn: $dsnVal,
-                user: $this->config->get($type->envPrefix() . '_USER'),
-                pass: $this->config->get($type->envPrefix() . '_PASS'),
-                database: $this->config->get($type->envPrefix() . '_DB'),
-                profile: $this->profile
-            );
-        }
-
-        // 2 — Legacy env fallback
-        return new ConnectionConfigDTO(
-            dsn: null,
-            host: $this->config->get($type->envPrefix() . '_HOST'),
-            port: $this->config->get($type->envPrefix() . '_PORT'),
-            user: $this->config->get($type->envPrefix() . '_USER'),
-            pass: $this->config->get($type->envPrefix() . '_PASS'),
-            database: $this->config->get($type->envPrefix() . '_DB'),
-            profile: $this->profile
-        );
-    }*/
     protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
     {
         // -------------------------------

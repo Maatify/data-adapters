@@ -69,22 +69,25 @@ Optional auto-wiring available via **maatify/bootstrap**.
 ```php
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 
 $config   = new EnvironmentConfig(__DIR__);
 $resolver = new DatabaseResolver($config);
 
-// MySQL (default or profile)
-$mysql = $resolver->resolve("mysql.main");
-$mysql->connect();
+// MySQL — default or profile-based routing
+$mainDb     = $resolver->resolve("mysql.main", autoConnect: true);
+$logsDb     = $resolver->resolve("mysql.logs");
+$analyticsDb = $resolver->resolve("mysql.analytics");
+
+// Dynamic custom profiles (Phase 11)
+$billingDb  = $resolver->resolve("mysql.billing");
 
 // Redis
-$redis = $resolver->resolve("redis");
-$redis->connect();
+$redis = $resolver->resolve("redis", autoConnect: true);
 
 // MongoDB
-$mongo = $resolver->resolve("mongo");
+$mongo = $resolver->resolve("mongo.main");
 $mongo->connect();
+
 ```
 
 ---

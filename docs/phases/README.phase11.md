@@ -1,235 +1,239 @@
-# 🧱 Phase 11 — Dynamic Database Registry (JSON Config)
+# 🚀 Phase 11 — Multi-Profile MySQL Connections
 
-**Version:** 1.1.0  
-**Base Version:** 1.0.0  
-**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
-**Project:** maatify/data-adapters  
-**Date:** 2025-11-12
-
----
-
-## 🎯 Goal
-
-Introduce a **dynamic JSON-based database registry** that allows multiple database
-profiles (MySQL, MongoDB, Redis, etc.) to be defined in a single declarative file.  
-This phase generalizes the multi-profile environment model introduced in Phase 10
-and prepares the system for multi-tenant and containerized deployments.
+**Version:** 1.1.0
+**Module:** `maatify/data-adapters`
+**Status:** ✅ Completed
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))
+**Date:** 2025-11-14
 
 ---
 
-## 🧩 Key Objectives
+# 🎯 Goal
 
-| Objective                   | Description                                                                           |
-|:----------------------------|:--------------------------------------------------------------------------------------|
-| **Centralized Config File** | Support `config/databases.json` for managing all adapter connections.                 |
-| **Unified Schema**          | Define consistent JSON structure covering host, port, user, password, db, and driver. |
-| **Priority Hierarchy**      | Apply config precedence: Runtime JSON > `.env` > Default values.                      |
-| **Dynamic Loading**         | Allow new profiles to be added or reloaded at runtime.                                |
-| **Future-Ready Design**     | Enable expansion to Redis and Mongo profiles for multi-service setups.                |
+Enable **fully dynamic multi-profile MySQL configuration**, supporting routes such as:
 
----
+* `mysql.main`
+* `mysql.logs`
+* `mysql.analytics`
+* `mysql.reporting`
+* `mysql.<any-profile>` (A2 + Dynamic)
 
-## ⚙️ Implementation Plan
+Each profile must map automatically to its environment variables:
 
-### 1️⃣ Database Registry File
-
-`config/databases.json` example:
-
-```json
-{
-  "mysql": {
-    "main": {
-      "host": "127.0.0.1",
-      "port": 3306,
-      "user": "root",
-      "pass": "",
-      "db": "maatify_main",
-      "driver": "pdo"
-    },
-    "logs": {
-      "host": "127.0.0.1",
-      "port": 3306,
-      "user": "root",
-      "pass": "",
-      "db": "maatify_logs",
-      "driver": "pdo"
-    }
-  },
-  "mongo": {
-    "activity": {
-      "uri": "mongodb://127.0.0.1:27017/maatify_activity"
-    }
-  }
-}
-````
-
-> 🧠 Each top-level key matches an adapter type (mysql, mongo, redis…).
-> Nested objects define profiles under that adapter.
-
----
-
-### 2️⃣ Update `EnvironmentConfig`
-
-Add loader for registry file:
-
-```php
-public function loadDatabaseRegistry(string $path = __DIR__ . '/../../config/databases.json'): void
-{
-    if (is_file($path)) {
-        $content = file_get_contents($path);
-        $this->registry = json_decode($content, true) ?? [];
-    }
-}
+```
+MYSQL_MAIN_DSN
+MYSQL_LOGS_HOST
+MYSQL_ANALYTICS_DB
+MYSQL_REPORTING_USER
+MYSQL_<CUSTOM>_PASS
 ```
 
-Add new helper to retrieve settings dynamically:
+### Key objectives
+
+* 🧠 **DSN-first resolution**
+* 🔄 **Backward compatibility** with legacy `*_HOST`, `*_PORT`, `*_DB`, etc.
+* 🧩 **Profile isolation per adapter**
+* ⚙️ **Centralized configuration via MySqlConfigBuilder**
+* 🧪 **Comprehensive PHPUnit coverage**
+
+---
+
+# 🧩 Phase Scope
+
+### Introduced in this phase
+
+* ✅ `MySqlConfigBuilder` (new)
+* ✅ MySQL adapters now override `resolveConfig()`
+* ✅ Dynamic unlimited profile support
+* ✅ Centralized merging logic (Builder + BaseAdapter + DSN)
+* ✅ Full test suite for all profile variations
+
+### Outside the scope (future phases)
+
+* ❌ MongoDB profile support → **Phase 12**
+* ❌ Dynamic registry → **Phase 13**
+
+---
+
+# 🏗️ Technical Design
+
+## 1) MySQL Adapter Architecture
+
+Both MySQL adapters now override:
 
 ```php
-public function getDatabaseConfig(string $adapter, string $profile = 'main'): ?array
-{
-    if (isset($this->registry[$adapter][$profile])) {
-        return $this->registry[$adapter][$profile];
-    }
-    // fallback to environment-based method (Phase 10)
-    if ($adapter === 'mysql') {
-        return $this->getMySQLConfig($profile);
-    }
-    return null;
-}
+protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
+```
+
+Resolution steps:
+
+1. BaseAdapter builds legacy configuration (`mysql`, `mysql.main`, etc.)
+2. `MySqlConfigBuilder` builds DSN-aware profile configuration
+3. Builder overrides BaseAdapter
+4. DSN overrides everything (highest priority)
+5. Result = unified `ConnectionConfigDTO`
+
+---
+
+## 2) Dynamic Profile Resolution
+
+Profiles are **not limited** to `main/logs/analytics`.
+
+Example:
+
+```
+mysql.billing
+mysql.reporting
+mysql.admin
+```
+
+Automatically mapped to:
+
+```
+MYSQL_BILLING_HOST
+MYSQL_ADMIN_DSN
+MYSQL_REPORTING_DB
+MYSQL_REPORTING_USER
+```
+
+No registration, no enum, no static list → **fully dynamic**.
+
+---
+
+## 3) DSN Priority
+
+Supported formats:
+
+### ① PDO-Style DSN
+
+```
+mysql:host=1.2.3.4;dbname=test;port=3310;charset=utf8mb4
+```
+
+### ② Doctrine-Style URL
+
+```
+mysql://user:pass@10.0.0.5:3307/logsdb
+```
+
+### ③ Legacy Variables
+
+```
+MYSQL_LOGS_HOST
+MYSQL_LOGS_PORT
+MYSQL_LOGS_DB
+MYSQL_LOGS_USER
+MYSQL_LOGS_PASS
+```
+
+Priority:
+
+```
+DSN → Builder → Legacy
 ```
 
 ---
 
-### 3️⃣ DatabaseResolver Integration
+## 4) Affected Components
 
-Extend `resolve()` to use registry first:
+| File / Component     | Change                      |
+|----------------------|-----------------------------|
+| `MySqlConfigBuilder` | ✅ New class                 |
+| `MySQLAdapter`       | 🔄 Uses builder & merges    |
+| `MySQLDbalAdapter`   | 🔄 Same unified config path |
+| `BaseAdapter`        | ❌ Unchanged                 |
+| `EnvironmentConfig`  | ❌ Unchanged                 |
+| Tests                | ✅ New test suite            |
 
-```php
-public function resolve(string $type): AdapterInterface
-{
-    [$adapter, $profile] = explode('.', $type) + [null, 'main'];
-    $config = $this->envConfig->getDatabaseConfig($adapter, $profile);
+---
 
-    return match ($adapter) {
-        'mysql' => new MySQLAdapter($config),
-        'mongo' => new MongoAdapter($config),
-        'redis' => new RedisAdapter($config),
-        default  => throw new InvalidArgumentException("Unsupported adapter: $adapter"),
-    };
-}
+# 🧪 Testing
+
+### Test Suite:
+
+`tests/MySQL/MysqlProfileResolverTest.php`
+
+### Verified Scenarios:
+
+| Scenario                                      | Status |
+|-----------------------------------------------|--------|
+| DSN overrides all other variables             | ✅      |
+| Dynamic profiles (`mysql.reporting`) work     | ✅      |
+| Doctrine DSN parsing                          | ✅      |
+| Legacy-only env still supported               | ✅      |
+| Builder merging with BaseAdapter              | ✅      |
+| DBAL adapter uses builder correctly           | ✅      |
+| Unknown/unregistered profiles behave properly | ✅      |
+
+### Environment:
+
+```
+APP_ENV=testing
 ```
 
----
-
-### 4️⃣ Priority Resolution Rules
-
-| Priority | Source                           | Description                              |
-|:---------|:---------------------------------|:-----------------------------------------|
-| 1️⃣      | `config/databases.json`          | Highest – registry-defined connections   |
-| 2️⃣      | `.env` prefixed (`MYSQL_MAIN_*`) | Fallback for environment-scoped configs  |
-| 3️⃣      | Defaults                         | Safe internal defaults for local testing |
+All tests passed.
 
 ---
 
-### 5️⃣ Dynamic Reloading (optional)
+# 📝 Example Usage
 
-Add runtime reload method:
+## 1️⃣ Resolver
 
 ```php
-$config->loadDatabaseRegistry('/path/to/databases.json');
-```
-
-Allows refreshing configuration without restarting the app.
-
----
-
-## 🧠 Design Highlights
-
-| Feature                         | Description                                                        |
-|:--------------------------------|:-------------------------------------------------------------------|
-| **Declarative Config**          | Enables portable configuration per environment (dev, stage, prod). |
-| **Multi-Adapter Support**       | Structure can extend beyond MySQL to Mongo, Redis, etc.            |
-| **Reload-Safe**                 | Non-breaking design—runtime refresh supported.                     |
-| **Foundation for Multi-Tenant** | Simplifies mapping tenant → database dynamically.                  |
-
----
-
-## 🧪 Testing & Validation
-
-| Test                           | Description                                    | Expected Result |
-|:-------------------------------|:-----------------------------------------------|:----------------|
-| `DatabaseRegistryLoadTest`     | Verifies JSON parsing and key lookup           | ✅               |
-| `DatabaseResolverPriorityTest` | Confirms JSON > .env > default hierarchy       | ✅               |
-| `DynamicReloadTest`            | Validates runtime reloading of config          | ✅               |
-| `MultiAdapterResolutionTest`   | Ensures MySQL/Mongo adapters resolve correctly | ✅               |
-
-**Coverage Target:** ≥ 90 %
-**Integration Verified:** Works with maatify/bootstrap DI container.
-
----
-
-## 📘 Example Usage
-
-```php
-use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Core\DatabaseResolver;
-
-$config = new EnvironmentConfig(__DIR__);
-$config->loadDatabaseRegistry(__DIR__ . '/config/databases.json');
-
 $resolver = new DatabaseResolver($config);
 
-$mainDb  = $resolver->resolve('mysql.main');
-$logsDb  = $resolver->resolve('mysql.logs');
-$activity = $resolver->resolve('mongo.activity');
+$logsDb = $resolver->resolve('mysql.logs', autoConnect: true);
+```
+
+## 2️⃣ .env Example
+
+```env
+MYSQL_LOGS_DSN=mysql:host=10.0.0.10;dbname=logs
+
+MYSQL_REPORTING_HOST=192.168.22.5
+MYSQL_REPORTING_USER=report
+MYSQL_REPORTING_PASS=secret
+MYSQL_REPORTING_DB=analytics_data
+```
+
+## 3️⃣ Direct Adapter
+
+```php
+$adapter = new MySQLAdapter($config, profile: 'reporting');
+$adapter->connect();
 ```
 
 ---
 
-## 🧱 Architecture Overview
+# ✔ Summary
 
-```
-src/
- ├─ Core/
- │   ├─ EnvironmentConfig.php
- │   ├─ DatabaseResolver.php
- │   └─ Exceptions/
- │       └─ InvalidArgumentException.php
-config/
- └─ databases.json
-tests/
- ├─ DatabaseRegistryLoadTest.php
- ├─ DatabaseResolverPriorityTest.php
- ├─ DynamicReloadTest.php
- └─ MultiAdapterResolutionTest.php
-docs/phases/
- └─ README.phase11.md
-```
+Phase 11 delivers:
+
+* 🔥 Fully dynamic multi-profile MySQL connections
+* 🧠 DSN-aware centralized configuration
+* 🛠 Robust backward compatibility
+* 🧪 90%+ coverage for all MySQL profile modes
+* 🧰 Standardized config path preparing for Phase 12 (Mongo)
+
+This phase completes the MySQL configuration system and sets the foundation for the next two phases of the architecture roadmap.
 
 ---
 
-## 🧩 Result Summary
+# 🧱 Phase Status
 
-| Outcome                                    | Description                           |
-|:-------------------------------------------|:--------------------------------------|
-| ✅ Registry-based configuration implemented | Supports multiple adapters & profiles |
-| ✅ Backward compatible                      | `.env` still works as fallback        |
-| ✅ Dynamic reload supported                 | Runtime refresh works                 |
-| 🚀 Ready for Phase 12                      | Documentation + Release v1.1.0        |
+| Phase | Title                           | Status      |
+| ----- | ------------------------------- | ----------- |
+| 10    | DSN Support for All Adapters    | ✅ Completed |
+| 11    | Multi-Profile MySQL Connections | ✅ Completed |
 
 ---
 
-## 🔗 Next Phase
+**© 2025 Maatify.dev**
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — [https://www.maatify.dev](https://www.maatify.dev)
 
-➡ **Phase 12 — Documentation & Release 1.1.0**
-Finalize examples, update README, bump version, and publish the new release to Packagist.
-
----
-
-**© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
-
-📘 Full documentation & source code:  
-https://github.com/Maatify/data-adapters
+📘 Full documentation & source code:
+[https://github.com/Maatify/data-adapters](https://github.com/Maatify/data-adapters)
 
 ---
+
+

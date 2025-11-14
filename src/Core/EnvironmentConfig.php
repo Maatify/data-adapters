@@ -14,10 +14,16 @@ namespace Maatify\DataAdapters\Core;
 
 use Exception;
 use Maatify\Bootstrap\Core\EnvironmentLoader;
+use Maatify\Common\DTO\ConnectionConfigDTO;
+use Maatify\DataAdapters\Core\Config\MySqlConfigBuilder;
+
 
 final readonly class EnvironmentConfig
 {
 
+    /**
+     * @throws Exception
+     */
     public function __construct(private string $root)
     {
         /**
@@ -58,5 +64,16 @@ final readonly class EnvironmentConfig
     public function all(): array
     {
         return $_ENV;
+    }
+
+    /**
+     * ------------------------------------------------------
+     * PHASE 11 — Unified MySQL Profile Resolution Entry Point
+     * ------------------------------------------------------
+     */
+    public function getMySQLConfig(?string $profile): ConnectionConfigDTO
+    {
+        $builder = new MySqlConfigBuilder($this);
+        return $builder->build($profile ?? 'main');
     }
 }
