@@ -67,26 +67,42 @@ Optional auto-wiring available via **maatify/bootstrap**.
 ## 🚀 Quick Usage
 
 ```php
+
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 
 $config   = new EnvironmentConfig(__DIR__);
 $resolver = new DatabaseResolver($config);
 
-// MySQL — default or profile-based routing
-$mainDb     = $resolver->resolve("mysql.main", autoConnect: true);
-$logsDb     = $resolver->resolve("mysql.logs");
+// ------------------------------------
+// 🟣 MySQL — Multi-Profile (Phase 11)
+// ------------------------------------
+$mainDb      = $resolver->resolve("mysql.main", autoConnect: true);
+$logsDb      = $resolver->resolve("mysql.logs");
 $analyticsDb = $resolver->resolve("mysql.analytics");
 
-// Dynamic custom profiles (Phase 11)
-$billingDb  = $resolver->resolve("mysql.billing");
+// Dynamic unlimited profiles (billing, reporting, etc.)
+$billingDb   = $resolver->resolve("mysql.billing");
 
-// Redis
+// ------------------------------------
+// 🔵 Redis — Auto Selection (phpredis → predis)
+// ------------------------------------
 $redis = $resolver->resolve("redis", autoConnect: true);
+$redis->getConnection()->set("key", "maatify");
 
-// MongoDB
-$mongo = $resolver->resolve("mongo.main");
-$mongo->connect();
+// ------------------------------------
+// 🟢 MongoDB — Multi-Profile (Phase 12)
+// ------------------------------------
+$mongoMain = $resolver->resolve("mongo.main", autoConnect: true);
+$mongoLogs = $resolver->resolve("mongo.logs");
+$mongoActivity = $resolver->resolve("mongo.activity");
+
+// Example: ping the database
+$client = $mongoMain->getConnection();
+$db     = $client->selectDatabase("admin");
+$ok     = $db->command(["ping" => 1])->toArray()[0]["ok"];
+
+echo $ok; // 1
 
 ```
 

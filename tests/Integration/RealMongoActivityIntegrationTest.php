@@ -61,7 +61,7 @@ final class RealMongoActivityIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // 🧩 Resolve the Mongo adapter
-        $mongo = $resolver->resolve("mongo");
+        $mongo = $resolver->resolve("mongo.main");
 
         // ✅ Establish actual connection
         $mongo->connect();

@@ -1,176 +1,170 @@
+# 📦 **maatify/data-adapters**
+
+## **Roadmap — Version 1.1.0 (Updated After Phase 12)**
+
 ![Maatify.dev](https://www.maatify.dev/assets/img/img/maatify_logo_white.svg)
 
 ---
-# 📦 maatify/data-adapters  
-## **Roadmap — Version 1.1.0**
 
-**Owner:** Maatify.dev  
-**Base Version:** 1.0.0  
-**Maintainer:** Mohamed Abdulalim (megyptm)  
-**Goal:** Extend the unified connectivity layer with DSN support, multi-profile database resolution, and dynamic registry configuration.
+**Owner:** Maatify.dev
+**Base Version:** 1.0.0
+**Maintainer:** Mohamed Abdulalim (megyptm)
+**Goal:** Extend the unified connectivity layer with DSN-first configuration, multi-profile database resolution, and optional dynamic registry.
 
 ---
 
 # 🚀 Overview
 
-Version **1.1.0** introduces a cleaner and more flexible configuration system across all adapters.  
-Major additions include:
+Version **1.1.0** now includes all major architectural improvements:
 
-- Full DSN support (MySQL, Redis, Mongo)
-- Multi-profile MySQL connections
-- Multi-profile Mongo connections
-- Optional dynamic JSON registry
-- Complete documentation + >90% test coverage
+* ✔ Full DSN support across all adapters (Phase 10)
+* ✔ MySQL multi-profile system with builder integration (Phase 11)
+* ✔ MongoDB multi-profile system with DSN parsing (Phase 12)
+* 🔄 Optional dynamic JSON registry (Phase 13 — planned)
+* 📚 Final documentation + release flow (Phase 14 — pending)
 
----
-
-# 🧩 **Phase 10 — DSN Support (NEW)**  
-### _Status: Planned — 0%_
-
-### 🎯 Goal  
-Enable first-class DSN support for all adapters, allowing projects to use single-line connection strings instead of multiple `.env` variables.
-
-### 🔧 Tasks
-- Add `EnvironmentConfig::getDsnConfig(type, profile)`
-- Support:
-  - `MYSQL_MAIN_DSN`, `MYSQL_LOGS_DSN`, `MYSQL_ANALYTICS_DSN`
-  - `MONGO_MAIN_DSN`, `REDIS_MAIN_DSN`
-- Merge DSN + username/password/options cleanly
-- Update `DatabaseResolver` to prioritize DSN
-- Add adapter-level DSN parsing for MySQL/Mongo/Redis
-- Implement `TestDsnResolutionTest`
-- Create documentation: `README.phase10.md`
-
-### 📝 Notes  
-DSN support becomes the new preferred configuration method but remains fully backward-compatible.
+All core phases (10–12) are now **fully completed**.
 
 ---
 
-# 🧩 **Phase 11 — Multi-Profile MySQL Connections**  
-### _Status: Planned — 0%_
+# 🧩 **Phase 10 — DSN Support (COMPLETED)**
 
-### 🎯 Goal  
-Introduce profile-based database resolution such as:
+### *Status: ✅ Completed — 100%*
+
+### 🎯 Goal
+
+Introduce DSN-first configuration across MySQL, MongoDB, and Redis with full backward compatibility.
+
+### ✔ Completed Work
+
+* Added `getDsnConfig()` to EnvironmentConfig
+* DSN variables supported:
+
+    * `MYSQL_*_DSN`
+    * `MONGO_*_DSN`
+    * `REDIS_*_DSN`
+* DSN parsing for all adapters
+* Resolver updated for DSN-priority workflow
+* Added DSN test suite
+* New documentation: `README.phase10.md`
+
+---
+
+# 🧩 **Phase 11 — Multi-Profile MySQL (COMPLETED)**
+
+### *Status: ✅ Completed — 100%*
+
+### 🎯 Goal
+
+Enable unlimited MySQL profiles such as:
 
 ```
-
 mysql.main
 mysql.logs
 mysql.analytics
-
+mysql.billing
+mysql.<custom>
 ```
 
-### 🔧 Tasks
-- Add `EnvironmentConfig::getMySQLConfig(profile)`
-- Support prefixed variables:
-  - `MYSQL_MAIN_*`, `MYSQL_LOGS_*`, `MYSQL_ANALYTICS_*`
-  - `MYSQL_MAIN_DSN`, etc.
-- Update resolver to support `mysql.{profile}`
-- Cache adapters per profile
-- Add `MysqlProfileResolverTest`
-- Write `README.phase11.md`
+### ✔ Completed Work
 
-### 🔗 Dependencies  
-`phase10`
+* Implemented `MySqlConfigBuilder`
+* Added dynamic profile support: `MYSQL_<PROFILE>_*`
+* Overrode `resolveConfig()` inside `MySQLAdapter` + `MySQLDbalAdapter`
+* Merge priority: **DSN → builder → legacy**
+* Resolver now caches adapters per profile
+* Full test suite implemented
+* New documentation: `README.phase11.md`
 
 ---
 
-# 🧩 **Phase 12 — Multi-Profile MongoDB Support (NEW)**  
-### _Status: Planned — 0%_
+# 🧩 **Phase 12 — Multi-Profile MongoDB (COMPLETED)**
 
-### 🎯 Goal  
-Add support for multiple MongoDB connections:
+### *Status: ✅ Completed — 100%*
+
+### 🎯 Goal
+
+Add profile-aware MongoDB resolution identical to MySQL architecture:
 
 ```
-
 mongo.main
 mongo.logs
 mongo.activity
-
+mongo.events
+mongo.<custom>
 ```
 
-### 🔧 Tasks
-- Add `EnvironmentConfig::getMongoConfig(profile)`
-- Support:
-  - `MONGO_MAIN_*`, `MONGO_LOGS_*`, `MONGO_ACTIVITY_*`
-  - `MONGO_MAIN_DSN`, etc.
-- Update resolver to support `mongo.{profile}`
-- Cache Mongo adapters per profile
-- Add `MongoProfileResolverTest`
-- Document in `README.phase12.md`
+### ✔ Completed Work
 
-### 🔗 Dependencies  
-`phase10`
+* Added `MongoConfigBuilder`
+* DSN parsing for MongoDB (`mongodb://` and `mongodb+srv://`)
+* Overrode `resolveConfig()` in MongoAdapter to merge builder + legacy
+* Resolver caching for Mongo profiles
+* Full Mongo test suite
+* Documentation: `README.phase12.md`
 
 ---
 
-# 🧩 **Phase 13 — Dynamic JSON Registry (Optional)**  
-### _Status: Planned — 0%_
+# 🧩 **Phase 13 — Dynamic JSON Registry (Optional)**
 
-### 🎯 Goal  
-Enable configuration loading from:
+### *Status: ⏳ Planned — 0%*
 
-```
+### 🎯 Goal
 
-/config/databases.json
+Load connection profiles dynamically from JSON:
 
 ```
+config/databases.json
+```
 
-with runtime override priorities.
+With priority:
 
-### 🔧 Tasks
-- Add registry loader to `EnvironmentConfig`
-- Define JSON schema
-- Merge priority:
-  - JSON → DSN → ENV
-- Add runtime hot-reload flag
-- Add `RegistryConfigTest`
-- Document in `README.phase13.md`
+**JSON → DSN → ENV**
 
-### 🔗 Dependencies  
-`phase10`, `phase11`, `phase12`
+### 🔧 Planned Tasks
+
+* Registry loader
+* JSON schema
+* Merge strategy
+* Hot reload support
+* Registry tests
+* Documentation: `README.phase13.md`
 
 ---
 
-# 🧩 **Phase 14 — Documentation & Release 1.1.0**  
-### _Status: Pending — 0%_
+# 🧩 **Phase 14 — Documentation & Release 1.1.0**
 
-### 🎯 Goal  
-Finalize the release with unified docs, changelog, and Packagist publish.
+### *Status: 🟨 Pending — 0%*
 
-### 🔧 Tasks
-- Merge DSN, profiles, and registry docs into `docs/README.full.md`
-- Update `README.md` with new features
-- Add CHANGELOG entry for v1.1.0
-- Finalize tests (>90% coverage)
-- Tag and publish `v1.1.0` on Packagist
+### 🎯 Goal
 
-### 🔗 Dependencies  
-`phase10`, `phase11`, `phase12`, `phase13`
+Finalize all documentation and publish version **1.1.0**.
+
+### 🔧 Remaining Tasks
+
+* Consolidate all phase docs into `docs/README.full.md`
+* Update root README
+* Update CHANGELOG
+* Ensure >90% test coverage
+* Tag and publish 1.1.0 on Packagist
 
 ---
 
 # 🟦 Summary
 
-| Phase | Title                          | Status    |
-|-------|--------------------------------|-----------|
-| 10    | DSN Support                    | Planned   |
-| 11    | Multi-Profile MySQL            | Planned   |
-| 12    | Multi-Profile Mongo            | Planned   |
-| 13    | Dynamic JSON Registry          | Planned   |
-| 14    | Documentation & Release 1.1.0  | Pending   |
+| Phase | Title                         | Status      |
+|-------|-------------------------------|-------------|
+| 10    | DSN Support                   | ✅ Completed |
+| 11    | Multi-Profile MySQL           | ✅ Completed |
+| 12    | Multi-Profile MongoDB         | ✅ Completed |
+| 13    | Dynamic JSON Registry         | ⏳ Planned   |
+| 14    | Documentation & Release 1.1.0 | 🟨 Pending  |
+
 
 ---
 
-# 🧱 Ready for Execution  
-This roadmap is now stable and ready to be used for automated execution via the Maatify Project Executor.
-
----
-
-**© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
-
-📘 Full documentation & source code:  
-https://github.com/Maatify/data-adapters
+**© 2025 Maatify.dev**
+Engineered by **Mohamed Abdulalim (megyptm)** — [https://www.maatify.dev](https://www.maatify.dev)
+📘 Full source code: [https://github.com/Maatify/data-adapters](https://github.com/Maatify/data-adapters)
 
 ---

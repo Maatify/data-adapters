@@ -1,228 +1,130 @@
-# 🧱 Phase 12 — Documentation & Release v1.1.0
+# 🚀 Phase 12 — Multi-Profile MongoDB Support
 
-**Version:** 1.1.0  
-**Base Version:** 1.0.0  
-**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
-**Project:** maatify/data-adapters  
-**Date:** 2025-11-12
-
----
-
-## 🎯 Goal
-
-Finalize the **v1.1.0 release** of `maatify/data-adapters`, consolidating
-all enhancements introduced in Phases 9–11:
-
-* Persistent failover storage (SQLite / MySQL)
-* Multi-profile MySQL support
-* Dynamic configuration registry (JSON-based)
-
-This phase focuses on merging documentation, updating metadata,
-and publishing a stable release on **Packagist**.
+**Version:** 1.1.0
+**Module:** `maatify/data-adapters`
+**Status:** ✅ Completed
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))
+**Date:** 2025-11-14
 
 ---
 
-## 🧩 Key Objectives
-
-| Objective                            | Description                                                                                                    |
-|:-------------------------------------|:---------------------------------------------------------------------------------------------------------------|
-| **Documentation Consolidation**      | Merge all per-phase docs into `/docs/README.full.md` with cross-links and examples.                            |
-| **Release Notes**                    | Add detailed `CHANGELOG.md` entry for version `v1.1.0`.                                                        |
-| **Public README Update**             | Reflect new persistent failover, multi-profile, and dynamic config features.                                   |
-| **Composer Metadata Update**         | Add keywords and description relevant to new functionality.                                                    |
-| **Testing & Coverage**               | Ensure total coverage ≥ 90% for all new adapters and helpers.                                                  |
-| **Version Tagging & Packagist Sync** | Tag `v1.1.0` and verify availability on [Packagist.org](https://packagist.org/packages/maatify/data-adapters). |
+# 🎯 Goal
+Add full profile-based MongoDB configuration and DSN support identical to MySQL’s Phase 11 architecture, while preserving backward compatibility and without modifying EnvironmentConfig.
 
 ---
 
-## ⚙️ Implementation Plan
+# 🧩 Phase Scope
+This phase introduces:
+- Profile-aware MongoDB routing: `mongo.main`, `mongo.logs`, `mongo.activity`
+- DSN-first configuration with automatic parsing
+- New `MongoConfigBuilder` to extract host/port/database from DSN
+- Adapter-level merge logic identical to MySQLAdapter
+- Per-profile MongoAdapter caching inside DatabaseResolver
+- New PHPUnit test suite for profile resolution
+- Documentation for profile usage and DSN examples
 
-### 1️⃣ Documentation Merge
+---
 
-Merge all sub-phase documentation into a single file:
+# 🏗️ Technical Design
 
-```bash
-cat docs/phases/README.phase9.md \
-    docs/phases/README.phase10.md \
-    docs/phases/README.phase11.md \
-    >> docs/README.full.md
+### ✔ BaseAdapter
+- Already resolves environment variables by profile prefix  
+- Already supports DSN-first strategy  
+- Must NOT be modified  
+
+### ✔ MongoConfigBuilder (new class)
+- Reads: `MONGO_<PROFILE>_DSN`
+- Parses DSN into host/port/database
+- Returns empty DTO when DSN not found (so BaseAdapter legacy logic remains)
+
+### ✔ MongoAdapter (overrides resolveConfig)
+- Calls BaseAdapter resolver  
+- Calls MongoConfigBuilder  
+- Merges:  
+  - dsn → profile then legacy  
+  - host/port/database → profile then legacy  
+  - user/pass/options → always legacy  
+- Connects using fully merged config
+
+### ✔ DatabaseResolver
+- Adds caching for profile-based Mongo instances  
+- Supports string routing: `mongo.{profile}`  
+
+---
+
+# 🧪 Testing
+
+### Test Suite: `MongoProfileResolverTest`
+
+**Covers:**
+- DSN-based profile extraction  
+- `mongo.main` and `mongo.logs` configurations  
+- Profile independence  
+- Integration with DatabaseResolver  
+- Final merged config fields  
+
+Example test setup:
+```php
+$_ENV['MONGO_MAIN_DSN'] = 'mongodb://localhost:27017/main';
+$_ENV['MONGO_LOGS_DSN'] = 'mongodb://localhost:27017/logs';
 ````
 
-Add cross-references, new architecture diagrams, and examples.
-
 ---
 
-### 2️⃣ CHANGELOG.md Update
+# 📝 Example Usage
 
-```markdown
-## [1.1.0] — 2025-11-12
-### Added
-- Persistent FallbackQueue storage (SQLite / MySQL)
-- Multi-profile MySQL connections via EnvironmentConfig
-- Dynamic configuration registry from `config/databases.json`
-### Improved
-- RecoveryWorker auto-detects persistent fallback drivers
-- EnvironmentConfig now supports hierarchical resolution
-### Documentation
-- Added detailed phase docs for 9–11
-- Updated README.md and roadmap files
-### Compatibility
-- Fully backward compatible with v1.0.0
+### Profile-based resolution:
+
+```php
+$resolver = new DatabaseResolver(new EnvironmentConfig(__DIR__));
+
+$mongoMain = $resolver->resolve('mongo.main', autoConnect: true);
+$mongoLogs = $resolver->resolve('mongo.logs', autoConnect: true);
+```
+
+### DSN Example:
+
+```env
+MONGO_MAIN_DSN=mongodb://localhost:27017/maatify
+MONGO_LOGS_DSN=mongodb://localhost:27017/logs
+```
+
+### Resulting config:
+
+```php
+$cfg = $mongo->debugConfig();
+
+$cfg->database; // "logs"
+$cfg->host;     // "localhost"
+$cfg->port;     // "27017"
 ```
 
 ---
 
-### 3️⃣ Composer Metadata
+# ✔ Summary
 
-Update `composer.json`:
+Phase 12 successfully adds:
 
-```json
-{
-  "name": "maatify/data-adapters",
-  "description": "Unified Data Connectivity Layer with persistent failover, multi-profile MySQL, and dynamic JSON configuration registry.",
-  "keywords": [
-    "maatify",
-    "data-adapters",
-    "mysql",
-    "mongodb",
-    "redis",
-    "persistent-failover",
-    "fallback-queue",
-    "multi-profile",
-    "database-resolver",
-    "php-library"
-  ],
-  "version": "1.1.0"
-}
-```
+* Clean profile-based MongoDB resolution
+* DSN-first parsing with proper fallback
+* New builder: `MongoConfigBuilder`
+* Updated MongoAdapter merge logic
+* Resolver-level caching
+* Full test coverage
+* Zero BC breaks
 
 ---
 
-### 4️⃣ README.md Enhancements
-
-Add new sections:
-
-* “Persistent Failover Storage”
-* “Multi-Profile MySQL Connections”
-* “Dynamic Configuration Registry”
-
-Include practical `.env` + `databases.json` examples.
+# 🔚 End of Phase 12
 
 ---
 
-### 5️⃣ Testing Verification
+**© 2025 Maatify.dev**
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — [https://www.maatify.dev](https://www.maatify.dev)
 
-```bash
-vendor/bin/phpunit --coverage-text
-```
-
-**Target Coverage:** ≥ 90%
-**Status:** ✅ Passed (Unit + Integration + Fallback persistence tests)
+📘 Full documentation & source code:
+[https://github.com/Maatify/data-adapters](https://github.com/Maatify/data-adapters)
 
 ---
 
-### 6️⃣ Tag & Publish
 
-```bash
-git add .
-git commit -m "🔖 Release v1.1.0 — Persistent Failover, Multi-DB & Dynamic Registry"
-git tag -a v1.1.0 -m "maatify/data-adapters v1.1.0 stable release"
-git push origin main --tags
-```
-
-Then verify:
-
-* [Packagist Release](https://packagist.org/packages/maatify/data-adapters)
-* [GitHub CI Workflow](https://github.com/Maatify/data-adapters/actions)
-
----
-
-## 🧠 Design Highlights
-
-| Feature                         | Description                                                             |
-|:--------------------------------|:------------------------------------------------------------------------|
-| **Full Backward Compatibility** | v1.1.0 works seamlessly with v1.0.0 configurations.                     |
-| **No API Breakage**             | Existing adapters and resolver logic unchanged.                         |
-| **New Capabilities**            | Persistent fallback queue, per-profile MySQL, dynamic config.           |
-| **Future Ready**                | Foundation for v1.2.x — cross-adapter replication and telemetry alerts. |
-
----
-
-## 🧪 Validation Summary
-
-| Area                    | Coverage | Result                   |
-|:------------------------|:---------|:-------------------------|
-| Fallback (SQLite/MySQL) | 91%      | ✅                        |
-| Multi-Profile MySQL     | 93%      | ✅                        |
-| Dynamic Registry        | 90%      | ✅                        |
-| Total Test Suite        | 91.5%    | ✅ Passed                 |
-| CI/CD Pipeline          | ✔️       | Passed on GitHub Actions |
-
----
-
-## 🧱 Architecture Overview (v1.1.0)
-
-```
-src/
- ├─ Core/
- │   ├─ EnvironmentConfig.php
- │   ├─ DatabaseResolver.php
- │   └─ Exceptions/
- │       └─ InvalidArgumentException.php
- ├─ Fallback/
- │   ├─ Storage/
- │   │   ├─ MemoryFallbackStorage.php
- │   │   ├─ SqliteFallbackStorage.php
- │   │   └─ MysqlFallbackStorage.php
- │   ├─ FallbackQueue.php
- │   ├─ RecoveryWorker.php
- │   └─ FallbackQueuePruner.php
-config/
- └─ databases.json
-docs/
- ├─ README.full.md
- ├─ phases/
- │   ├─ README.phase9.md
- │   ├─ README.phase10.md
- │   ├─ README.phase11.md
- │   └─ README.phase12.md
-tests/
- ├─ Fallback/
- ├─ Core/
- ├─ Integration/
- └─ Registry/
-```
-
----
-
-## 📘 Result Summary
-
-| Outcome               | Description                                  |
-|:----------------------|:---------------------------------------------|
-| ✅ Persistent Failover | Stored fallback operations survive restarts  |
-| ✅ Multi-DB Support    | Multiple MySQL profiles resolved dynamically |
-| ✅ JSON Registry       | Declarative configuration supported          |
-| ✅ Docs Merged         | Full version documentation consolidated      |
-| ✅ Release Tagged      | v1.1.0 live on Packagist & GitHub            |
-
----
-
-## 🚀 Next Milestone
-
-### **v1.2.x — Cross-Adapter Replication & Observability Alerts**
-
-| Planned Feature             | Description                                          |
-|:----------------------------|:-----------------------------------------------------|
-| **Adapter Replication**     | Auto-sync data between Redis/MySQL clusters.         |
-| **Telemetry Alerts**        | Real-time error alerts via maatify/psr-logger hooks. |
-| **Auto-Healing Mechanisms** | Self-recovery for transient adapter failures.        |
-
----
-
-**© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
-
-📘 Full documentation & source code:  
-https://github.com/Maatify/data-adapters
-
----

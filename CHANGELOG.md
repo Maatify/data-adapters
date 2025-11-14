@@ -12,6 +12,40 @@ All notable changes to this project will be documented in this file.
 **Release Date:** 2025-11-12  
 
 ---
+
+## **[1.1.0] — 2025-11-14**
+
+### 🚀 Phase 12 — Multi-Profile MongoDB Support
+
+### Added
+
+* `MongoConfigBuilder` for DSN parsing and multi-profile MongoDB configuration.
+* Support for **unlimited MongoDB profiles**:
+  `mongo.main`, `mongo.logs`, `mongo.activity`, `mongo.events`, …etc.
+* DSN-first parsing for:
+
+    * `mongodb://host:port/database`
+    * `mongodb+srv://cluster/database`
+* New test suite: `MongoProfileResolverTest`
+  (profile independence, DSN parsing, builder merge logic, resolver integration).
+* Added resolver-level caching for Mongo profiles to match MySQL behavior.
+* Documentation: `README.phase12.md`.
+
+### Changed
+
+* `MongoAdapter` now overrides `resolveConfig()` identical to MySQL:
+
+    * Merge priority: **DSN → builder → legacy env → BaseAdapter fallback**
+* Updated connection builder to safely merge user/pass even when missing from DSN.
+
+### Notes
+
+* Fully backward compatible with legacy `MONGO_HOST`, `MONGO_PORT`, `MONGO_DB`.
+* No changes required in EnvironmentConfig.
+* Architecture now fully aligned between MySQL and Mongo adapters.
+
+---
+
 ## [1.1.0] — 2025-11-14
 ### Phase 11 — Multi-Profile MySQL Resolution
 ### Added

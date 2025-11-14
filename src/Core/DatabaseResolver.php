@@ -17,9 +17,12 @@ use Maatify\Common\Contracts\Adapter\AdapterInterface;
 use Maatify\DataAdapters\Adapters\MongoAdapter;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 
-final readonly class DatabaseResolver
+final class DatabaseResolver
 {
-    public function __construct(private EnvironmentConfig $config) {}
+    private array $mongoCache = [];
+    public function __construct(
+        private readonly EnvironmentConfig $config
+    ) {}
 
     /**
      * Resolve adapter using string routing:
@@ -68,7 +71,10 @@ final readonly class DatabaseResolver
 
     private function makeMongo(?string $profile = null): AdapterInterface
     {
-        return new MongoAdapter($this->config, $profile);
+        $key = $profile ?? 'main';
+
+        return $this->mongoCache[$key]
+            ??= new MongoAdapter($this->config, $key);
     }
 
     private function makeMySQL(?string $profile = null): AdapterInterface

@@ -13,41 +13,88 @@
 
 declare(strict_types=1);
 
-namespace Maatify\DataAdapters\Adapters;
-
+namespace Maatify\DataAdapters\Adapters;use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\Common\Enums\ConnectionTypeEnum;
 use Maatify\DataAdapters\Core\BaseAdapter;
+use Maatify\DataAdapters\Core\Config\MongoConfigBuilder;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 use MongoDB\Client;
 use Throwable;
 
 final class MongoAdapter extends BaseAdapter
 {
+    /**
+     * Phase 12 override:
+     * Combine BaseAdapter legacy config with profile DSN parsing.
+     */
+    protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
+    {
+        $legacy  = parent::resolveConfig($type);
+
+        $builder = new MongoConfigBuilder($this->config);
+        $profile = $this->profile ?? 'main';
+        $mongo   = $builder->build($profile);
+
+        // Merge DSN-first, identical to MySQLAdapter pattern
+        return new ConnectionConfigDTO(
+            dsn     : $mongo->dsn      ?? $legacy->dsn,
+            host    : $mongo->host     ?? $legacy->host,
+            port    : $mongo->port     ?? $legacy->port,
+            user    : $legacy->user,
+            pass    : $legacy->pass,
+            database: $mongo->database ?? $legacy->database,
+            options : $legacy->options,
+            driver  : 'mongo',
+            profile : $profile
+        );
+    }
+
     public function connect(): void
     {
         $cfg = $this->resolveConfig(ConnectionTypeEnum::MONGO);
 
         try {
+            // -----------------------------------
+            // 1) DSN MODE
+            // -----------------------------------
             if ($cfg->dsn) {
                 $dsn = $cfg->dsn;
                 $options = [];
-            } else {
-                // legacy
+            }
+
+            // -----------------------------------
+            // 2) LEGACY MODE (ENV-driven fallback)
+            // -----------------------------------
+            else {
+                // Profile → Base → Safe Defaults
+                $host = $cfg->host
+                        ?? $this->config->get('MONGO_HOST')
+                           ?? '127.0.0.1';
+
+                $port = $cfg->port
+                        ?? $this->config->get('MONGO_PORT')
+                           ?? '27017';
+
+                $database = $cfg->database
+                            ?? $this->config->get('MONGO_DB')
+                               ?? 'admin';
+
                 $dsn = sprintf(
                     'mongodb://%s:%s/%s',
-                    $cfg->host,
-                    $cfg->port,
-                    $cfg->database ?? 'admin'
+                    $host,
+                    $port,
+                    $database
                 );
 
+                // user/pass: profile → base
                 $options = [
-                    'username' => $cfg->user,
-                    'password' => $cfg->pass,
+                    'username' => $cfg->user ?? $this->config->get('MONGO_USER'),
+                    'password' => $cfg->pass ?? $this->config->get('MONGO_PASS'),
                 ];
             }
 
             $this->connection = new Client($dsn, $options);
-            $this->connected = true;
+            $this->connected  = true;
 
         } catch (Throwable $e) {
             throw new ConnectionException("Mongo connection failed: " . $e->getMessage());
@@ -57,9 +104,13 @@ final class MongoAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            $db = $this->connection->selectDatabase($this->config->get('MONGO_DB', 'admin'));
+            $db = $this->connection->selectDatabase(
+                $this->config->get('MONGO_DB', 'admin')
+            );
+
             $db->command(['ping' => 1]);
             return true;
+
         } catch (Throwable) {
             return false;
         }
