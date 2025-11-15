@@ -74,11 +74,25 @@ final class RedisAdapter extends BaseAdapter
                 $parts = parse_url($cfg->dsn);
 
                 if ($parts !== false) {
-                    // 🔍 Override missing fields ONLY
-                    $cfg->host = $parts['host'] ?? $cfg->host;
-                    $cfg->port = $parts['port'] ?? $cfg->port;
-                    $cfg->pass = $parts['pass'] ?? $cfg->pass;
-                    $cfg->user = $parts['user'] ?? $cfg->user;
+                    // 🔍 Override missing host
+                    if (isset($parts['host'])) {
+                        $cfg->host = $parts['host'];
+                    }
+
+                    // 🔍 Override missing port (normalize to string)
+                    if (isset($parts['port'])) {
+                        $cfg->port = (string)$parts['port'];
+                    }
+
+                    // 🔍 Override missing password
+                    if (isset($parts['pass'])) {
+                        $cfg->pass = $parts['pass'];
+                    }
+
+                    // 🔍 Override missing username
+                    if (isset($parts['user'])) {
+                        $cfg->user = $parts['user'];
+                    }
                 }
             }
 
