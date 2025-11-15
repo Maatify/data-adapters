@@ -89,9 +89,13 @@ final readonly class EnvironmentConfig
      */
     public function get(string $key, ?string $default = null): ?string
     {
-        if (!empty($_ENV) && array_key_exists('APP_ENV', $_ENV) && $_ENV['APP_ENV'] === 'testing') {
-            // In tests: ONLY use $_ENV
-            return $_ENV[$key] ?? $default;
+        // 🧪 If test but key was injected via putenv() in real integration test
+        if (($_ENV['APP_ENV'] ?? null) === 'testing') {
+            $fromEnv = getenv($key);
+            if ($fromEnv !== false) {
+                return $fromEnv; // ← REAL TEST should see this
+            }
+            return $_ENV[$key] ?? $default; // ← MOCK TEST should see this
         }
 
         // Highest priority → $_ENV (test overrides, runtime overrides)
