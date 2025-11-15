@@ -72,7 +72,7 @@ final class MySQLAdapter extends BaseAdapter
 
         // 🧩 Build profile-based DSN/host configuration
         $builder = new MySqlConfigBuilder($this->config);
-        $mysql   = $builder->build($this->profile ?? 'main');
+        $mysql   = $builder->build($this->profile);
 
         // 🔹 Merge DSN-first while keeping legacy safe defaults
         return new ConnectionConfigDTO(

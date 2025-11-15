@@ -71,7 +71,7 @@ final class MySQLDbalAdapter extends BaseAdapter
 
         // 🧩 Build DSN/host/port/database via builder
         $builder = new MySqlConfigBuilder($this->config);
-        $mysql   = $builder->build($this->profile ?? 'main');
+        $mysql   = $builder->build($this->profile);
 
         return new ConnectionConfigDTO(
             dsn:      $mysql->dsn      ?? $legacy->dsn,

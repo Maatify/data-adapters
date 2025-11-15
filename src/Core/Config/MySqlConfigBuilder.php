@@ -64,12 +64,16 @@ final readonly class MySqlConfigBuilder
      * ✔ If DSN is missing → returns *blank* ConnectionConfigDTO
      * ✔ If DSN exists → returns DSN-specific fields only (host, port, database)
      *
-     * @param string $profile The profile name ("main", "logs", "reporting", etc.)
+     * @param string|null $profile The profile name ("main", "logs", "reporting", etc.)
      *
      * @return ConnectionConfigDTO Parsed connection data for the profile
      */
-    public function build(string $profile): ConnectionConfigDTO
+    public function build(?string $profile): ConnectionConfigDTO
     {
+        if ($profile === null) {
+            return new ConnectionConfigDTO(); // No override → legacy mode 100%
+        }
+
         $key = sprintf('MYSQL_%s_DSN', strtoupper($profile));
         $dsn = $this->config->get($key);
 
