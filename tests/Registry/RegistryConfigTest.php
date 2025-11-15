@@ -17,10 +17,45 @@ namespace Maatify\DataAdapters\Tests\Registry;
 use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\Config\RegistryConfig;
 
+/**
+ * 🧪 **RegistryConfigTest**
+ *
+ * Unit tests covering the behavior of the `RegistryConfig` class.
+ *
+ * 🎯 **Test coverage includes:**
+ * - Invalid registry path handling
+ * - Loading a valid registry file
+ * - Registry-based overrides for DSN and legacy values
+ *
+ * Each test creates fixtures on the fly to avoid using external files.
+ *
+ * ---
+ * ### Fixture Structure Example:
+ * ```json
+ * {
+ *   "databases": {
+ *     "mysql": {
+ *       "main": {
+ *         "dsn": "mysql:host=127.0.0.1;dbname=test"
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ * ---
+ */
 final class RegistryConfigTest extends TestCase
 {
+    /**
+     * Directory for dynamically generated test fixtures.
+     *
+     * @var string
+     */
     private string $fixturesDir;
 
+    /**
+     * Prepare fixture directory before each test.
+     */
     protected function setUp(): void
     {
         $this->fixturesDir = __DIR__ . '/fixtures';
@@ -31,6 +66,9 @@ final class RegistryConfigTest extends TestCase
         }
     }
 
+    /**
+     * 🧪 Ensure that setting an invalid registry path throws an exception.
+     */
     public function testInvalidPathThrowsException(): void
     {
         $this->expectException(\Exception::class);
@@ -39,10 +77,14 @@ final class RegistryConfigTest extends TestCase
         $config->setPath('/invalid/path.json');
     }
 
+    /**
+     * 🧪 Ensure that a valid registry file loads successfully and contains expected keys.
+     */
     public function testValidRegistryLoadsSuccessfully(): void
     {
         $path = $this->fixturesDir . '/registry.valid.json';
 
+        // Create a valid registry fixture
         file_put_contents($path, json_encode([
             'databases' => [
                 'mysql' => [
@@ -61,10 +103,14 @@ final class RegistryConfigTest extends TestCase
         unlink($path);
     }
 
+    /**
+     * 🧪 Ensure registry values override DSN and legacy values properly.
+     */
     public function testRegistryOverridesDsnAndLegacy(): void
     {
         $path = $this->fixturesDir . '/registry.override.json';
 
+        // Create a registry fixture that overrides DSN
         file_put_contents($path, json_encode([
             'databases' => [
                 'mysql' => [

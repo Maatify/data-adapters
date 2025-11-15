@@ -17,40 +17,114 @@ namespace Maatify\DataAdapters\Core\Config;
 use Exception;
 use JsonException;
 
+/**
+ * 🧩 **RegistryConfig**
+ *
+ * 🎯 Lightweight handler for the `.maatify.registry.json` database registry.
+ * It provides:
+ *
+ * - Safe path validation
+ * - Lazy-loading of registry contents
+ * - Automatic JSON decoding with exception handling
+ * - In-memory caching with optional `reload()`
+ *
+ * This class is used by the unified builders (MySQL, Mongo, Redis) to apply
+ * **registry overrides** as the highest-priority source of configuration.
+ *
+ * ---
+ * ### Example — Loading Registry
+ * ```php
+ * $registry = new RegistryConfig();
+ * $registry->setPath('/project/.maatify.registry.json');
+ *
+ * $json = $registry->load();
+ * print_r($json['databases']);
+ * ```
+ * ---
+ *
+ * ### Expected JSON format
+ * ```json
+ * {
+ *   "databases": {
+ *     "mysql": { ... },
+ *     "mongo": { ... },
+ *     "redis": { ... }
+ *   }
+ * }
+ * ```
+ */
 final class RegistryConfig
 {
+    /**
+     * Cached registry contents.
+     *
+     * @var array<string,mixed>|null
+     */
     private ?array $registry = null;
+
+    /**
+     * Absolute file system path to registry file.
+     *
+     * @var string|null
+     */
     private ?string $path = null;
 
     /**
-     * @throws Exception
+     * 🗂️ **Set registry file path**
+     *
+     * Validates:
+     * - File must exist
+     * - File must be readable
+     *
+     * @param string $path Raw file path (relative or absolute)
+     *
+     * @throws Exception If file does not exist or is unreadable
      */
     public function setPath(string $path): void
     {
         $real = realpath($path);
+
         if (! $real || ! is_readable($real)) {
             throw new Exception("Registry path is invalid or unreadable: {$path}");
         }
 
         $this->path = $real;
-        $this->registry = null; // force reload
+
+        // 🧹 Force lazy reload on next `load()`
+        $this->registry = null;
     }
 
+    /**
+     * 🔍 **Get full path to registry file**
+     *
+     * @return string|null Absolute path or null if no path set
+     */
     public function getPath(): ?string
     {
         return $this->path;
     }
 
     /**
-     * @throws JsonException
-     * @throws Exception
+     * 📥 **Load registry JSON into memory**
+     *
+     * Provides:
+     * - Lazy load (first call only)
+     * - JSON decoding with error handling
+     * - Structural validation (must contain `"databases"`)
+     *
+     * @return array<string,mixed> Full decoded registry structure
+     *
+     * @throws JsonException If JSON is invalid
+     * @throws Exception If file unreadable or missing required keys
      */
     public function load(): array
     {
+        // Return cached version if already loaded
         if ($this->registry !== null) {
             return $this->registry;
         }
 
+        // No registry configured → empty result (safe fallback)
         if (! $this->path) {
             return $this->registry = [];
         }
@@ -69,6 +143,11 @@ final class RegistryConfig
         return $this->registry = $data;
     }
 
+    /**
+     * 🔄 **Force registry reload**
+     *
+     * Clears cached registry contents so the next call to `load()` reads the file again.
+     */
     public function reload(): void
     {
         $this->registry = null;

@@ -19,23 +19,57 @@ use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
 /**
- * 🧩 RedisConfigBuilder (Phase 13 Unified)
+ * 🧩 **RedisConfigBuilder (Phase 13 Unified)**
  *
- * ✔ Registry → DSN → Legacy fallback
- * ✔ DSN-first with redis:// parsing
- * ✔ Full configuration returned (host, port, pass, database)
- * ✔ Same behavior rules as MySQL & Mongo builders
+ * 🎯 Produces a complete and normalized Redis configuration using:
+ *
+ * ### 🔥 Priority Chain (Highest → Lowest)
+ * 1️⃣ **Registry overrides**
+ * 2️⃣ **DSN mode** (`redis://password@host:port/db`)
+ * 3️⃣ **Legacy environment variables** (`REDIS_MAIN_HOST`, `REDIS_MAIN_PORT`, etc.)
+ *
+ * Ensures consistent behavior across all adapter builders (MySQL / Mongo / Redis).
+ *
+ * ✔ Returns a **full** ConnectionConfigDTO
+ * ✔ Supports redis:// parsing
+ * ✔ Backward compatible with old legacy env setups
+ * ✔ No username support (by design)
+ *
+ * ---
+ * ### Example
+ * ```php
+ * $builder = new RedisConfigBuilder($env);
+ * $cfg = $builder->build('cache');
+ *
+ * echo $cfg->host;      // 127.0.0.1
+ * echo $cfg->database;  // 2
+ * echo $cfg->dsn;       // redis://pass@127.0.0.1:6379/2
+ * ```
+ * ---
  */
 final readonly class RedisConfigBuilder
 {
+    /**
+     * @param EnvironmentConfig $config Unified environment loader.
+     */
     public function __construct(
         private EnvironmentConfig $config
     ) {}
 
     /**
-     * Build Redis configuration for a profile.
+     * 🧠 **Build Redis configuration for a specific profile**
      *
-     * @throws JsonException
+     * The method:
+     * - Extracts DSN (if present)
+     * - Parses redis://
+     * - Loads legacy values
+     * - Applies registry overrides
+     * - Returns a complete `ConnectionConfigDTO`
+     *
+     * @param string $profile Redis profile (e.g., `main`, `cache`, `queue`)
+     *
+     * @return ConnectionConfigDTO Fully resolved configuration
+     * @throws JsonException When invalid JSON is encountered in registry or env
      */
     public function build(string $profile): ConnectionConfigDTO
     {
@@ -84,13 +118,13 @@ final readonly class RedisConfigBuilder
         );
 
         // ---------------------------------------------------------
-        // (4) Build full DTO (same behavior as MySQL/Mongo)
+        // (4) Build FULL DTO (matching MySQL/Mongo builder structure)
         // ---------------------------------------------------------
         return new ConnectionConfigDTO(
             dsn      : $merged['dsn']      ?? $dsnVal,
             host     : $merged['host']     ?? $legacy['host'],
             port     : isset($merged['port']) ? (string)$merged['port'] : $legacy['port'],
-            user     : null, // Redis does not support username in our architecture
+            user     : null, // Redis username intentionally unsupported
             pass     : $merged['pass']     ?? $legacy['pass'],
             database : $merged['database'] ?? $legacy['database'],
             options  : $merged['options']  ?? $legacy['options'],
@@ -100,7 +134,24 @@ final readonly class RedisConfigBuilder
     }
 
     /**
-     * Parse redis://pass@host:port/db
+     * 🧩 **Parse `redis://` DSN format**
+     *
+     * Supports formats like:
+     * ```
+     * redis://pass@127.0.0.1:6379/2
+     * redis://password@host:port
+     * redis://127.0.0.1:6379
+     * ```
+     *
+     * Extracts:
+     * - host
+     * - port
+     * - password
+     * - database index
+     *
+     * @param string $dsn Redis DSN string
+     *
+     * @return array<string, string|null> Parsed values
      */
     private function parseRedisDsn(string $dsn): array
     {

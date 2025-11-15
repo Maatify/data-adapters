@@ -22,10 +22,50 @@ use Maatify\DataAdapters\Core\BaseAdapter;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 use Throwable;
 
+/**
+ * 🧩 **Class MySQLDbalAdapter**
+ *
+ * 🎯 Provides MySQL connectivity using **Doctrine DBAL** instead of raw PDO.
+ * This adapter is ideal when the consumer requires:
+ * - Doctrine QueryBuilder
+ * - Schema management tools
+ * - Cross-database abstraction layers
+ *
+ * It fully supports the Maatify DSN-first connection strategy (Phase 10), with
+ * graceful fallback to traditional host/port/database configurations.
+ *
+ * ---
+ * ### ✅ Example Usage
+ * ```php
+ * use Maatify\DataAdapters\Core\DatabaseResolver;
+ *
+ * $resolver = new DatabaseResolver($config);
+ * $dbal = $resolver->resolve('mysql.reporting');
+ *
+ * $result = $dbal->connection()->executeQuery('SELECT NOW()')->fetchOne();
+ * ```
+ * ---
+ */
 final class MySQLDbalAdapter extends BaseAdapter
 {
     /**
-     * Connect using Doctrine DBAL.
+     * 🧠 **Connect using Doctrine DBAL**
+     *
+     * Supports 3 modes:
+     *
+     * 1️⃣ **Doctrine URL-style DSN**
+     * ```
+     * MYSQL_DSN="mysql://user:pass@127.0.0.1:3306/dbname"
+     * ```
+     *
+     * 2️⃣ **PDO-style DSN**
+     * Parsed and converted into DBAL format automatically.
+     *
+     * 3️⃣ **Legacy ENV fallback**
+     * For older systems still using host/port/user/pass.
+     *
+     * ---
+     * @throws ConnectionException When DBAL fails to initialize or execute the ping query.
      */
     public function connect(): void
     {
@@ -33,7 +73,7 @@ final class MySQLDbalAdapter extends BaseAdapter
 
         try {
             // --------------------------------------
-            // 1️⃣ DSN URL (Doctrine style)
+            // 1️⃣ URL-style DSN → Full auto-parsed by DBAL
             // --------------------------------------
             if (! empty($cfg->dsn) && str_starts_with($cfg->dsn, 'mysql://')) {
                 $params = [
@@ -44,17 +84,17 @@ final class MySQLDbalAdapter extends BaseAdapter
             }
 
             // --------------------------------------
-            // 2️⃣ PDO DSN (mysql:host=...)
+            // 2️⃣ PDO DSN → Convert manually to DBAL params
             // --------------------------------------
             elseif (! empty($cfg->dsn)) {
-                // Convert mysql:host=127;dbname=xx → body
+                // Convert mysql:host=127;dbname=xx → host=127&dbname=xx
                 $body = str_replace('mysql:', '', $cfg->dsn);
                 $body = str_replace(';', '&', $body);
 
                 parse_str($body, $dsnParts);
 
                 $params = [
-                    'host'     => $dsnParts['host'] ?? $cfg->host,
+                    'host'     => $dsnParts['host']   ?? $cfg->host,
                     'port'     => isset($dsnParts['port']) ? (int)$dsnParts['port'] : (int)$cfg->port,
                     'dbname'   => $dsnParts['dbname'] ?? $cfg->database,
                     'user'     => $cfg->user,
@@ -65,7 +105,7 @@ final class MySQLDbalAdapter extends BaseAdapter
             }
 
             // --------------------------------------
-            // 3️⃣ Legacy ENV fallback
+            // 3️⃣ Legacy fallback (host/port/db/user/pass)
             // --------------------------------------
             else {
                 $params = [
@@ -79,15 +119,15 @@ final class MySQLDbalAdapter extends BaseAdapter
                 ];
             }
 
-            // --------------------------------------
-            // Create DBAL connection
-            // --------------------------------------
+            // -------------------------------------------------
+            // 🧩 Create Doctrine DBAL connection
+            // -------------------------------------------------
             $this->connection = DriverManager::getConnection(
                 $params,
                 new Configuration()
             );
 
-            // Force actual connection test
+            // 🧪 Force connection validation
             $this->connection->executeQuery('SELECT 1');
 
             $this->connected = true;
@@ -100,7 +140,19 @@ final class MySQLDbalAdapter extends BaseAdapter
     }
 
     /**
-     * Basic DBAL health check.
+     * 🧪 **Health Check**
+     *
+     * Executes a simple `SELECT 1` using DBAL's query engine.
+     *
+     * @return bool `true` if connection responds properly.
+     *
+     * ---
+     * ### 🔹 Example
+     * ```php
+     * if (!$dbal->healthCheck()) {
+     *     echo "DBAL service unreachable";
+     * }
+     * ```
      */
     public function healthCheck(): bool
     {
@@ -111,6 +163,21 @@ final class MySQLDbalAdapter extends BaseAdapter
         }
     }
 
+    /**
+     * 🔄 **Reconnect**
+     *
+     * Recreates the Doctrine DBAL connection from scratch.
+     *
+     * @return bool Whether reconnection succeeded.
+     *
+     * ---
+     * ### 🔹 Example
+     * ```php
+     * if (!$dbal->reconnect()) {
+     *     throw new RuntimeException("Failed to reconnect DBAL");
+     * }
+     * ```
+     */
     public function reconnect(): bool
     {
         $this->disconnect();

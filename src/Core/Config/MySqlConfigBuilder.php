@@ -16,34 +16,71 @@ use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
 /**
- * 🧩 MySqlConfigBuilder (Phase 13 — Final)
+ * 🧩 **MySqlConfigBuilder (Phase 13 — Final)**
  *
- * ✔ Always returns a FULL configuration:
- *    host, port, database, user, pass, options
+ * 🎯 Responsible for producing a **fully resolved MySQL configuration**
+ * using the standardized priority chain:
  *
- * ✔ DSN-first (parse + override)
- * ✔ Legacy fallback
- * ✔ Registry (highest priority)
+ * ### 🔥 Resolution Priority
+ * 1️⃣ **Registry overrides** (`.maatify.registry.json`)
+ * 2️⃣ **DSN mode** (PDO or Doctrine-style DSN)
+ * 3️⃣ **Legacy environment variables** (`MYSQL_*_HOST`, etc.)
  *
- * Ensures all tests pass:
+ * ✔ Always returns a **complete** `ConnectionConfigDTO`, including:
+ * - host
+ * - port
+ * - database
+ * - user
+ * - pass
+ * - options
+ * - driver
+ * - profile
+ *
+ * 📌 Fully compatible with:
  * - Dynamic profiles
- * - Legacy mode
- * - Unknown profiles
- * - DSN parsing (PDO + Doctrine)
+ * - Legacy-only setups
+ * - DSN-only setups
+ * - Unknown/empty profiles
+ *
+ * ---
+ * ### Example
+ * ```php
+ * $builder = new MySqlConfigBuilder($envConfig);
+ * $config  = $builder->build('main');
+ *
+ * echo $config->dsn;       // mysql://...
+ * echo $config->host;      // 127.0.0.1
+ * echo $config->database;  // mydb
+ * ```
+ * ---
  */
 final readonly class MySqlConfigBuilder
 {
+    /**
+     * @param EnvironmentConfig $config The unified environment configuration loader.
+     */
     public function __construct(
         private EnvironmentConfig $config
     ) {}
 
     /**
-     * Build a fully resolved MySQL config for a profile.
+     * 🧠 **Build a fully resolved MySQL profile configuration**
      *
-     * @throws JsonException
+     * Produces a complete and normalized configuration DTO by merging:
+     *
+     * - DSN values (if provided)
+     * - Parsed DSN fields (host, port, user, pass, db)
+     * - Legacy values (MYSQL_MAIN_HOST, etc.)
+     * - Registry overrides (highest priority)
+     *
+     * @param string|null $profile The MySQL profile name (e.g., `main`, `logs`).
+     *
+     * @return ConnectionConfigDTO
+     * @throws JsonException When options JSON is malformed.
      */
     public function build(?string $profile): ConnectionConfigDTO
     {
+        // ⛔ Null profile → return empty DTO (used internally by Resolver)
         if ($profile === null) {
             return new ConnectionConfigDTO();
         }
@@ -51,7 +88,7 @@ final readonly class MySqlConfigBuilder
         $upper = strtoupper($profile);
 
         // ---------------------------------------------------------
-        // (1) Read DSN
+        // (1) DSN (PDO or Doctrine-style)
         // ---------------------------------------------------------
         $dsnKey  = "MYSQL_{$upper}_DSN";
         $dsn     = $this->config->get($dsnKey);
@@ -69,14 +106,14 @@ final readonly class MySqlConfigBuilder
             'database' => $this->config->get("MYSQL_{$upper}_DB"),
         ];
 
-        // Legacy options JSON
+        // Parse legacy OPTIONS JSON
         $optionsJson = $this->config->get("MYSQL_{$upper}_OPTIONS");
         $legacy['options'] = !empty($optionsJson)
             ? (json_decode($optionsJson, true) ?: [])
             : [];
 
         // ---------------------------------------------------------
-        // (3) Registry → DSN → Legacy
+        // (3) Registry → DSN → Legacy (priority merge)
         // ---------------------------------------------------------
         $merged = $this->config->mergeWithRegistry(
             type    : 'mysql',
@@ -86,7 +123,7 @@ final readonly class MySqlConfigBuilder
         );
 
         // ---------------------------------------------------------
-        // (4) Build final full DTO
+        // (4) Build final DTO (never returns partial state)
         // ---------------------------------------------------------
         return new ConnectionConfigDTO(
             dsn      : $merged['dsn']      ?? $dsn,
@@ -102,11 +139,24 @@ final readonly class MySqlConfigBuilder
     }
 
     /**
-     * Parse MySQL DSN (PDO + Doctrine)
+     * 🧠 **Parse MySQL DSN (PDO or Doctrine-style)**
+     *
+     * Supports:
+     * - Doctrine DSN:
+     *   `mysql://user:pass@host:3306/dbname`
+     *
+     * - PDO DSN:
+     *   `mysql:host=127.0.0.1;port=3306;dbname=test`
+     *
+     * @param string $dsn Raw DSN string.
+     *
+     * @return array<string, string|null> Parsed DSN parts.
      */
     private function parseMysqlDsn(string $dsn): array
     {
-        // Doctrine: mysql://user:pass@host:port/db
+        // -------------------------------------------------
+        // Doctrine: mysql://user:pass@host:port/dbname
+        // -------------------------------------------------
         if (str_starts_with($dsn, 'mysql://')) {
             $url = parse_url($dsn);
 
@@ -119,15 +169,20 @@ final readonly class MySqlConfigBuilder
             ];
         }
 
+        // -------------------------------------------------
         // PDO: mysql:host=127;port=3306;dbname=test
+        // -------------------------------------------------
         $clean = str_replace('mysql:', '', $dsn);
         $pairs = explode(';', $clean);
 
         $out = [];
         foreach ($pairs as $pair) {
-            if (!str_contains($pair, '=')) continue;
-            [$k, $v] = explode('=', $pair, 2);
-            $out[strtolower(trim($k))] = trim($v);
+            if (!str_contains($pair, '=')) {
+                continue;
+            }
+
+            [$key, $value] = explode('=', $pair, 2);
+            $out[strtolower(trim($key))] = trim($value);
         }
 
         return [

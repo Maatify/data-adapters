@@ -17,60 +17,67 @@ namespace Maatify\DataAdapters\Profiles;
 use InvalidArgumentException;
 
 /**
- * 🧩 **Class AdapterProfile**
+ * 🧩 **AdapterProfile**
  *
- * 🎯 A value object that represents a normalized, validated adapter profile.
+ * A small immutable value object representing a validated and normalized
+ * adapter profile used across the **maatify/data-adapters** ecosystem.
  *
- * Profiles are used across the Maatify Data-Adapters ecosystem to distinguish
- * between different connection scopes:
+ * 🎯 **Purpose**
+ * - Validate profile names (allowed: `a-z`, `0-9`, `.`, `_`, `-`)
+ * - Normalize consistently across all adapters
+ * - Prevent invalid or unsafe profile names
+ * - Provide strict typing + immutability
  *
- * ```
- * mysql.main
- * mysql.logs
- * mongo.reporting
- * redis.cache
- * ```
+ * ---
+ * ### ✔ Examples
  *
- * ✔ Ensures profile names are safe
- * ✔ Enforces allowed characters
- * ✔ Auto-normalizes to **uppercase** internally
- * ✔ Immutable (`readonly`) and convertible to string
- *
- * @example Creating a profile:
  * ```php
- * $profile = AdapterProfile::from('logs');
- * echo $profile;           // "LOGS"
+ * $p = AdapterProfile::from("logs");
+ * echo $p->value();     // "LOGS"
  * ```
  *
- * @example Invalid:
  * ```php
- * AdapterProfile::from('bad profile'); // throws InvalidArgumentException
+ * $p = AdapterProfile::from("mongo.reporting");
+ * echo (string)$p;      // "MONGO.REPORTING"
  * ```
+ *
+ * ❌ Invalid:
+ * ```php
+ * AdapterProfile::from("bad profile"); // throws InvalidArgumentException
+ * ```
+ * ---
  */
 final readonly class AdapterProfile implements ProfileInterface
 {
     /**
-     * @param string $profile Normalized profile name (always uppercase)
+     * Internal profile name (always uppercase).
+     *
+     * @var string
      */
-    private function __construct(
-        private string $profile
-    ) {
+    private string $profile;
+
+    /**
+     * @param string $profile Validated and uppercase-normalized profile name
+     */
+    private function __construct(string $profile)
+    {
+        $this->profile = $profile;
     }
 
     /**
      * 🎯 **Create an AdapterProfile from raw input**
      *
-     * Steps:
-     * - Trim whitespace
-     * - Convert to lowercase
-     * - Validate allowed characters: `[a-z0-9._-]`
-     * - Store internally as uppercase
+     * Processing steps:
+     * 1. Trim whitespace
+     * 2. Convert to lowercase
+     * 3. Validate: allowed characters → `/^[a-z0-9._-]+$/`
+     * 4. Convert to uppercase for internal storage
      *
-     * @param string $profile Raw profile string (e.g., "main", "cache", "logs")
+     * @param string $profile Raw profile name (`main`, `cache`, `mysql.logs`, etc.)
      *
      * @return self
      *
-     * @throws InvalidArgumentException When profile contains invalid characters or is empty
+     * @throws InvalidArgumentException When invalid characters or empty value is provided
      */
     public static function from(string $profile): self
     {
@@ -90,9 +97,9 @@ final readonly class AdapterProfile implements ProfileInterface
     }
 
     /**
-     * Get the normalized profile value.
+     * 🧱 **Return normalized profile string (UPPERCASE).**
      *
-     * @return string Uppercase profile string
+     * @return string
      */
     public function value(): string
     {
@@ -100,7 +107,7 @@ final readonly class AdapterProfile implements ProfileInterface
     }
 
     /**
-     * Cast the profile to its string value.
+     * 🔄 String cast: returns normalized string value.
      *
      * @return string
      */

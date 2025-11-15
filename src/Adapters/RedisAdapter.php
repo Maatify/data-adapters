@@ -21,43 +21,104 @@ use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 use Redis;
 use Throwable;
 
+/**
+ * 🧩 **Class RedisAdapter**
+ *
+ * 🎯 Provides a Redis connection using the native **phpredis** extension.
+ * This adapter is designed for high-performance workloads, queue handlers,
+ * cache layers, and any service that benefits from persistent TCP-level Redis connections.
+ *
+ * ✅ Supports:
+ * - Legacy host/port/password connection
+ * - AUTH authentication
+ * - Connection validation via `PING`
+ * - Seamless reconnection
+ *
+ * ---
+ * ### Example Usage
+ * ```php
+ * use Maatify\DataAdapters\Core\DatabaseResolver;
+ *
+ * $resolver = new DatabaseResolver($config);
+ * $redis = $resolver->resolve('redis.session');
+ *
+ * $redis->connection()->set('token', '123');
+ * echo $redis->connection()->get('token');
+ * ```
+ * ---
+ */
 final class RedisAdapter extends BaseAdapter
 {
     /**
-     * Connect using phpredis extension.
+     * 🧠 **Connect using the phpredis extension**
+     *
+     * Resolves configuration via DSN-first strategy in BaseAdapter, but phpredis
+     * itself does not support DSN directly — therefore this adapter only uses the
+     * resolved **host**, **port**, and **password**.
+     *
+     * Steps:
+     * 1️⃣ Create a new Redis client
+     * 2️⃣ Connect to host/port
+     * 3️⃣ Authenticate (optional)
+     * 4️⃣ Validate connection using `PING`
+     *
+     * @throws ConnectionException When connection or authentication fails.
      */
     public function connect(): void
     {
         $cfg = $this->resolveConfig(ConnectionTypeEnum::REDIS);
 
         try {
+            // 🧩 Instantiate native Redis client
             $client = new Redis();
 
+            // -----------------------------------------
+            // 🔌 Connect (tcp-only for phpredis)
+            // -----------------------------------------
             $client->connect(
                 $cfg->host ?? '127.0.0.1',
                 (int)($cfg->port ?? 6379)
             );
 
-            // 🔐 AUTH (if password exists)
+            // -----------------------------------------
+            // 🔐 AUTH if needed
+            // -----------------------------------------
             if (! empty($cfg->pass)) {
                 $client->auth($cfg->pass);
             }
 
-            // 🧪 Force ping to validate connection
+            // -----------------------------------------
+            // 🏁 Validate connection with PING
+            // -----------------------------------------
             $pong = $client->ping();
             if ($pong === false) {
                 throw new ConnectionException("Redis did not respond to PING.");
             }
 
             $this->connection = $client;
-            $this->connected = true;
+            $this->connected  = true;
+
         } catch (Throwable $e) {
-            throw new ConnectionException("Redis connection failed: " . $e->getMessage());
+            throw new ConnectionException(
+                "Redis connection failed: " . $e->getMessage()
+            );
         }
     }
 
     /**
-     * Basic health check.
+     * 🧪 **Health Check**
+     *
+     * Uses Redis's `PING` to verify active connectivity.
+     *
+     * @return bool `true` if Redis responds correctly, else `false`.
+     *
+     * ---
+     * ### Example:
+     * ```php
+     * if (!$redis->healthCheck()) {
+     *     echo "Redis offline";
+     * }
+     * ```
      */
     public function healthCheck(): bool
     {
@@ -69,7 +130,19 @@ final class RedisAdapter extends BaseAdapter
     }
 
     /**
-     * Reconnect safely.
+     * 🔄 **Reconnect**
+     *
+     * Safely disconnects and re-establishes the Redis connection.
+     *
+     * @return bool Whether reconnection succeeded.
+     *
+     * ---
+     * ### Example:
+     * ```php
+     * if (!$redis->reconnect()) {
+     *     throw new RuntimeException("Failed to reconnect Redis");
+     * }
+     * ```
      */
     public function reconnect(): bool
     {

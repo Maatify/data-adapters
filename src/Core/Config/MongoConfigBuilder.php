@@ -17,14 +17,56 @@ namespace Maatify\DataAdapters\Core\Config;
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
+/**
+ * 🧩 **Class MongoConfigBuilder**
+ *
+ * 🎯 Responsible for generating a complete and normalized `ConnectionConfigDTO`
+ * for MongoDB profiles.
+ * This builder implements the **DSN → Registry → Legacy** prioritized resolution flow
+ * used across the Maatify Data Adapter system.
+ *
+ * ---
+ * ### 🔥 Resolution Priority
+ * 1️⃣ **Profile-level DSN** (`MONGO_{PROFILE}_DSN`)
+ * 2️⃣ **Registry overrides** (in `.maatify.registry.json`)
+ * 3️⃣ **Legacy environment variables** (`MONGO_*_HOST`, `MONGO_*_PORT`, etc.)
+ *
+ * This ensures complete backward compatibility while enabling modern single-line DSN usage.
+ *
+ * ---
+ * ### ✅ Example
+ * ```php
+ * $builder = new MongoConfigBuilder($envConfig);
+ * $config  = $builder->build('logs');
+ *
+ * echo $config->dsn;        // mongodb://user:pass@127.0.0.1:27017/logs
+ * echo $config->database;   // logs
+ * ```
+ * ---
+ */
 final readonly class MongoConfigBuilder
 {
+    /**
+     * @param EnvironmentConfig $config  Environment loader instance.
+     */
     public function __construct(
         private EnvironmentConfig $config
     ) {}
 
     /**
-     * Build full MongoDB configuration for a given profile.
+     * 🧩 **Build full MongoDB configuration for a given profile**
+     *
+     * Combines:
+     * - DSN (primary)
+     * - Parsed DSN fields
+     * - Legacy fallback values
+     * - Registry overrides
+     *
+     * and produces a final `ConnectionConfigDTO` identical in structure to MySQL builder output.
+     *
+     * @param string $profile MongoDB profile name (e.g., `main`, `logs`, `analytics`)
+     *
+     * @return ConnectionConfigDTO Fully normalized configuration DTO.
      */
     public function build(string $profile): ConnectionConfigDTO
     {
@@ -38,7 +80,7 @@ final readonly class MongoConfigBuilder
         $dsnData = $dsn ? $this->parseMongoDsn($dsn) : [];
 
         // ---------------------------------------------------------
-        // (2) Legacy fallback values
+        // (2) Legacy fallback values — used when DSN missing
         // ---------------------------------------------------------
         $legacy = [
             'dsn'      => null,
@@ -82,7 +124,24 @@ final readonly class MongoConfigBuilder
     }
 
     /**
-     * Parse MongoDB DSN format.
+     * 🧠 **Parse MongoDB DSN string**
+     *
+     * Extracts:
+     * - host
+     * - port
+     * - username
+     * - password
+     * - database
+     *
+     * from DSN formats such as:
+     * ```
+     * mongodb://user:pass@127.0.0.1:27017/logs
+     * mongodb://127.0.0.1:27017/admin
+     * ```
+     *
+     * @param string $dsn MongoDB DSN string.
+     *
+     * @return array<string, string|null> Parsed DSN fields.
      */
     private function parseMongoDsn(string $dsn): array
     {
