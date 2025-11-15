@@ -85,7 +85,7 @@ final readonly class MongoConfigBuilder
         return new ConnectionConfigDTO(
             dsn     : $dsn,
             host    : $parsed['host'] ?? null,
-            port    : $parsed['port'] ?? null,
+            port    : (string)$parsed['port'] ?? null,
             database: $parsed['database'] ?? null,
             driver  : 'mongo',
             profile : $profile,
