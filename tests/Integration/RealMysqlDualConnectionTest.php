@@ -18,10 +18,6 @@ use Maatify\DataAdapters\Core\EnvironmentConfig;
 
 final class RealMysqlDualConnectionTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        $_ENV['MAATIFY_TEST_MOCK'] = 1;
-    }
     #[\PHPUnit\Framework\Attributes\DataProvider('provideDrivers')]
     public function testMysqlConnection(string $driver, string $dsnEnvVar): void
     {
