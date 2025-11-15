@@ -16,32 +16,11 @@ use Exception;
 use Maatify\Bootstrap\Core\EnvironmentLoader;
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\Config\MySqlConfigBuilder;
+use Maatify\DataAdapters\Core\Config\RegistryConfig;
 
-/**
- * 🧩 **Class EnvironmentConfig**
- *
- * 🎯 Provides a smart environment loader for the entire Maatify Data-Adapters
- * ecosystem. This class acts as a thin abstraction around `$_ENV` with
- * additional logic that ensures environment variables are loaded exactly once
- * and in the correct context (Bootstrap, tests, external library usage).
- *
- * ### 🧠 Smart Loading Behavior:
- * - If **Bootstrap already loaded the environment**, skip loading.
- * - If **running under PHPUnit tests**, never load `.env`.
- * - If **library used standalone** (no bootstrap), automatically load `.env`.
- *
- * ✔ Guarantees consistent and predictable environment access
- * ✔ Avoids duplicate loading between Maatify Bootstrap / external apps / CLI
- * ✔ Supports dynamic profile-based MySQL resolution (Phase 11)
- *
- * @example Basic usage:
- * ```php
- * $env = new EnvironmentConfig(__DIR__);
- * $host = $env->get('MYSQL_HOST');
- * ```
- */
 final readonly class EnvironmentConfig
 {
+    private RegistryConfig $registry;
     /**
      * @param string $root Project root directory passed to EnvironmentLoader
      *
@@ -61,32 +40,43 @@ final readonly class EnvironmentConfig
 
         // 🧠 Bootstrap has already loaded environment → do nothing
         if ($appEnv && $appEnv !== 'testing') {
+            $this->registry = new RegistryConfig();
+            $this->initializeRegistry();
             return;
         }
 
         // 🧪 Testing mode → NEVER load `.env`
         if ($appEnv === 'testing') {
+            $this->registry = new RegistryConfig();
+            $this->initializeRegistry();
             return;
         }
 
         // 🟢 No environment loaded yet → load now through Bootstrap loader
         $loader = new EnvironmentLoader($this->root);
         $loader->load();
+
+        // Initialize registry after loading ENV
+        $this->registry = new RegistryConfig();
+        $this->initializeRegistry();
     }
 
     /**
-     * 🎯 **Get environment variable**
-     *
-     * Wrapper that checks:
-     * - Direct `$_ENV`
-     * - Fallback to `getenv()`
-     * - Fallback to default value
-     *
-     * @param string      $key     Environment variable name
-     * @param string|null $default Default value if not found
-     *
-     * @return string|null
+     * 🔧 Phase 13 — Initialize registry path from ENV if provided
      */
+    private function initializeRegistry(): void
+    {
+        $envPath = $_ENV['DB_REGISTRY_PATH'] ?? getenv('DB_REGISTRY_PATH') ?: null;
+
+        if ($envPath) {
+            try {
+                $this->registry->setPath($envPath);
+            } catch (Exception) {
+                // silent fail — registry is optional by design
+            }
+        }
+    }
+
     public function get(string $key, ?string $default = null): ?string
     {
         if (!empty($_ENV) && array_key_exists('APP_ENV', $_ENV) && $_ENV['APP_ENV'] === 'testing') {
@@ -109,13 +99,6 @@ final readonly class EnvironmentConfig
         return $default;
     }
 
-    /**
-     * 🧪 **Check if environment key exists**
-     *
-     * @param string $key
-     *
-     * @return bool
-     */
     public function has(string $key): bool
     {
         return isset($_ENV[$key]) || getenv($key) !== false;
@@ -131,21 +114,38 @@ final readonly class EnvironmentConfig
         return $_ENV;
     }
 
-    /**
-     * ------------------------------------------------------------
-     * 🧩 PHASE 11 — Unified MySQL Profile Resolution Entry Point
-     * ------------------------------------------------------------
-     *
-     * Provides a single call that returns a DSN-aware MySQL configuration DTO
-     * for any profile (`main`, `billing`, `logs`, etc.)
-     *
-     * @param string|null $profile MySQL profile name
-     *
-     * @return ConnectionConfigDTO Parsed configuration DTO
-     */
     public function getMySQLConfig(?string $profile): ConnectionConfigDTO
     {
+        $profile = $profile ?: 'main'; // 🔥 enforce profile=main always
         $builder = new MySqlConfigBuilder($this);
-        return $builder->build($profile ?? 'main');
+        return $builder->build($profile);
+    }
+
+    public function setRegistryPath(string $path): void
+    {
+        $this->registry->setPath($path);
+    }
+
+    public function getRegistryPath(): ?string
+    {
+        return $this->registry->getPath();
+    }
+
+    public function loadRegistry(): array
+    {
+        return $this->registry->load();
+    }
+
+    public function reloadRegistry(): void
+    {
+        $this->registry->reload();
+    }
+
+    public function mergeWithRegistry(string $type, string $profile, array $dsn, array $legacy): array
+    {
+        $registry = $this->loadRegistry();
+        $reg = $registry['databases'][$type][$profile] ?? [];
+
+        return array_merge($legacy, $dsn, $reg);
     }
 }

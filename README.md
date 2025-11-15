@@ -51,58 +51,134 @@ composer require maatify/data-adapters
 ---
 
 ## ✨ Features
-- Unified adapters for **MySQL, Redis, MongoDB**
-- Multi-profile MySQL (`mysql.main`, `mysql.logs`, …)
-- Automatic Redis driver detection (phpredis → predis)
+- Unified configuration engine (Phase 13)
+- Registry → DSN → Legacy priority system
+- Fully unified config builders for MySQL / MongoDB / Redis
+- Multi-profile MySQL & MongoDB (unlimited profiles)
+- Redis unified builder (future multi-profile ready)
 - Centralized diagnostics & health checks
+
+---
+
+## 🔥 New in Phase 13 — Unified Configuration Architecture
+
+Phase 13 finalizes the unified configuration engine across all adapters.
+
+### ✔ Global Configuration Priority
+**Registry → DSN → Legacy (Deprecated)**  
+This applies consistently to MySQL, MongoDB, and Redis.
+
+### ✔ Unified Builder Behavior (Final)
+All builders now:
+- Return **fully normalized configuration objects**
+- Use identical DSN parsing rules
+- Support unlimited profiles (`mysql.main`, `mongo.logs`, …)
+- Merge configuration with the same priority logic
+- Expose driver + profile metadata
+
+### ✔ Registry JSON Support
+A new `registry.json` file allows runtime overrides:
+
+```json
+{
+  "mysql": {
+    "main": { "user": "override_user" }
+  },
+  "redis": {
+    "cache": { "host": "10.0.0.1", "port": 6380 }
+  }
+}
+````
+
+This overrides DSN & legacy variables automatically.
+
+### ✔ Redis Builder Unified
+
+The Redis builder has been rewritten to match MySQL/Mongo logic
+and is now **future-ready for multi-profile support**.
 
 ---
 
 ## 🧩 Compatibility
 Fully framework-agnostic.  
 Optional auto-wiring available via **maatify/bootstrap**.
-
+- Fully compatible with the new Phase 13 unified configuration engine
+- Supports runtime overrides through registry.json
 ---
 
-## 🚀 Quick Usage
+## 🚀 Quick Usage (Updated for Phase 13 — Unified Config Engine)
 
 ```php
-
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 
 $config   = new EnvironmentConfig(__DIR__);
+
+// Phase 13: Registry → DSN → Legacy
 $resolver = new DatabaseResolver($config);
 
 // ------------------------------------
-// 🟣 MySQL — Multi-Profile (Phase 11)
+// 🟣 MySQL — Multi-Profile (Phase 13)
 // ------------------------------------
-$mainDb      = $resolver->resolve("mysql.main", autoConnect: true);
-$logsDb      = $resolver->resolve("mysql.logs");
-$analyticsDb = $resolver->resolve("mysql.analytics");
+$mainDb = $resolver->resolve("mysql.main", autoConnect: true);
+$logsDb = $resolver->resolve("mysql.logs");
+$billingDb = $resolver->resolve("mysql.billing"); // unlimited profiles
 
-// Dynamic unlimited profiles (billing, reporting, etc.)
-$billingDb   = $resolver->resolve("mysql.billing");
-
-// ------------------------------------
-// 🔵 Redis — Auto Selection (phpredis → predis)
-// ------------------------------------
-$redis = $resolver->resolve("redis", autoConnect: true);
-$redis->getConnection()->set("key", "maatify");
+$stmt = $mainDb->getConnection()->query("SELECT 1");
+echo $stmt->fetchColumn(); // 1
 
 // ------------------------------------
-// 🟢 MongoDB — Multi-Profile (Phase 12)
+// 🟢 MongoDB — Multi-Profile (Phase 13)
 // ------------------------------------
 $mongoMain = $resolver->resolve("mongo.main", autoConnect: true);
 $mongoLogs = $resolver->resolve("mongo.logs");
-$mongoActivity = $resolver->resolve("mongo.activity");
 
-// Example: ping the database
-$client = $mongoMain->getConnection();
-$db     = $client->selectDatabase("admin");
+$db     = $mongoMain->getConnection()->selectDatabase("admin");
 $ok     = $db->command(["ping" => 1])->toArray()[0]["ok"];
 
 echo $ok; // 1
+
+// ------------------------------------
+// 🔴 Redis — Unified Builder (Phase 13)
+// ------------------------------------
+$redis = $resolver->resolve("redis.cache", autoConnect: true);
+$redis->getConnection()->set("key", "maatify");
+echo $redis->getConnection()->get("key"); // maatify
+
+// ------------------------------------
+// 🔍 Debug Final Merged Configuration
+// (Phase 13 unified DTO output)
+// ------------------------------------
+print_r(
+    $mainDb->debugConfig()->toArray()
+);
+
+/*
+Output example:
+[
+    "dsn"      => "mysql://user:pass@127.0.0.1:3306/main",
+    "host"     => "127.0.0.1",
+    "port"     => "3306",
+    "user"     => "user",
+    "pass"     => "pass",
+    "database" => "main",
+    "driver"   => "pdo",
+    "profile"  => "main"
+]
+*/
+
+// ------------------------------------
+// 📦 Registry Override Example
+// registry.json:
+// {
+//   "mysql": { "main": { "user": "override_user" } }
+// }
+// ------------------------------------
+
+$mainDbFromRegistry = $resolver->resolve("mysql.main");
+print_r($mainDbFromRegistry->debugConfig()->user);
+// override_user
+
 
 ```
 
@@ -137,8 +213,17 @@ echo $diagnostic->toJson();
 vendor/bin/phpunit
 ```
 
-**Coverage:** > 87 %  
-**Status:** ✅ All tests passing (integration, diagnostics, fallback)
+**Coverage:** **≈ 93%**  
+**Status:** ✅ All tests passing (DSN, registry, multi-profile, diagnostics, metrics)  
+**Suites:**
+
+* Unit Tests
+* Integration Tests
+* DSN Parsing Tests
+* Registry Merge Tests
+* Multi-Profile MySQL & MongoDB Tests
+* Redis Builder Tests
+* Diagnostics & Metrics Tests
 
 ---
 
@@ -150,6 +235,7 @@ vendor/bin/phpunit
 * **Telemetry:** [`docs/telemetry.md`](docs/telemetry.md)
 * **Architecture:** [`docs/architecture.md`](docs/architecture.md)
 * **Multi-Profile MySQL:** [`docs/mysql-profiles.md`](docs/mysql-profiles.md)
+* **Usage Examples:** [`docs/USAGE.md`](docs/USAGE.md)
 * **Phases:** [`docs/README.roadmap.md`](docs/README.roadmap.md)
 * **Changelog:** [`CHANGELOG.md`](CHANGELOG.md)
 

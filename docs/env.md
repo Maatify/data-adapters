@@ -5,47 +5,98 @@
 
 ---
 
-# ✅ **Environment Variables (Updated for Phase 10 → Phase 12 Final Architecture)**
+# 🔧 **Environment Variables (Updated for Phase 10 → Phase 13 Final Architecture)**
 
-> ⚠️ **From Phase 10 onward, DSN variables have absolute priority.**
-> Phase 11 & 12 extend this model to support **unlimited dynamic profiles** for MySQL and MongoDB.
-> Legacy variables are still supported but officially **deprecated**.
-
----
-
-# 🧩 Primary Variables (DSN-First, Multi-Profile)
-
-### ✔ MySQL (Phase 11 — Multi-Profile)
-
-| Variable Example                 | Description                                              |
-|----------------------------------|----------------------------------------------------------|
-| `MYSQL_MAIN_DSN`                 | DSN for main profile.                                    |
-| `MYSQL_LOGS_DSN`                 | DSN for logs profile.                                    |
-| `MYSQL_ANALYTICS_DSN`            | DSN for analytics profile.                               |
-| `MYSQL_<PROFILE>_DSN`            | **Any custom profile** (billing, reporting, etc.).       |
-| `MYSQL_<PROFILE>_USER` / `_PASS` | Optional credentials (only used if not provided in DSN). |
+> ⚠️ **As of Phase 13: Global precedence is now:**
+> **Registry → DSN → Legacy (Deprecated)**
+> All three adapters (MySQL, MongoDB, Redis) now use **identical builder logic** and return a **fully normalized configuration DTO**.
 
 ---
 
-### ✔ MongoDB (Phase 12 — Multi-Profile)
+## 🧩 Primary Rules Introduced in Phase 13
 
-| Variable Example                 | Description                                                |
-|----------------------------------|------------------------------------------------------------|
-| `MONGO_MAIN_DSN`                 | DSN for Mongo main profile.                                |
-| `MONGO_LOGS_DSN`                 | DSN for logs profile.                                      |
-| `MONGO_ACTIVITY_DSN`             | DSN for activity profile.                                  |
-| `MONGO_<PROFILE>_DSN`            | **Any custom profile** (analytics, archive, events, etc.). |
-| `MONGO_<PROFILE>_USER` / `_PASS` | Optional credentials.                                      |
+### ✔ Unified builder behavior
+
+All builders now normalize and return:
+
+```
+host, port, user, pass, database, options, driver, profile
+```
+
+### ✔ Registry-first priority
+
+If registry.json contains overrides, they override:
+
+* DSN
+* Legacy
+* Default values
+
+### ✔ Unified DSN parsing
+
+MySQL, MongoDB, and Redis now follow the same parsing strategy and the same merge rules.
+
+### ✔ Unlimited profiles
+
+MySQL and MongoDB — fully supported.
+Redis — future-ready with same builder structure (Phase 13).
 
 ---
 
-### ✔ Redis (Phase 10+)
+# 🧩 DSN-First Variables (Multi-Profile)
 
-| Variable Example      | Description                                        |
-|-----------------------|----------------------------------------------------|
-| `REDIS_CACHE_DSN`     | Full DSN string for primary Redis (cache/queue).   |
-| `REDIS_<PROFILE>_DSN` | Profile-based Redis DSN (optional future support). |
-| `REDIS_PASS`          | Redis password (used when DSN has no auth info).   |
+## ✔ MySQL (Phase 11 + Phase 13)
+
+| Variable Example                 | Description                                            |
+|----------------------------------|--------------------------------------------------------|
+| `MYSQL_MAIN_DSN`                 | Main profile DSN                                       |
+| `MYSQL_LOGS_DSN`                 | Logs database DSN                                      |
+| `MYSQL_ANALYTICS_DSN`            | Analytics DSN                                          |
+| `MYSQL_<PROFILE>_DSN`            | Unlimited profiles (billing, reporting, archive, etc.) |
+| `MYSQL_<PROFILE>_USER` / `_PASS` | Used only when DSN does not contain credentials        |
+
+---
+
+## ✔ MongoDB (Phase 12 + Phase 13)
+
+| Variable Example                 | Description                                           |
+|----------------------------------|-------------------------------------------------------|
+| `MONGO_MAIN_DSN`                 | Main profile DSN                                      |
+| `MONGO_LOGS_DSN`                 | Logs profile DSN                                      |
+| `MONGO_ACTIVITY_DSN`             | Activity database DSN                                 |
+| `MONGO_<PROFILE>_DSN`            | Unlimited profiles (events, analytics, archive, etc.) |
+| `MONGO_<PROFILE>_USER` / `_PASS` | Used if DSN has no auth                               |
+
+---
+
+## ✔ Redis (Phase 10 + Phase 13 Unified Builder)
+
+| Variable Example       | Description                        |
+|------------------------|------------------------------------|
+| `REDIS_CACHE_DSN`      | Main Redis DSN                     |
+| `REDIS_<PROFILE>_DSN`  | Future-ready multi-profile support |
+| `REDIS_<PROFILE>_PASS` | Used when DSN lacks credentials    |
+
+---
+
+# 🧠 Registry JSON (Introduced in Phase 13)
+
+```json
+{
+  "redis": {
+    "cache": {
+      "host": "10.0.0.1",
+      "port": 6380
+    }
+  },
+  "mysql": {
+    "main": {
+      "user": "override_user"
+    }
+  }
+}
+```
+
+> This overrides DSN + legacy, every time.
 
 ---
 

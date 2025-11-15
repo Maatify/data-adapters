@@ -12,101 +12,77 @@
 
 declare(strict_types=1);
 
-
 namespace Maatify\DataAdapters\Core\Config;
 
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
-/**
- * 🧩 **Class MongoConfigBuilder**
- *
- * 🎯 Responsible for building profile-based MongoDB configuration objects
- * using DSN-first resolution, in alignment with the unified Maatify
- * Data-Adapters architecture.
- *
- * ✔ Supports **DSN per profile**, e.g.:
- * ```
- * MONGO_MAIN_DSN=mongodb://127.0.0.1:27017/mydb
- * MONGO_LOGS_DSN=mongodb://127.0.0.1:27017/logs
- * ```
- *
- * ✔ DSN parsing includes:
- * - Host
- * - Port
- * - Database name
- * - Works with both `mongodb://` and `mongodb+srv://` formats
- *
- * ✔ If DSN is not provided for the given profile:
- * → Returns an empty DTO so the legacy BaseAdapter logic remains in control.
- *
- * @example
- * ```php
- * $builder = new MongoConfigBuilder($env);
- * $config  = $builder->build('main');
- * ```
- */
 final readonly class MongoConfigBuilder
 {
-    /**
-     * @var EnvironmentConfig $config
-     * Environment loader used to fetch DSN values from the environment.
-     */
-    public function __construct(private EnvironmentConfig $config)
-    {
-    }
+    public function __construct(
+        private EnvironmentConfig $config
+    ) {}
 
     /**
-     * 🎯 **Build connection configuration for a given Mongo profile**
-     *
-     * Resolves a DSN environment variable in the format:
-     * `MONGO_{PROFILE}_DSN`
-     *
-     * - If DSN is missing → returns a "blank" config so BaseAdapter legacy config applies.
-     * - If DSN exists → parses host, port, and database name.
-     *
-     * @param string $profile Connection profile name (e.g. "main", "logs")
-     *
-     * @return ConnectionConfigDTO Parsed connection configuration
+     * Build full MongoDB configuration for a given profile.
      */
     public function build(string $profile): ConnectionConfigDTO
     {
-        $key = sprintf('MONGO_%s_DSN', strtoupper($profile));
-        $dsn = $this->config->get($key);
+        $upper = strtoupper($profile);
 
-        // 🧩 No DSN → Do NOT override BaseAdapter legacy logic
-        if (empty($dsn)) {
-            return new ConnectionConfigDTO();
-        }
+        // ---------------------------------------------------------
+        // (1) DSN (primary source)
+        // ---------------------------------------------------------
+        $dsnKey = "MONGO_{$upper}_DSN";
+        $dsn    = $this->config->get($dsnKey);
+        $dsnData = $dsn ? $this->parseMongoDsn($dsn) : [];
 
-        // 🧠 Parse DSN for host, port, database
-        $parsed = $this->parseMongoDsn($dsn);
+        // ---------------------------------------------------------
+        // (2) Legacy fallback values
+        // ---------------------------------------------------------
+        $legacy = [
+            'dsn'      => null,
+            'host'     => $this->config->get("MONGO_{$upper}_HOST"),
+            'port'     => (string) $this->config->get("MONGO_{$upper}_PORT"),
+            'user'     => $this->config->get("MONGO_{$upper}_USER"),
+            'pass'     => $this->config->get("MONGO_{$upper}_PASS"),
+            'database' => $this->config->get("MONGO_{$upper}_DB"),
+        ];
 
-        return new ConnectionConfigDTO(
-            dsn     : $dsn,
-            host    : $parsed['host'] ?? null,
-            port    : (string)$parsed['port'] ?? null,
-            database: $parsed['database'] ?? null,
-            driver  : 'mongo',
+        // Options JSON
+        $optionsJson = $this->config->get("MONGO_{$upper}_OPTIONS");
+        $legacy['options'] = $optionsJson
+            ? (json_decode($optionsJson, true) ?: [])
+            : [];
+
+        // ---------------------------------------------------------
+        // (3) Registry → DSN → Legacy merge
+        // ---------------------------------------------------------
+        $merged = $this->config->mergeWithRegistry(
+            type    : 'mongo',
             profile : $profile,
+            dsn     : array_merge(['dsn' => $dsn], $dsnData),
+            legacy  : $legacy
+        );
+
+        // ---------------------------------------------------------
+        // (4) Build full DTO exactly like MySQLBuilder rules
+        // ---------------------------------------------------------
+        return new ConnectionConfigDTO(
+            dsn      : $merged['dsn']      ?? $dsn,
+            host     : $merged['host']     ?? $legacy['host'],
+            port     : isset($merged['port']) ? (string)$merged['port'] : $legacy['port'],
+            user     : $merged['user']     ?? $legacy['user'],
+            pass     : $merged['pass']     ?? $legacy['pass'],
+            database : $merged['database'] ?? $legacy['database'],
+            options  : $merged['options']  ?? $legacy['options'],
+            driver   : 'mongo',
+            profile  : $profile
         );
     }
 
     /**
-     * 🧩 **Parse a MongoDB DSN string**
-     *
-     * Supports both:
-     * - `mongodb://user:pass@host:27017/db`
-     * - `mongodb+srv://host/db`
-     *
-     * Extracts:
-     * - host
-     * - port
-     * - database name
-     *
-     * @param string $dsn Full MongoDB URI
-     *
-     * @return array Parsed values (`host`, `port`, `database`)
+     * Parse MongoDB DSN format.
      */
     private function parseMongoDsn(string $dsn): array
     {
@@ -115,6 +91,8 @@ final readonly class MongoConfigBuilder
         return [
             'host'     => $url['host'] ?? null,
             'port'     => isset($url['port']) ? (string)$url['port'] : null,
+            'user'     => $url['user'] ?? null,
+            'pass'     => $url['pass'] ?? null,
             'database' => isset($url['path']) ? ltrim($url['path'], '/') : null,
         ];
     }

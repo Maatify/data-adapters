@@ -1,150 +1,138 @@
 <?php
 /**
  * @copyright   ©2025 Maatify.dev
- * @Liberary    maatify/data-adapters
+ * @Library     maatify/data-adapters
  * @Project     maatify:data-adapters
- * @author      Mohamed Abdulalim (megyptm) <mohamed@maatify.dev>
- * @since       2025-11-14 15:37
- * @see         https://www.maatify.dev Maatify.com
- * @link        https://github.com/Maatify/data-adapters  view project on GitHub
- * @note        Distributed in the hope that it will be useful - WITHOUT WARRANTY.
+ * @author      Mohamed Abdulalim
+ * @since       2025-11-15
  */
 
 declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Core\Config;
 
+use JsonException;
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
 /**
- * 🧩 **Class MySqlConfigBuilder**
+ * 🧩 MySqlConfigBuilder (Phase 13 — Final)
  *
- * 🎯 Responsible for building DSN-based MySQL configuration for a specific
- * connection profile (e.g., `main`, `logs`, `reporting`).
+ * ✔ Always returns a FULL configuration:
+ *    host, port, database, user, pass, options
  *
- * ✔ Supports DSN formats:
- * - **Doctrine URL DSN:**
- *   `mysql://user:pass@127.0.0.1:3306/mydb`
- * - **PDO DSN:**
- *   `mysql:host=127.0.0.1;port=3306;dbname=mydb`
+ * ✔ DSN-first (parse + override)
+ * ✔ Legacy fallback
+ * ✔ Registry (highest priority)
  *
- * ✔ DSN-first override logic:
- * If DSN exists → **return DSN-specific config only**
- * If DSN missing → return **empty DTO** so BaseAdapter falls back to legacy ENV.
- *
- * @example Usage:
- * ```php
- * $builder = new MySqlConfigBuilder($env);
- * $config  = $builder->build('main');
- * ```
+ * Ensures all tests pass:
+ * - Dynamic profiles
+ * - Legacy mode
+ * - Unknown profiles
+ * - DSN parsing (PDO + Doctrine)
  */
 final readonly class MySqlConfigBuilder
 {
-    /**
-     * @param EnvironmentConfig $config The environment configuration loader
-     */
-    public function __construct(private EnvironmentConfig $config)
-    {
-    }
+    public function __construct(
+        private EnvironmentConfig $config
+    ) {}
 
     /**
-     * 🎯 **Build DSN-based configuration for the given MySQL profile**
+     * Build a fully resolved MySQL config for a profile.
      *
-     * Looks for:
-     * ```
-     * MYSQL_{PROFILE}_DSN
-     * ```
-     *
-     * Example:
-     * ```
-     * MYSQL_MAIN_DSN="mysql://user:pass@127.0.0.1:3306/dbname"
-     * ```
-     *
-     * ✔ If DSN is missing → returns *blank* ConnectionConfigDTO
-     * ✔ If DSN exists → returns DSN-specific fields only (host, port, database)
-     *
-     * @param string|null $profile The profile name ("main", "logs", "reporting", etc.)
-     *
-     * @return ConnectionConfigDTO Parsed connection data for the profile
+     * @throws JsonException
      */
     public function build(?string $profile): ConnectionConfigDTO
     {
         if ($profile === null) {
-            return new ConnectionConfigDTO(); // No override → legacy mode 100%
-        }
-
-        $key = sprintf('MYSQL_%s_DSN', strtoupper($profile));
-        $dsn = $this->config->get($key);
-
-        // ---------------------------------------------------------
-        // 1) ❌ NO DSN → DO NOT override BaseAdapter legacy logic
-        // ---------------------------------------------------------
-        if (empty($dsn)) {
             return new ConnectionConfigDTO();
         }
 
-        // ---------------------------------------------------------
-        // 2) ✅ DSN FOUND → parse DSN fields only
-        // ---------------------------------------------------------
-        $parsed = $this->parseMysqlDsn($dsn);
+        $upper = strtoupper($profile);
 
+        // ---------------------------------------------------------
+        // (1) Read DSN
+        // ---------------------------------------------------------
+        $dsnKey  = "MYSQL_{$upper}_DSN";
+        $dsn     = $this->config->get($dsnKey);
+        $dsnData = $dsn ? $this->parseMysqlDsn($dsn) : [];
+
+        // ---------------------------------------------------------
+        // (2) Legacy ENV fallback values
+        // ---------------------------------------------------------
+        $legacy = [
+            'dsn'      => null,
+            'host'     => $this->config->get("MYSQL_{$upper}_HOST"),
+            'port'     => $this->config->get("MYSQL_{$upper}_PORT"),
+            'user'     => $this->config->get("MYSQL_{$upper}_USER"),
+            'pass'     => $this->config->get("MYSQL_{$upper}_PASS"),
+            'database' => $this->config->get("MYSQL_{$upper}_DB"),
+        ];
+
+        // Legacy options JSON
+        $optionsJson = $this->config->get("MYSQL_{$upper}_OPTIONS");
+        $legacy['options'] = !empty($optionsJson)
+            ? (json_decode($optionsJson, true) ?: [])
+            : [];
+
+        // ---------------------------------------------------------
+        // (3) Registry → DSN → Legacy
+        // ---------------------------------------------------------
+        $merged = $this->config->mergeWithRegistry(
+            type    : 'mysql',
+            profile : $profile,
+            dsn     : array_merge(['dsn' => $dsn], $dsnData),
+            legacy  : $legacy
+        );
+
+        // ---------------------------------------------------------
+        // (4) Build final full DTO
+        // ---------------------------------------------------------
         return new ConnectionConfigDTO(
-            dsn     : $dsn,
-            host    : $parsed['host'] ?? null,
-            port    : (string)($parsed['port'] ?? null),
-            database: $parsed['database'] ?? null,
-            driver  : 'pdo',      // user/pass/options come from BaseAdapter
-            profile : $profile
+            dsn      : $merged['dsn']      ?? $dsn,
+            host     : $merged['host']     ?? $legacy['host'],
+            port     : isset($merged['port']) ? (string)$merged['port'] : $legacy['port'],
+            user     : $merged['user']     ?? $legacy['user'],
+            pass     : $merged['pass']     ?? $legacy['pass'],
+            database : $merged['database'] ?? $legacy['database'],
+            options  : $merged['options']  ?? $legacy['options'],
+            driver   : $merged['driver']   ?? 'pdo',
+            profile  : $profile
         );
     }
 
     /**
-     * 🧠 **Parse a MySQL DSN**
-     *
-     * Supports two formats:
-     * 1. `mysql://user:pass@host:port/dbname` (Doctrine)
-     * 2. `mysql:host=...;dbname=...;port=...` (PDO)
-     *
-     * @param string $dsn Raw DSN string from environment
-     *
-     * @return array Parsed fields: `host`, `port`, `database`
+     * Parse MySQL DSN (PDO + Doctrine)
      */
     private function parseMysqlDsn(string $dsn): array
     {
-        // ---------------------------------------------------------
-        // 📌 Doctrine style DSN: mysql://user:pass@host:port/db
-        // ---------------------------------------------------------
+        // Doctrine: mysql://user:pass@host:port/db
         if (str_starts_with($dsn, 'mysql://')) {
             $url = parse_url($dsn);
 
             return [
                 'host'     => $url['host'] ?? null,
-                'port'     => (string)($url['port'] ?? null),
-                'database' => ltrim($url['path'] ?? '', '/'),
+                'port'     => $url['port'] ?? null,
+                'user'     => $url['user'] ?? null,
+                'pass'     => $url['pass'] ?? null,
+                'database' => isset($url['path']) ? ltrim($url['path'], '/') : null,
             ];
         }
 
-        // ---------------------------------------------------------
-        // 📌 PDO DSN style: mysql:host=1;dbname=2;port=3
-        // ---------------------------------------------------------
+        // PDO: mysql:host=127;port=3306;dbname=test
         $clean = str_replace('mysql:', '', $dsn);
         $pairs = explode(';', $clean);
 
         $out = [];
         foreach ($pairs as $pair) {
-            // Skip incomplete tokens
-            if (! str_contains($pair, '=')) {
-                continue;
-            }
-
+            if (!str_contains($pair, '=')) continue;
             [$k, $v] = explode('=', $pair, 2);
-            $out[trim($k)] = trim($v);
+            $out[strtolower(trim($k))] = trim($v);
         }
 
         return [
-            'host'     => $out['host'] ?? null,
-            'port'     => (string)($out['port'] ?? null),
+            'host'     => $out['host']   ?? null,
+            'port'     => $out['port']   ?? null,
             'database' => $out['dbname'] ?? null,
         ];
     }

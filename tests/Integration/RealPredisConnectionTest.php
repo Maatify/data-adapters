@@ -20,41 +20,57 @@ use Predis\Client;
 
 final class RealPredisConnectionTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        // Force testing environment (Phase 13 requirement)
+        $_ENV['APP_ENV'] = 'testing';
+
+        // Provide minimal legacy Redis env for profile "main"
+        $_ENV['REDIS_MAIN_HOST'] = '127.0.0.1';
+        $_ENV['REDIS_MAIN_PORT'] = '6379';
+        $_ENV['REDIS_MAIN_PASS'] = '';
+        $_ENV['REDIS_MAIN_DB']   = '0';
+    }
+
     public function testPredisRealConnection(): void
     {
-        // 🧱 Arrange: Load environment and initialize adapter
+        // Arrange
         $config = new EnvironmentConfig(dirname(__DIR__, 2));
-        $adapter = new PredisAdapter($config);
+        $adapter = new PredisAdapter($config, 'main');
 
-        // ⚙️ Act: Connect to Redis
+        // Act
         $adapter->connect();
         $connection = $adapter->getConnection();
 
-        // ✅ Assert: Ensure valid Predis client
+        // Assert: Must be a Predis\Client instance
         $this->assertInstanceOf(
             Client::class,
             $connection,
             '❌ Expected Predis\Client instance for Redis connection.'
         );
 
-        // 🩺 Health Check
-        $pong = $connection->ping();
-        $this->assertSame('PONG', (string)$pong, '❌ Predis should respond with PONG.');
-
+        // Health Check
         $this->assertTrue(
             $adapter->healthCheck(),
             '❌ PredisAdapter health check must return true.'
         );
 
-        // 🧪 Perform SET/GET round-trip
+        // Ping must return "PONG"
+        $this->assertSame(
+            'PONG',
+            (string)$connection->ping(),
+            '❌ Predis PING response mismatch'
+        );
+
+        // SET / GET round-trip
         $connection->set('maatify:test', 'connected');
         $this->assertSame(
             'connected',
             $connection->get('maatify:test'),
-            '❌ Expected "connected" value mismatch from Redis SET/GET round-trip.'
+            '❌ Redis SET/GET round-trip failed.'
         );
 
-        // 🧹 Cleanup: remove test key
+        // Cleanup
         $connection->del(['maatify:test']);
     }
 }

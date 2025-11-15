@@ -222,7 +222,7 @@ This phase completes the MySQL configuration system and sets the foundation for 
 # 🧱 Phase Status
 
 | Phase | Title                           | Status      |
-| ----- | ------------------------------- | ----------- |
+|-------|---------------------------------|-------------|
 | 10    | DSN Support for All Adapters    | ✅ Completed |
 | 11    | Multi-Profile MySQL Connections | ✅ Completed |
 
