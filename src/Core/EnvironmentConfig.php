@@ -89,7 +89,19 @@ final readonly class EnvironmentConfig
      */
     public function get(string $key, ?string $default = null): ?string
     {
-        return $_ENV[$key] ?? getenv($key) ?: $default;
+        // Highest priority → $_ENV (test overrides, runtime overrides)
+        if (array_key_exists($key, $_ENV)) {
+            return $_ENV[$key];
+        }
+
+        // Second priority → system environment (CI, Docker, OS)
+        $val = getenv($key);
+        if ($val !== false) {
+            return $val;
+        }
+
+        // Fallback
+        return $default;
     }
 
     /**
