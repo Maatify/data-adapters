@@ -13,6 +13,29 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+Here are the **perfectly formatted**, Maatify-standard **CHANGELOG entry** and **release note** for the `.env.example` update.
+
+---
+
+# 🧾 **CHANGELOG Entry**
+
+Add this under your latest version (e.g., `1.1.1` or `1.2.0` — depending on what you decide):
+
+---
+
+## **[1.1.0] — 2025-11-14**
+
+### **Updated**
+
+* Refreshed `.env.example` with full DSN-first configuration schema (Phase 11).
+* Added missing **multi-profile MySQL** variables (`MYSQL_MAIN_HOST`, `MYSQL_MAIN_PORT`, etc.) to ensure legacy mode passes CI tests.
+* Normalized MySQL DSN strings with explicit `port` and `charset=utf8mb4` for consistency.
+* Clarified Redis & Mongo DSN format examples and aligned fallback variables.
+* Improved formatting, comments, and organization across all environment sections.
+* Ensured `.env.example` fully matches internal resolver behavior and PHPUnit expectations.
+
+---
+
 ## **[1.1.0] — 2025-11-14**
 
 ### 🚀 Phase 12 — Multi-Profile MongoDB Support
