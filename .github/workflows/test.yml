@@ -60,6 +60,18 @@ jobs:
           mongo --host $MONGO_HOST --port $MONGO_PORT --eval "db.runCommand({ ping: 1 })" || echo "⚠️ Mongo not responding"
         continue-on-error: true
 
+      - name: ⏳ Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready yet... ($i)"
+            sleep 2
+          done
+
       - name: 🛠 Initialize MySQL Test Databases
         run: |
           echo "Creating required test databases..."
