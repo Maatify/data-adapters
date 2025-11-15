@@ -22,19 +22,40 @@ use Maatify\DataAdapters\Core\EnvironmentConfig;
 use PHPUnit\Framework\TestCase;
 
 /**
- * 🧪 MysqlProfileResolverTest
+ * 🧪 **MysqlProfileResolverTest**
  *
- * Ensures correct behavior of:
- * - DSN priority
- * - Dynamic profile support
- * - Legacy fallback mode
- * - Builder merge with BaseAdapter data
- * - Profile routing from DatabaseResolver architecture
+ * Comprehensive test suite validating MySQL profile resolution across:
+ *
+ * ### 🎯 Key Responsibilities Tested:
+ * - **DSN Priority:** DSN overrides all legacy fields.
+ * - **Dynamic Profiles:** Any profile name (e.g., `reporting`, `billing`, `analytics`) must work.
+ * - **Legacy Fallback:** If DSN is absent, legacy host/port/db variables work normally.
+ * - **Doctrine URL DSN:** Proper parsing of `mysql://user:pass@host:port/dbname`.
+ * - **Builder Merge Logic:** MySqlConfigBuilder overrides BaseAdapter values as expected.
+ * - **DBAL Adapter Support:** Ensures MySQLDbalAdapter honors the same DSN parsing logic.
+ *
+ * ✔ Uses `APP_ENV=testing` → prevents `.env` from loading
+ * ✔ Sanitizes environment before each test
+ * ✔ Fully aligned with Phase 11 spec for DSN-first resolution
+ *
+ * @example Basic usage inside a test:
+ * ```php
+ * $_ENV['MYSQL_MAIN_DSN'] = 'mysql:host=1.2.3.4;dbname=test;port=3309';
+ * $adapter = new MySQLAdapter($env, 'main');
+ * $cfg = $adapter->debugConfig();
+ * ```
  */
 final class MysqlProfileResolverTest extends TestCase
 {
     private EnvironmentConfig $env;
 
+    /**
+     * 🧪 Reset and prepare test environment before each test.
+     *
+     * - Sets `APP_ENV=testing`
+     * - Clears all previous env variables
+     * - Creates a fresh EnvironmentConfig instance
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,11 +68,17 @@ final class MysqlProfileResolverTest extends TestCase
         $this->env = new EnvironmentConfig(__DIR__);
     }
 
+    /**
+     * Helper: create PDO adapter with optional profile.
+     */
     private function makeAdapter(?string $profile = null): MySQLAdapter
     {
         return new MySQLAdapter($this->env, $profile);
     }
 
+    /**
+     * Helper: create DBAL adapter with optional profile.
+     */
     private function makeDbalAdapter(?string $profile = null): MySQLDbalAdapter
     {
         return new MySQLDbalAdapter($this->env, $profile);
@@ -60,10 +87,14 @@ final class MysqlProfileResolverTest extends TestCase
     // -------------------------------------------------------------
     // 1) DSN priority
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Ensure DSN overrides all legacy config fields.
+     */
     public function testDsnPriorityOverridesLegacy(): void
     {
-        $_ENV['MYSQL_MAIN_DSN'] = 'mysql:host=1.2.3.4;dbname=testdb;port=3309';
-        $_ENV['MYSQL_MAIN_DB']  = 'legacydb';
+        $_ENV['MYSQL_MAIN_DSN']  = 'mysql:host=1.2.3.4;dbname=testdb;port=3309';
+        $_ENV['MYSQL_MAIN_DB']   = 'legacydb';
         $_ENV['MYSQL_MAIN_HOST'] = '99.99.99.99';
 
         $adapter = $this->makeAdapter('main');
@@ -78,6 +109,10 @@ final class MysqlProfileResolverTest extends TestCase
     // -------------------------------------------------------------
     // 2) Dynamic profiles
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Test that arbitrary profile names resolve correctly.
+     */
     public function testDynamicProfileResolution(): void
     {
         $_ENV['MYSQL_REPORTING_HOST'] = '10.0.0.44';
@@ -95,6 +130,10 @@ final class MysqlProfileResolverTest extends TestCase
     // -------------------------------------------------------------
     // 3) DSN Doctrine URL
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Ensure Doctrine-style DSN is parsed correctly.
+     */
     public function testDoctrineUrlDsnParsing(): void
     {
         $_ENV['MYSQL_LOGS_DSN'] = 'mysql://user:pass@192.168.20.5:3307/logdb';
@@ -110,6 +149,10 @@ final class MysqlProfileResolverTest extends TestCase
     // -------------------------------------------------------------
     // 4) Legacy fallback mode
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Ensure behavior is correct when DSN is absent.
+     */
     public function testLegacyModeWorksWithoutDsn(): void
     {
         $_ENV['MYSQL_MAIN_HOST'] = '127.0.0.55';
@@ -126,8 +169,12 @@ final class MysqlProfileResolverTest extends TestCase
     }
 
     // -------------------------------------------------------------
-    // 5) Merge logic: builder overrides base values
+    // 5) Builder merge logic
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Ensure MySqlConfigBuilder overrides BaseAdapter fields.
+     */
     public function testBuilderOverridesBaseAdapterConfig(): void
     {
         // BaseAdapter keys
@@ -146,8 +193,12 @@ final class MysqlProfileResolverTest extends TestCase
     }
 
     // -------------------------------------------------------------
-    // 6) DBAL adapter also uses builder
+    // 6) DBAL adapter support
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Ensure DBAL adapter also respects builder DSN logic.
+     */
     public function testDbalAdapterUsesBuilder(): void
     {
         $_ENV['MYSQL_ANALYTICS_DSN'] = 'mysql:host=8.8.8.8;dbname=ana;port=8888';
@@ -162,12 +213,16 @@ final class MysqlProfileResolverTest extends TestCase
     }
 
     // -------------------------------------------------------------
-    // 7) Unknown profile → still supported (dynamic)
+    // 7) Unknown profile support
     // -------------------------------------------------------------
+
+    /**
+     * 🧪 Unknown profile should work dynamically without errors.
+     */
     public function testUnknownProfileIsSupported(): void
     {
         $_ENV['MYSQL_BILLING_HOST'] = '100.200.100.200';
-        $_ENV['MYSQL_BILLING_DB'] = 'billing_db';
+        $_ENV['MYSQL_BILLING_DB']   = 'billing_db';
 
         $adapter = $this->makeAdapter('billing');
         $cfg = $adapter->debugConfig();

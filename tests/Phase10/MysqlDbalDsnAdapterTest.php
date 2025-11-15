@@ -18,8 +18,40 @@ use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Adapters\MySQLDbalAdapter;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
+/**
+ * 🧪 **MysqlDbalDsnAdapterTest**
+ *
+ * 🎯 Ensures that the DBAL MySQL adapter correctly reads and prioritizes
+ * DSN-based configuration — specifically Doctrine-style URL DSNs:
+ *
+ * ```
+ * mysql://user:pass@host:port/database
+ * ```
+ *
+ * This test validates that:
+ * - DSN is correctly picked up using the profile name (`logs`)
+ * - DSN-first behavior works the same as in PDO MySQLAdapter
+ * - Legacy host/port/db/env variables do not override DSN
+ *
+ * ✔ Fully aligned with Phase 10 DSN architecture
+ * ✔ `APP_ENV=testing` prevents accidental `.env` loading
+ *
+ * @example
+ * ```php
+ * $_ENV['MYSQL_LOGS_DSN'] = 'mysql://user:pass@10.0.0.5:3306/logs';
+ * $adapter = new MySQLDbalAdapter($env, 'logs');
+ * $cfg = $adapter->debugConfig();
+ * ```
+ */
 final class MysqlDbalDsnAdapterTest extends TestCase
 {
+    /**
+     * 🧪 Seed mock environment for the test.
+     *
+     * Ensures DBAL adapter reads:
+     * - DSN: `MYSQL_LOGS_DSN`
+     * - Profile: `logs`
+     */
     protected function setUp(): void
     {
         $_ENV = [
@@ -28,6 +60,9 @@ final class MysqlDbalDsnAdapterTest extends TestCase
         ];
     }
 
+    /**
+     * 🧪 Ensure DBAL correctly loads Doctrine URL DSN for logs profile.
+     */
     public function testDbalReadsUrlDsn(): void
     {
         $adapter = new MySQLDbalAdapter(new EnvironmentConfig(__DIR__), 'logs');

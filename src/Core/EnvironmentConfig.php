@@ -17,11 +17,34 @@ use Maatify\Bootstrap\Core\EnvironmentLoader;
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\Config\MySqlConfigBuilder;
 
-
+/**
+ * 🧩 **Class EnvironmentConfig**
+ *
+ * 🎯 Provides a smart environment loader for the entire Maatify Data-Adapters
+ * ecosystem. This class acts as a thin abstraction around `$_ENV` with
+ * additional logic that ensures environment variables are loaded exactly once
+ * and in the correct context (Bootstrap, tests, external library usage).
+ *
+ * ### 🧠 Smart Loading Behavior:
+ * - If **Bootstrap already loaded the environment**, skip loading.
+ * - If **running under PHPUnit tests**, never load `.env`.
+ * - If **library used standalone** (no bootstrap), automatically load `.env`.
+ *
+ * ✔ Guarantees consistent and predictable environment access
+ * ✔ Avoids duplicate loading between Maatify Bootstrap / external apps / CLI
+ * ✔ Supports dynamic profile-based MySQL resolution (Phase 11)
+ *
+ * @example Basic usage:
+ * ```php
+ * $env = new EnvironmentConfig(__DIR__);
+ * $host = $env->get('MYSQL_HOST');
+ * ```
+ */
 final readonly class EnvironmentConfig
 {
-
     /**
+     * @param string $root Project root directory passed to EnvironmentLoader
+     *
      * @throws Exception
      */
     public function __construct(private string $root)
@@ -29,47 +52,79 @@ final readonly class EnvironmentConfig
         /**
          * 🔒 Smart Env Loader Logic:
          *
-         * - إذا bootstrap حمّل env → APP_ENV موجود → لا تعمل load
-         * - إذا tests تشغّل → APP_ENV=testing → لا تعمل load
-         * - إذا مشروع خارجي يستخدم المكتبة بدون bootstrap → APP_ENV غير موجود → المكتبة تحمل env
+         * - If bootstrap already loaded → `APP_ENV` exists → skip loading
+         * - If running tests → `APP_ENV=testing` → skip loading
+         * - If external project using the library → no `APP_ENV` → this class loads `.env`
          */
 
         $appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: null;
 
-        // 🧠 Bootstrap already loaded → skip
+        // 🧠 Bootstrap has already loaded environment → do nothing
         if ($appEnv && $appEnv !== 'testing') {
-            return; // Already loaded externally
+            return;
         }
 
-        // 🧪 Testing → NEVER load .env
+        // 🧪 Testing mode → NEVER load `.env`
         if ($appEnv === 'testing') {
             return;
         }
 
-        // 🟢 No environment loaded → load now
+        // 🟢 No environment loaded yet → load now through Bootstrap loader
         $loader = new EnvironmentLoader($this->root);
         $loader->load();
     }
 
+    /**
+     * 🎯 **Get environment variable**
+     *
+     * Wrapper that checks:
+     * - Direct `$_ENV`
+     * - Fallback to `getenv()`
+     * - Fallback to default value
+     *
+     * @param string      $key     Environment variable name
+     * @param string|null $default Default value if not found
+     *
+     * @return string|null
+     */
     public function get(string $key, ?string $default = null): ?string
     {
         return $_ENV[$key] ?? getenv($key) ?: $default;
     }
 
+    /**
+     * 🧪 **Check if environment key exists**
+     *
+     * @param string $key
+     *
+     * @return bool
+     */
     public function has(string $key): bool
     {
         return isset($_ENV[$key]) || getenv($key) !== false;
     }
 
+    /**
+     * 📦 **Return all loaded environment variables**
+     *
+     * @return array<string,string>
+     */
     public function all(): array
     {
         return $_ENV;
     }
 
     /**
-     * ------------------------------------------------------
-     * PHASE 11 — Unified MySQL Profile Resolution Entry Point
-     * ------------------------------------------------------
+     * ------------------------------------------------------------
+     * 🧩 PHASE 11 — Unified MySQL Profile Resolution Entry Point
+     * ------------------------------------------------------------
+     *
+     * Provides a single call that returns a DSN-aware MySQL configuration DTO
+     * for any profile (`main`, `billing`, `logs`, etc.)
+     *
+     * @param string|null $profile MySQL profile name
+     *
+     * @return ConnectionConfigDTO Parsed configuration DTO
      */
     public function getMySQLConfig(?string $profile): ConnectionConfigDTO
     {

@@ -12,10 +12,38 @@
 
 declare(strict_types=1);
 
-
 namespace Maatify\DataAdapters\Profiles;
 
+/**
+ * 🧩 **Interface ProfileInterface**
+ *
+ * 🎯 Represents a normalized connection profile identifier used across
+ * the Maatify Data-Adapters system.
+ *
+ * A profile typically corresponds to a database/connection context such as:
+ *
+ * - `"MAIN"`
+ * - `"LOGS"`
+ * - `"BILLING"`
+ * - `"CACHE"`
+ *
+ * Implementations (like `AdapterProfile`) ensure:
+ * ✔ Validation
+ * ✔ Normalization
+ * ✔ Safe string value
+ *
+ * @example
+ * ```php
+ * $profile = AdapterProfile::from('logs');
+ * echo $profile->value(); // "LOGS"
+ * ```
+ */
 interface ProfileInterface
 {
+    /**
+     * Retrieve the normalized profile value as a string.
+     *
+     * @return string
+     */
     public function value(): string;
 }
