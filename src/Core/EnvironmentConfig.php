@@ -89,42 +89,23 @@ final readonly class EnvironmentConfig
      */
     public function get(string $key, ?string $default = null): ?string
     {
-        // --------------------------------------------------------
-        // 🟦 MOCK MODE (used in resolver tests, builder tests, etc)
-        // --------------------------------------------------------
-        if (!empty($_ENV['MAATIFY_FAKE_ENV'])) {
-            // In mock tests: ignore getenv(), ignore system env, ignore .env.example
+        if (!empty($_ENV) && array_key_exists('APP_ENV', $_ENV) && $_ENV['APP_ENV'] === 'testing') {
+            // In tests: ONLY use $_ENV
             return $_ENV[$key] ?? $default;
         }
 
-        // --------------------------------------------------------
-        // 🟩 TEST MODE (Real Integration)
-        // Only read putenv() + CI env, NOT .env files
-        // --------------------------------------------------------
-        if (($_ENV['APP_ENV'] ?? null) === 'testing') {
-            // priority:
-            // 1) putenv()/getenv()
-            // 2) $_ENV
-            // 3) default
-            $val = getenv($key);
-            if ($val !== false) {
-                return $val;
-            }
-            return $_ENV[$key] ?? $default;
-        }
-
-        // --------------------------------------------------------
-        // 🟢 NORMAL MODE (.env or .env.local)
-        // --------------------------------------------------------
+        // Highest priority → $_ENV (test overrides, runtime overrides)
         if (array_key_exists($key, $_ENV)) {
             return $_ENV[$key];
         }
 
+        // Second priority → system environment (CI, Docker, OS)
         $val = getenv($key);
         if ($val !== false) {
             return $val;
         }
 
+        // Fallback
         return $default;
     }
 
