@@ -72,13 +72,12 @@ jobs:
             sleep 2
           done
 
-      - name: 🛠 Fix MySQL Authentication Plugin
+      - name: 🔧 Patch MySQL auth plugin
         run: |
-          docker exec mysql \
-            mysql -uroot -proot -e "
-              ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
-              FLUSH PRIVILEGES;
-            "
+          echo "Applying mysql_native_password fix..."
+          docker exec "${{ job.services.mysql.id }}" \
+            mysql -uroot -proot -e \
+            "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
 
       - name: 🛠 Initialize MySQL Test Databases
         run: |
