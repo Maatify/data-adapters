@@ -86,6 +86,13 @@ jobs:
           mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_logs;"
           mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_dev;"
 
+      - name: Export MySQL ENV to PHP
+        run: |
+          echo "MYSQL_USER=root" >> $GITHUB_ENV
+          echo "MYSQL_PASS=root" >> $GITHUB_ENV
+          echo "MYSQL_MAIN_USER=root" >> $GITHUB_ENV
+          echo "MYSQL_MAIN_PASS=root" >> $GITHUB_ENV
+
       - name: 🧪 Run PHPUnit Tests
         id: tests
         run: |
