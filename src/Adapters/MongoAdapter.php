@@ -104,6 +104,10 @@ final class MongoAdapter extends BaseAdapter
             // -----------------------------------
             if ($cfg->dsn) {
                 $dsn = $cfg->dsn;
+                /**
+                * DSN mode: credentials inside DSN OR ignored.
+                * Start with empty options.
+                */
                 $options = [];
             }
 
@@ -133,13 +137,24 @@ final class MongoAdapter extends BaseAdapter
                 );
 
                 // 🔐 Credentials: profile → base
-                $options = [
-                    'username' => $cfg->user ?? $this->config->get('MONGO_USER'),
-                    'password' => $cfg->pass ?? $this->config->get('MONGO_PASS'),
-                ];
+                $username = $cfg->user ?? $this->config->get('MONGO_USER');
+                $password = $cfg->pass ?? $this->config->get('MONGO_PASS');
+
+                // 🛠 Build options WITHOUT null keys
+                $options = [];
+                if (!empty($username)) {
+                    $options['username'] = $username;
+                }
+                if (!empty($password)) {
+                    $options['password'] = $password;
+                }
             }
 
             // 🧩 Create MongoDB client
+            /**
+             * 🔒 FIX: Pass only valid string credentials.
+             * MongoDB driver throws if username/password = null.
+             */
             $this->connection = new Client($dsn, $options);
             $this->connected  = true;
 

@@ -58,6 +58,13 @@ jobs:
           mongo --host $MONGO_HOST --port $MONGO_PORT --eval "db.runCommand({ ping: 1 })" || echo "⚠️ Mongo not responding"
         continue-on-error: true
 
+      - name: 🛠 Initialize MySQL Test Databases
+        run: |
+          echo "Creating required test databases..."
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_main;"
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_logs;"
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_dev;"
+
       - name: 🧪 Run PHPUnit Tests
         id: tests
         run: |
