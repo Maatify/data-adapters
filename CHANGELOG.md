@@ -17,6 +17,35 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# 🧾 **CHANGELOG — v1.1.1**
+
+**Release Date:** 2025-11-16
+**Type:** Patch Release (Backward-Compatible)
+
+## **[1.1.1] — Added MongoDB Helpers**
+
+### ✔ Added
+
+* `MongoAdapter::getClient()` — returns the underlying `MongoDB\Client` instance.
+* `MongoAdapter::getDatabase(?string $name = null)`
+
+    * Returns a `MongoDB\Database` instance.
+    * If `$name` is null, it resolves the database from the final merged config (Registry → DSN → Legacy).
+
+### ✔ Improved
+
+* Enhanced Mongo adapter usability in multi-profile and multi-database setups.
+* Ensures MongoDB adapter now matches MySQL/Redis in developer-friendly helper access.
+* Maintains full compatibility with Phase 13 unified configuration engine.
+
+### ✔ No Breaking Changes
+
+* Existing connection flows, DSN resolution, and diagnostics remain unchanged.
+* All tests continue to pass (Mongo multi-profile included).
+
+---
+
+
 # ⭐ **[1.1.0] — 2025-11-15**
 
 ## 🚀 **Phase 13 — Unified Builders + Registry Priority + DSN Stabilization**

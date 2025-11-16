@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Adapters;
 
 use MongoDB\Client;
+use MongoDB\Database;
 use Throwable;
 use Maatify\DataAdapters\Core\BaseAdapter;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
@@ -186,5 +187,34 @@ final class MongoAdapter extends BaseAdapter
         $this->disconnect();
         $this->connect();
         return $this->connected;
+    }
+
+    /**
+     * 📌 Return a MongoDB\Database instance based on resolved profile or cfg->database
+     */
+    public function getDatabase(): Database
+    {
+        if (! $this->connected) {
+            $this->connect();
+        }
+
+        $cfg = $this->resolveConfig(ConnectionTypeEnum::MONGO);
+
+        // Use configured database or default "admin"
+        $database = $cfg->database ?: 'admin';
+
+        return $this->connection->selectDatabase($database);
+    }
+
+    /**
+     * 📌 Optional: return underlying MongoDB\Client
+     */
+    public function getClient(): Client
+    {
+        if (! $this->connected) {
+            $this->connect();
+        }
+
+        return $this->connection;
     }
 }
