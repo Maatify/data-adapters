@@ -15,6 +15,7 @@ namespace Maatify\DataAdapters\Core;
 
 use Maatify\Common\Contracts\Adapter\AdapterInterface;
 use Maatify\DataAdapters\Adapters\MongoAdapter;
+use Maatify\DataAdapters\Contracts\ResolverInterface;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 
 /**
@@ -45,7 +46,7 @@ use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
  * ```
  * ---
  */
-final class DatabaseResolver
+final class DatabaseResolver implements ResolverInterface
 {
     /**
      * Cached Mongo adapters per profile to avoid re-instantiating the client.

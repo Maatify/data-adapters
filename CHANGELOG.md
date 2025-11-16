@@ -17,6 +17,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.2] — 2025-11-16
+### Added
+- Introduced `ResolverInterface` to formalize contract for all resolver implementations.
+- `DatabaseResolver` now implements `ResolverInterface` for better dependency inversion and future extensibility.
+
+### Notes
+- Fully backward compatible.
+- No changes required for existing user code.
+
+---
+
 # 🧾 **CHANGELOG — v1.1.1**
 
 **Release Date:** 2025-11-16
