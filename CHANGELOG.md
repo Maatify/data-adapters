@@ -19,6 +19,24 @@ All notable changes to this project will be documented in this file.
 
 # ⭐ **[1.2.0] — 2025-11-17**
 
+## [1.2.1] — 2025-11-17
+### Fixed
+- Forced TCP mode for MySQL DBAL by disabling unix_socket fallback.
+- Resolved `SQLSTATE[HY000] [2002] No such file or directory` affecting GitHub CI runs.
+- Improved DSN parsing to support complex passwords containing special characters.
+- Ensured consistent param normalization between PDO and DBAL MySQL adapters.
+- Updated RawAccessTest to use CI-safe DSNs for stable driver validation.
+
+### Improved
+- More robust handshake logic for Doctrine DBAL initialization.
+- Better separation between DSN-derived fields and legacy ENV fallbacks.
+
+### Notes
+- Fully backward compatible with 1.2.x series.
+- Recommended upgrade for all users running CI or DBAL-based connections.
+
+---
+
 ## 🚀 **Phase 15 — Raw Driver Layer + Full DSN Stabilization**
 
 ### Added
