@@ -47,7 +47,12 @@ final class RawAccessTest extends TestCase
          * CI already has maatify_dev database created.
          */
 
-        $_ENV["MYSQL_MAIN_DSN"]  = "mysql:host=127.0.0.1;dbname=maatify_dev;port=3306;charset=utf8mb4";
+        $_ENV["MYSQL_MAIN_DSN"] =
+            "mysql:host=127.0.0.1;port=3306;dbname=maatify_dev;charset=utf8mb4;unix_socket=";
+
+        $_ENV["MYSQL_MAIN_USER"] = "root";
+        $_ENV["MYSQL_MAIN_PASS"] = "root";
+        $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
         $_ENV["MYSQL_MAIN_USER"] = "root";
         $_ENV["MYSQL_MAIN_PASS"] = "root";
         $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
@@ -66,7 +71,8 @@ final class RawAccessTest extends TestCase
         /**
          * Using maatify_logs which we ensure exists in CI.
          */
-        $_ENV["MYSQL_LOGS_DSN"]    = "mysql://root:root@127.0.0.1:3306/maatify_logs";
+        $_ENV["MYSQL_LOGS_DSN"] =
+            "mysql://root:root@127.0.0.1:3306/maatify_logs?unix_socket=";
         $_ENV["MYSQL_LOGS_DRIVER"] = "dbal";
 
         $mysql = $this->resolver->resolve('mysql.logs');
@@ -83,7 +89,7 @@ final class RawAccessTest extends TestCase
         /**
          * Mongo test database always exists in CI
          */
-        $_ENV["MONGO_MAIN_DSN"] = "mongodb://127.0.0.1:27017/maatify";
+        $_ENV["MONGO_MAIN_DSN"] = "mongodb://127.0.0.1:27017/main";
 
         $mongo = $this->resolver->resolve('mongo.main');
         $raw   = $mongo->getDriver();
