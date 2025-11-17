@@ -72,7 +72,63 @@ jobs:
           - "3306:3306"
 
     steps:
+      # ---------------------------------------------
+      # 1) Load Repo (important: MUST be before ENV)
+      # ---------------------------------------------
       - uses: actions/checkout@v4
+
+      # ---------------------------------------------
+      # 2) Inject ALL ENV into $_ENV via GITHUB_ENV
+      # ---------------------------------------------
+      - name: Inject Maatify Test Environment
+        run: |
+          echo "APP_ENV=testing" >> $GITHUB_ENV
+
+          # Redis
+          echo "REDIS_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "REDIS_PORT=6379" >> $GITHUB_ENV
+          echo "REDIS_PASS=" >> $GITHUB_ENV
+          echo "REDIS_MAIN_DSN=redis://127.0.0.1:6379" >> $GITHUB_ENV
+          echo "REDIS_QUEUE_DSN=redis://127.0.0.1:6379" >> $GITHUB_ENV
+          echo "REDIS_SESSIONS_DSN=redis://127.0.0.1:6379/2" >> $GITHUB_ENV
+          echo "REDIS_CACHE_DSN=redis://127.0.0.1:6379/2" >> $GITHUB_ENV
+          echo "REDIS_ANALYTICS_DSN=redis://127.0.0.1:6380" >> $GITHUB_ENV
+
+          # Mongo
+          echo "MONGO_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "MONGO_PORT=27017" >> $GITHUB_ENV
+          echo "MONGO_USER=" >> $GITHUB_ENV
+          echo "MONGO_PASS=" >> $GITHUB_ENV
+          echo "MONGO_DB=maatify" >> $GITHUB_ENV
+          echo "MONGO_AUTH_SOURCE=admin" >> $GITHUB_ENV
+          echo "MONGO_MAIN_DSN=mongodb://127.0.0.1:27017/maatify" >> $GITHUB_ENV
+          echo "MONGO_LOGS_DSN=mongodb://127.0.0.1:27017/logs" >> $GITHUB_ENV
+          echo "MONGO_ACTIVITY_DSN=mongodb://127.0.0.1:27017/activity" >> $GITHUB_ENV
+
+          # MySQL Legacy
+          echo "MYSQL_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "MYSQL_PORT=3306" >> $GITHUB_ENV
+          echo "MYSQL_USER=root" >> $GITHUB_ENV
+          echo "MYSQL_PASS=root" >> $GITHUB_ENV
+          echo "MYSQL_DB=maatify_dev" >> $GITHUB_ENV
+          echo "MYSQL_DRIVER=dbal" >> $GITHUB_ENV
+
+          # MySQL DSN Profiles
+          echo "MYSQL_DSN=mysql:host=127.0.0.1;dbname=maatify_dev;charset=utf8mb4" >> $GITHUB_ENV
+          echo "MYSQL_MAIN_DSN=mysql:host=127.0.0.1;dbname=maatify_main;charset=utf8mb4" >> $GITHUB_ENV
+          echo "MYSQL_MAIN_USER=root" >> $GITHUB_ENV
+          echo "MYSQL_MAIN_PASS=root" >> $GITHUB_ENV
+          echo "MYSQL_DEV_DSN=mysql:host=127.0.0.1;dbname=maatify_dev;charset=utf8mb4" >> $GITHUB_ENV
+          echo "MYSQL_BILLING_DSN=mysql:host=127.0.0.1;dbname=maatify_billing;charset=utf8mb4" >> $GITHUB_ENV
+          echo "MYSQL_LOGS_DSN=mysql://root:root@127.0.0.1:3306/maatify_logs" >> $GITHUB_ENV
+          echo "MYSQL_LOGS_DRIVER=dbal" >> $GITHUB_ENV
+
+          # Phase 13 Registry (optional but recommended)
+          echo "DB_REGISTRY_PATH=tests/fixtures/database_registry.json" >> $GITHUB_ENV
+
+      # ---------------------------------------------
+      # 3) PHP Setup
+      # ---------------------------------------------
 
       - uses: shivammathur/setup-php@v2
         with:
