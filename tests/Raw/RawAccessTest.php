@@ -48,11 +48,8 @@ final class RawAccessTest extends TestCase
          */
 
         $_ENV["MYSQL_MAIN_DSN"] =
-            "mysql:host=127.0.0.1;port=3306;dbname=maatify_dev;charset=utf8mb4;unix_socket=";
+            "mysql:host=127.0.0.1;port=3306;dbname=maatify;charset=utf8mb4;";
 
-        $_ENV["MYSQL_MAIN_USER"] = "root";
-        $_ENV["MYSQL_MAIN_PASS"] = "root";
-        $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
         $_ENV["MYSQL_MAIN_USER"] = "root";
         $_ENV["MYSQL_MAIN_PASS"] = "root";
         $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
@@ -72,8 +69,10 @@ final class RawAccessTest extends TestCase
          * Using maatify_logs which we ensure exists in CI.
          */
         $_ENV["MYSQL_LOGS_DSN"] =
-            "mysql://root:root@127.0.0.1:3306/maatify_logs?charset=utf8mb4&unix_socket=";
+            "mysql://root:root@127.0.0.1:3306/maatify";
         $_ENV["MYSQL_LOGS_DRIVER"] = "dbal";
+        $_ENV["MYSQL_LOGS_USER"] = "root";
+        $_ENV["MYSQL_LOGS_PASS"] = "root";
 
         $mysql = $this->resolver->resolve('mysql.logs');
         $raw   = $mysql->getDriver();

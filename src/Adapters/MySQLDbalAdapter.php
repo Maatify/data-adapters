@@ -88,6 +88,8 @@ final class MySQLDbalAdapter extends BaseAdapter
                     new Configuration()
                 );
 
+//                print_r($cfg);
+//                print_r($_ENV);
                 $this->connection->executeQuery('SELECT 1');
                 $this->connected = true;
                 return;
@@ -137,8 +139,8 @@ final class MySQLDbalAdapter extends BaseAdapter
                 new Configuration()
             );
 
-            print_r($cfg);
-//            print_r($_ENV);
+            //                print_r($cfg);
+            //                print_r($_ENV);
 
             // 🧪 Force connection validation
             $this->connection->executeQuery('SELECT 1');
