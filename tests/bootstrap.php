@@ -42,6 +42,4 @@ $loader->load();
 
 // 🧪 Display active environment for verification
 echo "🧪 Environment: " . ($_ENV['APP_ENV'] ?? 'unknown') . PHP_EOL;
-echo "$ _ENV" . PHP_EOL;
-print_r($_ENV);
 
