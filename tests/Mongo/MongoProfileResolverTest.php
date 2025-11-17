@@ -71,7 +71,7 @@ final class MongoProfileResolverTest extends TestCase
         $this->assertNotEmpty($cfg->dsn, 'MONGO_MAIN_DSN must be set');
 
         // ensure DB is parsed correctly
-        $this->assertSame('main', $cfg->database);
+        $this->assertSame('maatify', $cfg->database);
     }
 
     /**
