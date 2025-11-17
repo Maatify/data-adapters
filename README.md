@@ -57,6 +57,8 @@ composer require maatify/data-adapters
 - Multi-profile MySQL & MongoDB (unlimited profiles)
 - Redis unified builder (future multi-profile ready)
 - Centralized diagnostics & health checks
+- Unified raw driver layer (`getDriver()`) for PDO / DBAL / MongoDB / Redis
+- Full DSN stabilization (PDO-style + Doctrine URL-style)
 
 ---
 
@@ -99,6 +101,127 @@ and is now **future-ready for multi-profile support**.
 
 ---
 
+# 🔥 **New in Phase 15 — Raw Driver Layer + DSN Stabilization**
+
+Phase 15 introduces a **unified low-level driver access layer** and fully stabilizes
+DSN parsing across all adapters (PDO, Doctrine, Mongo, Redis).
+
+This phase ensures every adapter exposes its **native underlying driver** safely:
+
+| Adapter      | raw driver (`getDriver()`) |
+|--------------|----------------------------|
+| MySQL (PDO)  | `PDO`                      |
+| MySQL (DBAL) | `Doctrine\DBAL\Connection` |
+| MongoDB      | `MongoDB\Database`         |
+| Redis        | `Redis` or `Predis\Client` |
+
+---
+
+## ✔ Unified Raw Driver Access (`getDriver()`)
+
+Every adapter now supports:
+
+```php
+$pdo  = $mysql->getDriver();          // PDO
+$dbal = $mysqlDbal->getDriver();      // Doctrine Connection
+$mongo = $mongoMain->getDriver();     // MongoDB Database
+$redis = $redisCache->getDriver();    // Redis or Predis
+```
+
+Perfect for:
+
+* Building your own query layers
+* Passing native connections into other libraries
+* High-performance custom operations
+
+---
+
+## ✔ Full DSN Stabilization (PDO + Doctrine)
+
+Phase 15 completes the DSN architecture:
+
+### PDO-style DSNs
+
+```
+mysql:host=127.0.0.1;port=3306;dbname=demo
+```
+
+### Doctrine URL DSNs
+
+```
+mysql://user:P%40ss%3B@10.0.0.5:3306/mydb
+```
+
+✓ Special characters now parsed correctly
+✓ Passwords preserved safely (encoded/decoded)
+✓ Unified parser for both formats
+✓ No more `parse_url()` issues
+
+---
+
+## ✔ Accurate Driver Routing (`driver=pdo` / `driver=dbal`)
+
+Profiles can now explicitly choose driver:
+
+```
+MYSQL_MAIN_DRIVER=pdo
+MYSQL_LOGS_DRIVER=dbal
+MYSQL_REPORTING_DRIVER=dbal
+```
+
+Or DSN auto-detects driver automatically.
+
+---
+
+## ✔ Real MySQL Dual-Driver Test (Local + CI)
+
+Phase 15 upgrades the integration tests so they:
+
+* Load real `.env` values
+* Support DSN override via `putenv()`
+* Work in both **CI** and **local development**
+* Auto-detect PDO and DBAL correctness
+* Skip only when connection fails intentionally
+
+---
+
+## ✔ Improved Config Normalization
+
+`MySqlConfigBuilder` / `MongoConfigBuilder` / `RedisConfigBuilder` now guarantee:
+
+* No null database issues
+* No partial DSN parsing
+* No empty user/pass fallback bugs
+* No malformed DSN from registry merge
+
+---
+
+## ✔ Raw Driver Tests Added
+
+* `RawDriverRoutingTest`
+* `RawAccessTest`
+* `MysqlDsnParserTest` (enhanced)
+
+All confirming:
+
+* Correct low-level driver type
+* Correct DSN behavior
+* Correct profile routing
+* Correct priority merge
+
+---
+
+# 🟦 Summary of Phase 15
+
+✓ Raw driver access layer
+✓ Stable DSN parsing for all formats
+✓ Reliable driver routing
+✓ Full MySqlConfigBuilder normalization
+✓ Raw-access tests + DSN tests + dual-driver tests
+✓ Architecture ready for **Failover Routing (Phase 16)**
+
+---
+
 ## 🧩 Compatibility
 Fully framework-agnostic.  
 Optional auto-wiring available via **maatify/bootstrap**.
@@ -106,7 +229,8 @@ Optional auto-wiring available via **maatify/bootstrap**.
 - Supports runtime overrides through registry.json
 ---
 
-## 🚀 Quick Usage (Updated for Phase 13 — Unified Config Engine)
+
+## 🚀 Quick Usage (Updated for Phase 15 — Raw Driver Layer + DSN Stabilization)
 
 ```php
 use Maatify\DataAdapters\Core\EnvironmentConfig;
@@ -180,6 +304,15 @@ print_r($mainDbFromRegistry->debugConfig()->user);
 // override_user
 
 
+// ------------------------------------
+// 🛠 Raw Driver Access (Phase 15)
+// ------------------------------------
+$native = $mainDb->getDriver();   // PDO or Doctrine Connection
+var_dump($native instanceof PDO); // true (example)
+
+$mongoNative = $mongoMain->getDriver(); // MongoDB\Database
+
+$redisNative = $redis->getDriver(); // Redis or Predis\Client
 ```
 
 ---
@@ -213,6 +346,12 @@ echo $diagnostic->toJson();
 vendor/bin/phpunit
 ```
 
+- Added Phase 15 tests:
+    - RawDriverRoutingTest
+    - RawAccessTest
+    - Enhanced DSN parsing tests
+    - Real MySQL dual-driver test (PDO + DBAL)
+
 **Coverage:** **≈ 93%**  
 **Status:** ✅ All tests passing (DSN, registry, multi-profile, diagnostics, metrics)  
 **Suites:**
@@ -224,6 +363,8 @@ vendor/bin/phpunit
 * Multi-Profile MySQL & MongoDB Tests
 * Redis Builder Tests
 * Diagnostics & Metrics Tests
+* Phase 15 introduced raw driver validation inside diagnostics, ensuring  
+  accurate low-level connectivity (PDO/DBAL/MongoDB/Redis).
 
 ---
 

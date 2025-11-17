@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Core\Config;
 
+use InvalidArgumentException;
 use JsonException;
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
+use Maatify\DataAdapters\Core\Parser\MysqlDsnParser;
 
 /**
  * 🧩 **MySqlConfigBuilder (Phase 13 — Final)**
@@ -78,9 +80,13 @@ final readonly class MySqlConfigBuilder
      * @return ConnectionConfigDTO
      * @throws JsonException When options JSON is malformed.
      */
+    /**
+     * Build a resolved MySQL configuration for the given profile.
+     *
+     * @throws InvalidArgumentException  When Doctrine DSN is invalid.
+     */
     public function build(?string $profile): ConnectionConfigDTO
     {
-        // ⛔ Null profile → return empty DTO (used internally by Resolver)
         if ($profile === null) {
             return new ConnectionConfigDTO();
         }
@@ -88,14 +94,34 @@ final readonly class MySqlConfigBuilder
         $upper = strtoupper($profile);
 
         // ---------------------------------------------------------
-        // (1) DSN (PDO or Doctrine-style)
+        // (1) Load DSN (PDO or Doctrine URL)
         // ---------------------------------------------------------
-        $dsnKey  = "MYSQL_{$upper}_DSN";
-        $dsn     = $this->config->get($dsnKey);
-        $dsnData = $dsn ? $this->parseMysqlDsn($dsn) : [];
+        $dsnKey = "MYSQL_{$upper}_DSN";
+        $dsn    = $this->config->get($dsnKey);
+        $dsnData = $dsn ? MysqlDsnParser::parse($dsn) : [];
 
         // ---------------------------------------------------------
-        // (2) Legacy ENV fallback values
+        // (1.1) STRICT VALIDATION for Doctrine URL
+        // ---------------------------------------------------------
+        if ($dsn && str_starts_with($dsn, 'mysql://')) {
+            $this->validateDoctrineDsn($dsn, $profile);
+
+                // Doctrine DSN MUST override everything
+                return new ConnectionConfigDTO(
+                    dsn      : $dsn,
+                    host     : $dsnData['host'] ?? null,
+                    port     : isset($dsnData['port']) ? (string)$dsnData['port'] : null,
+                    user     : $dsnData['user'] ?? null,
+                    pass     : $dsnData['pass'] ?? null,
+                    database : $dsnData['database'] ?? null,
+                    options  : $dsnData['options'] ?? [],
+                    driver   : 'dbal',
+                    profile  : $profile
+                );
+        }
+
+        // ---------------------------------------------------------
+        // (2) Legacy fallback environment values
         // ---------------------------------------------------------
         $legacy = [
             'dsn'      => null,
@@ -106,14 +132,14 @@ final readonly class MySqlConfigBuilder
             'database' => $this->config->get("MYSQL_{$upper}_DB"),
         ];
 
-        // Parse legacy OPTIONS JSON
+        // Parse OPTIONS JSON (optional)
         $optionsJson = $this->config->get("MYSQL_{$upper}_OPTIONS");
-        $legacy['options'] = !empty($optionsJson)
+        $legacy['options'] = $optionsJson
             ? (json_decode($optionsJson, true) ?: [])
             : [];
 
         // ---------------------------------------------------------
-        // (3) Registry → DSN → Legacy (priority merge)
+        // (3) Registry → DSN → Legacy priority merge
         // ---------------------------------------------------------
         $merged = $this->config->mergeWithRegistry(
             type    : 'mysql',
@@ -123,7 +149,7 @@ final readonly class MySqlConfigBuilder
         );
 
         // ---------------------------------------------------------
-        // (4) Build final DTO (never returns partial state)
+        // (4) Produce final normalized DTO
         // ---------------------------------------------------------
         return new ConnectionConfigDTO(
             dsn      : $merged['dsn']      ?? $dsn,
@@ -139,56 +165,28 @@ final readonly class MySqlConfigBuilder
     }
 
     /**
-     * 🧠 **Parse MySQL DSN (PDO or Doctrine-style)**
+     * 💂‍♂️ Strict validation for Doctrine-style DSN (mysql://user:pass@host:port/db)
      *
-     * Supports:
-     * - Doctrine DSN:
-     *   `mysql://user:pass@host:3306/dbname`
-     *
-     * - PDO DSN:
-     *   `mysql:host=127.0.0.1;port=3306;dbname=test`
-     *
-     * @param string $dsn Raw DSN string.
-     *
-     * @return array<string, string|null> Parsed DSN parts.
+     * @throws InvalidArgumentException
      */
-    private function parseMysqlDsn(string $dsn): array
+    private function validateDoctrineDsn(string $dsn, string $profile): void
     {
-        // -------------------------------------------------
-        // Doctrine: mysql://user:pass@host:port/dbname
-        // -------------------------------------------------
-        if (str_starts_with($dsn, 'mysql://')) {
-            $url = parse_url($dsn);
+        $parts = MysqlDsnParser::parse($dsn);
 
-            return [
-                'host'     => $url['host'] ?? null,
-                'port'     => $url['port'] ?? null,
-                'user'     => $url['user'] ?? null,
-                'pass'     => $url['pass'] ?? null,
-                'database' => isset($url['path']) ? ltrim($url['path'], '/') : null,
-            ];
+        if (!is_array($parts)) {
+            throw new \InvalidArgumentException(
+                "Invalid Doctrine MySQL DSN for profile '{$profile}'. Failed to parse DSN: {$dsn}"
+            );
         }
 
-        // -------------------------------------------------
-        // PDO: mysql:host=127;port=3306;dbname=test
-        // -------------------------------------------------
-        $clean = str_replace('mysql:', '', $dsn);
-        $pairs = explode(';', $clean);
+        $required = ['host', 'port', 'user', 'pass', 'database'];
 
-        $out = [];
-        foreach ($pairs as $pair) {
-            if (!str_contains($pair, '=')) {
-                continue;
+        foreach ($required as $key) {
+            if (empty($parts[$key])) {
+                throw new \InvalidArgumentException(
+                    "Invalid Doctrine DSN for profile '{$profile}': missing '{$key}' in DSN: {$dsn}"
+                );
             }
-
-            [$key, $value] = explode('=', $pair, 2);
-            $out[strtolower(trim($key))] = trim($value);
         }
-
-        return [
-            'host'     => $out['host']   ?? null,
-            'port'     => $out['port']   ?? null,
-            'database' => $out['dbname'] ?? null,
-        ];
     }
 }

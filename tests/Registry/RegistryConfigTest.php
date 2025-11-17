@@ -18,106 +18,96 @@ use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\Config\RegistryConfig;
 
 /**
- * 🧪 **RegistryConfigTest**
+ * 🧪 RegistryConfigTest (Improved & Stable)
  *
- * Unit tests covering the behavior of the `RegistryConfig` class.
- *
- * 🎯 **Test coverage includes:**
- * - Invalid registry path handling
- * - Loading a valid registry file
- * - Registry-based overrides for DSN and legacy values
- *
- * Each test creates fixtures on the fly to avoid using external files.
- *
- * ---
- * ### Fixture Structure Example:
- * ```json
- * {
- *   "databases": {
- *     "mysql": {
- *       "main": {
- *         "dsn": "mysql:host=127.0.0.1;dbname=test"
- *       }
- *     }
- *   }
- * }
- * ```
- * ---
+ * ✔ Fully isolated — no external env, no .env loading
+ * ✔ Creates fixtures dynamically inside /tests/Registry/fixtures
+ * ✔ Ensures cleanup after each test
+ * ✔ Compatible with PHPUnit 10 strictness
  */
 final class RegistryConfigTest extends TestCase
 {
-    /**
-     * Directory for dynamically generated test fixtures.
-     *
-     * @var string
-     */
     private string $fixturesDir;
 
-    /**
-     * Prepare fixture directory before each test.
-     */
     protected function setUp(): void
     {
+        parent::setUp();
+
+        // Create dedicated fixtures directory
         $this->fixturesDir = __DIR__ . '/fixtures';
 
-        // Ensure fixtures directory exists
-        if (!is_dir($this->fixturesDir)) {
+        if (! is_dir($this->fixturesDir)) {
             mkdir($this->fixturesDir, 0777, true);
         }
     }
 
+    protected function tearDown(): void
+    {
+        // Cleanup fixtures after each test
+        if (is_dir($this->fixturesDir)) {
+            foreach (glob($this->fixturesDir . '/*.json') as $file) {
+                unlink($file);
+            }
+            rmdir($this->fixturesDir);
+        }
+
+        parent::tearDown();
+    }
+
     /**
-     * 🧪 Ensure that setting an invalid registry path throws an exception.
+     * 🧪 Ensure invalid registry path throws.
      */
     public function testInvalidPathThrowsException(): void
     {
         $this->expectException(\Exception::class);
 
         $config = new RegistryConfig();
-        $config->setPath('/invalid/path.json');
+        $config->setPath('/invalid/not-found.json');
     }
 
     /**
-     * 🧪 Ensure that a valid registry file loads successfully and contains expected keys.
+     * 🧪 Test loading a valid registry file.
      */
     public function testValidRegistryLoadsSuccessfully(): void
     {
         $path = $this->fixturesDir . '/registry.valid.json';
 
-        // Create a valid registry fixture
         file_put_contents($path, json_encode([
             'databases' => [
                 'mysql' => [
-                    'main' => ['dsn' => 'mysql:host=127.0.0.1;dbname=test']
+                    'main' => [
+                        'dsn' => 'mysql:host=127.0.0.1;dbname=test'
+                    ]
                 ]
             ]
-        ]));
+        ], JSON_PRETTY_PRINT));
 
         $config = new RegistryConfig();
         $config->setPath($path);
 
         $data = $config->load();
 
+        $this->assertIsArray($data);
         $this->assertArrayHasKey('databases', $data);
-
-        unlink($path);
+        $this->assertArrayHasKey('mysql', $data['databases']);
     }
 
     /**
-     * 🧪 Ensure registry values override DSN and legacy values properly.
+     * 🧪 Test override logic for DSN/legacy values.
      */
     public function testRegistryOverridesDsnAndLegacy(): void
     {
         $path = $this->fixturesDir . '/registry.override.json';
 
-        // Create a registry fixture that overrides DSN
         file_put_contents($path, json_encode([
             'databases' => [
                 'mysql' => [
-                    'main' => ['dsn' => 'mysql:host=10.0.0.5;dbname=override']
+                    'main' => [
+                        'dsn' => 'mysql:host=10.0.0.5;dbname=override'
+                    ]
                 ]
             ]
-        ]));
+        ], JSON_PRETTY_PRINT));
 
         $config = new RegistryConfig();
         $config->setPath($path);
@@ -128,7 +118,5 @@ final class RegistryConfigTest extends TestCase
             'mysql:host=10.0.0.5;dbname=override',
             $data['databases']['mysql']['main']['dsn']
         );
-
-        unlink($path);
     }
 }

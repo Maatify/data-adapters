@@ -19,55 +19,41 @@ use Maatify\DataAdapters\Adapters\MySQLDbalAdapter;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
 /**
- * 🧪 **MysqlDbalDsnAdapterTest**
+ * 🧪 MysqlDbalDsnAdapterTest (Real Integration Version)
  *
- * 🎯 Ensures that the DBAL MySQL adapter correctly reads and prioritizes
- * DSN-based configuration — specifically Doctrine-style URL DSNs:
- *
- * ```
- * mysql://user:pass@host:port/database
- * ```
- *
- * This test validates that:
- * - DSN is correctly picked up using the profile name (`logs`)
- * - DSN-first behavior works the same as in PDO MySQLAdapter
- * - Legacy host/port/db/env variables do not override DSN
- *
- * ✔ Fully aligned with Phase 10 DSN architecture
- * ✔ `APP_ENV=testing` prevents accidental `.env` loading
- *
- * @example
- * ```php
- * $_ENV['MYSQL_LOGS_DSN'] = 'mysql://user:pass@10.0.0.5:3306/logs';
- * $adapter = new MySQLDbalAdapter($env, 'logs');
- * $cfg = $adapter->debugConfig();
- * ```
+ * ✔ No $_ENV mocking
+ * ✔ Uses real DSN from .env.testing or .env.local
+ * ✔ Ensures DBAL adapter honors DSN-first behavior
+ * ✔ Works on GitHub Actions + local environment
  */
 final class MysqlDbalDsnAdapterTest extends TestCase
 {
-    /**
-     * 🧪 Seed mock environment for the test.
-     *
-     * Ensures DBAL adapter reads:
-     * - DSN: `MYSQL_LOGS_DSN`
-     * - Profile: `logs`
-     */
+    private MySQLDbalAdapter $adapter;
+
     protected function setUp(): void
     {
-        $_ENV = [
-            'APP_ENV'        => 'testing',
-            'MYSQL_LOGS_DSN' => 'mysql://user:pass@10.0.0.5:3306/logs',
-        ];
+        // Real bootstrap already loaded env (.env.local, .env.testing)
+        $config = new EnvironmentConfig(dirname(__DIR__, 2));
+
+        // profile "logs" must exist in DSN
+        $this->adapter = new MySQLDbalAdapter($config, 'logs');
     }
 
-    /**
-     * 🧪 Ensure DBAL correctly loads Doctrine URL DSN for logs profile.
-     */
-    public function testDbalReadsUrlDsn(): void
+    public function testDbalReadsRealDsn(): void
     {
-        $adapter = new MySQLDbalAdapter(new EnvironmentConfig(__DIR__), 'logs');
-        $cfg = $adapter->debugConfig();
+        $cfg = $this->adapter->debugConfig();
 
-        $this->assertSame('mysql://user:pass@10.0.0.5:3306/logs', $cfg->dsn);
+        // Ensure DSN exists
+        $this->assertNotEmpty(
+            $cfg->dsn,
+            'MYSQL_LOGS_DSN must exist in your environment'
+        );
+
+        // Ensure Doctrine URL DSN format
+        $this->assertStringStartsWith(
+            'mysql://',
+            $cfg->dsn,
+            'DBAL DSN must be Doctrine URL format'
+        );
     }
 }

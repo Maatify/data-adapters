@@ -52,6 +52,9 @@ use Maatify\Common\Enums\ConnectionTypeEnum;
  */
 final class MongoAdapter extends BaseAdapter
 {
+
+    private ?Database $cachedDb = null;
+
     /**
      * 🧩 **Establish MongoDB Connection**
      *
@@ -192,18 +195,21 @@ final class MongoAdapter extends BaseAdapter
     /**
      * 📌 Return a MongoDB\Database instance based on resolved profile or cfg->database
      */
+
     public function getDatabase(): Database
     {
+        if ($this->cachedDb instanceof Database) {
+            return $this->cachedDb;
+        }
+
         if (! $this->connected) {
             $this->connect();
         }
 
         $cfg = $this->resolveConfig(ConnectionTypeEnum::MONGO);
 
-        // Use configured database or default "admin"
-        $database = $cfg->database ?: 'admin';
-
-        return $this->connection->selectDatabase($database);
+        $dbName = $cfg->database ?: 'admin';
+        return $this->cachedDb = $this->connection->selectDatabase($dbName);
     }
 
     /**
@@ -217,4 +223,10 @@ final class MongoAdapter extends BaseAdapter
 
         return $this->connection;
     }
+
+    public function getDriver(): Database
+    {
+        return $this->getDatabase();
+    }
+
 }

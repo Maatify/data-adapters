@@ -16,16 +16,22 @@ use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
+/**
+ * 🔥 Real MySQL Dual Connection Test
+ *
+ * ✔ يعمل في CI + Local بدون أي شروط
+ * ✔ يجرب كل من:
+ *   - MYSQL_DSN  → PDO driver
+ *   - MYSQL_MAIN_DSN → DBAL driver
+ * ✔ يستخدم القيم الحقيقية من .env للمشروع
+ */
 final class RealMysqlDualConnectionTest extends TestCase
 {
     #[\PHPUnit\Framework\Attributes\DataProvider('provideDrivers')]
     public function testMysqlConnection(string $driver, string $dsnEnvVar): void
     {
-        if (! getenv('CI')) {
-            $this->markTestSkipped('Skipped offline MySQL integration test.');
-        }
         // -----------------------------
-        // 1) Read real .env values first
+        // 1) Load .env real values
         // -----------------------------
         $configLoader = new EnvironmentConfig(dirname(__DIR__, 2));
 
@@ -35,46 +41,57 @@ final class RealMysqlDualConnectionTest extends TestCase
         $user = $configLoader->get('MYSQL_USER');
         $pass = $configLoader->get('MYSQL_PASS');
 
+        $this->assertNotEmpty($host, 'Missing MYSQL_HOST in .env');
+        $this->assertNotEmpty($db,   'Missing MYSQL_DB in .env');
+
         // -----------------------------
-        // 2) Override env vars with putenv() BEFORE reloading config
+        // 2) Clean old DSNs
         // -----------------------------
         putenv("MYSQL_DSN");
         putenv("MYSQL_MAIN_DSN");
         putenv("MYSQL_DEFAULT_DSN");
 
-        putenv("{$dsnEnvVar}=mysql:host={$host};port={$port};dbname={$db}");
+        // -----------------------------
+        // 3) Set DSN for the tested driver
+        // -----------------------------
+        $pdoDsn = "mysql:host={$host};port={$port};dbname={$db}";
+        putenv("{$dsnEnvVar}={$pdoDsn}");
 
+        // Ensure username/password available
         putenv("MYSQL_USER={$user}");
         putenv("MYSQL_PASS={$pass}");
 
         // -----------------------------
-        // 3) Now reload config (important!)
+        // 4) Reload config after overrides
         // -----------------------------
         $config   = new EnvironmentConfig(dirname(__DIR__, 2));
         $resolver = new DatabaseResolver($config);
 
         // -----------------------------
-        // 4) Connect
+        // 5) Resolve and connect
         // -----------------------------
         $adapter = $resolver->resolve("mysql");
         $adapter->connect();
 
+        // -----------------------------
+        // 6) Validate actual connectivity
+        // -----------------------------
         $this->assertTrue(
             $adapter->healthCheck(),
             "❌ MySQL {$driver} health check failed."
         );
     }
 
-
-
     /**
-     * 📦 Data Provider: DSN-based driver selector
+     * 🧪 Driver matrix:
+     * - MYSQL_DSN       → PDO
+     * - MYSQL_MAIN_DSN  → DBAL
      */
     public static function provideDrivers(): array
     {
         return [
-            ['pdo',  'MYSQL_DSN'],         // → MySQLAdapter (PDO)
-            ['dbal', 'MYSQL_MAIN_DSN'],    // → MySQLDbalAdapter (DBAL)
+            ['pdo',  'MYSQL_DSN'],
+            ['dbal', 'MYSQL_MAIN_DSN'],
         ];
     }
 }

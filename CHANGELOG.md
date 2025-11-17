@@ -17,6 +17,53 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# ⭐ **[1.2.0] — 2025-11-17**
+
+## 🚀 **Phase 15 — Raw Driver Layer + Full DSN Stabilization**
+
+### Added
+- Introduced a unified **raw driver access layer** via `getDriver()`:
+    - MySQL (PDO) → `PDO`
+    - MySQL (DBAL) → `Doctrine\DBAL\Connection`
+    - MongoDB → `MongoDB\Database`
+    - Redis → `Redis` or `Predis\Client`
+- Added complete test suite for the new raw layer:
+    - `RawDriverRoutingTest`
+    - `RawAccessTest`
+    - Updated `MysqlDsnParserTest` for stricter DSN parsing
+- Added automatic driver selection using:
+  ```
+  MYSQL_<PROFILE>_DRIVER=pdo|dbal
+  ```
+- Added strict DSN interpreter for both:
+    - PDO-style DSNs
+    - Doctrine URL DSNs with safe password decoding
+- Normalized MySQL profile DTO output in `MySqlConfigBuilder`.
+
+### Changed
+- Rewrote MySQL DSN parsing using strict regex-based rules to avoid
+  `parse_url()` limitations.
+- Updated `DatabaseResolver` to:
+    - Correctly map profiles to driver types
+    - Fully isolate driver routing from connection logic
+    - Guarantee correct driver before `getDriver()` calls
+- Standardized raw driver access (previously `raw()`) across all adapters.
+- Updated MySQLDbalAdapter and MySQLAdapter to support the new DSN + driver
+  flag resolution flow.
+
+### Fixed
+- Fixed Doctrine DSN failures for passwords containing `@`, `:`, `;`, `%xx`.
+- Fixed null-database issues in partial DSNs.
+- Fixed DSN merge logic inconsistencies for Registry → DSN → Legacy.
+- Fixed real MySQL dual-driver tests for both local and CI environments.
+
+### Notes
+- Fully backward-compatible with Phase 13.
+- No changes required in existing user code.
+- The raw driver layer prepares the foundation for **Phase 16: Failover Routing**.
+
+---
+
 ## [1.1.2] — 2025-11-16
 ### Added
 - Introduced `ResolverInterface` to formalize contract for all resolver implementations.

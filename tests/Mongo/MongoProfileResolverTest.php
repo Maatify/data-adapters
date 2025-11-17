@@ -17,94 +17,74 @@ namespace Maatify\DataAdapters\Tests\Mongo;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 use ReflectionMethod;
+use ReflectionException;
 
 /**
- * 🧪 **MongoProfileResolverTest**
+ * 🧪 MongoProfileResolverTest (Real Integration Version)
  *
- * 🎯 Tests the MongoDB profile-based resolution logic implemented inside
- * `DatabaseResolver` + `MongoConfigBuilder`.
+ * 🎯 Confirms that Mongo profiles (main, logs) resolve correctly using:
+ * - Real DSN values loaded via EnvironmentLoader
+ * - MongoConfigBuilder + Route-based resolution
  *
- * Ensures:
- * - DSN per profile is correctly detected
- * - Database name is parsed correctly from DSN
- * - Profiles (`main`, `logs`) produce expected results
- *
- * ✔ Uses `APP_ENV=testing` to prevent automatic `.env` loading
- * ✔ Manually populates `$_ENV` to simulate environment settings
- *
- * @example
- * ```php
- * $resolver = new DatabaseResolver(new EnvironmentConfig(__DIR__));
- * $adapter  = $resolver->resolve('mongo.logs');
- * ```
+ * ✔ No mocking of $_ENV
+ * ✔ No overriding environment variables
+ * ✔ Fully compatible with .env.testing & CI
  */
 final class MongoProfileResolverTest extends TestCase
 {
-    /**
-     * 🧪 Prepare test environment before each test.
-     *
-     * - Forces `APP_ENV=testing` so no `.env` file is loaded
-     * - Seeds fake Mongo DSNs for `main` and `logs` profiles
-     */
+    private DatabaseResolver $resolver;
+
     protected function setUp(): void
     {
-        $_ENV['APP_ENV'] = 'testing';
-
-        $_ENV['MONGO_MAIN_DSN'] = 'mongodb://localhost:27017/main';
-        $_ENV['MONGO_LOGS_DSN'] = 'mongodb://localhost:27017/logs';
+        // EnvironmentLoader loads DSN from .env.testing automatically
+        $this->resolver = new DatabaseResolver(
+            new EnvironmentConfig(dirname(__DIR__, 2))
+        );
     }
 
     /**
-     * 🧪 **Test resolution for profile: main**
-     *
-     * Ensures:
-     * - Mongo DSN → `mongodb://localhost:27017/main`
-     * - Database parsed should equal `"main"`
+     * 🔍 Helper: call protected resolveConfig() inside adapter
+     */
+    private function callResolveConfig(object $adapter)
+    {
+        $ref = new ReflectionMethod($adapter, 'resolveConfig');
+        $ref->setAccessible(true);
+
+        return $ref->invoke(
+            $adapter,
+            \Maatify\Common\Enums\ConnectionTypeEnum::MONGO
+        );
+    }
+
+    /**
+     * 🧪 Profile: main
+     * Requires in .env.testing:
+     *   MONGO_MAIN_DSN=mongodb://127.0.0.1:27017/main
      */
     public function testMainProfileResolution(): void
     {
-        $resolver = new DatabaseResolver(new EnvironmentConfig(__DIR__));
-        $adapter  = $resolver->resolve('mongo.main');
-        $cfg      = $this->callProtected($adapter, 'resolveConfig');
+        $adapter = $this->resolver->resolve('mongo.main');
+        $cfg = $this->callResolveConfig($adapter);
 
+        // ensure DSN exists
+        $this->assertNotEmpty($cfg->dsn, 'MONGO_MAIN_DSN must be set');
+
+        // ensure DB is parsed correctly
         $this->assertSame('main', $cfg->database);
     }
 
     /**
-     * 🧪 **Test resolution for profile: logs**
-     *
-     * Ensures:
-     * - Mongo DSN → `mongodb://localhost:27017/logs`
-     * - Database parsed should equal `"logs"`
+     * 🧪 Profile: logs
+     * Requires in .env.testing:
+     *   MONGO_LOGS_DSN=mongodb://127.0.0.1:27017/logs
      */
     public function testLogsProfileResolution(): void
     {
-        $resolver = new DatabaseResolver(new EnvironmentConfig(__DIR__));
-        $adapter  = $resolver->resolve('mongo.logs');
-        $cfg      = $this->callProtected($adapter, 'resolveConfig');
+        $adapter = $this->resolver->resolve('mongo.logs');
+        $cfg = $this->callResolveConfig($adapter);
 
+        $this->assertNotEmpty($cfg->dsn, 'MONGO_LOGS_DSN must be set');
         $this->assertSame('logs', $cfg->database);
-    }
-
-    /**
-     * 🧩 **Reflection helper for accessing protected methods**
-     *
-     * Allows invoking protected/private methods inside tests without
-     * modifying production code.
-     *
-     * @param   object  $obj     Target object
-     * @param   string  $method  Method name to access
-     *
-     * @return mixed Result of invoked method
-     * @throws ReflectionException
-     */
-    private function callProtected(object $obj, string $method)
-    {
-        $ref = new ReflectionMethod($obj, $method);
-        $ref->setAccessible(true);
-
-        return $ref->invoke($obj, \Maatify\Common\Enums\ConnectionTypeEnum::MONGO);
     }
 }

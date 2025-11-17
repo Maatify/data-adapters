@@ -161,4 +161,21 @@ final class MySQLAdapter extends BaseAdapter
         $this->connect();
         return $this->connected;
     }
+
+    public function getDriver(): \PDO
+    {
+        if (!$this->isConnected()) {
+            $this->connect();
+        }
+
+        return $this->connection;
+    }
+
+    public function raw(): \PDO
+    {
+        if (! $this->isConnected()) {
+            $this->connect();
+        }
+        return $this->connection;
+    }
 }

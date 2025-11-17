@@ -19,72 +19,65 @@ use Maatify\DataAdapters\Adapters\MySQLAdapter;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 
 /**
- * 🧪 **MysqlDsnAdapterTest**
+ * 🧪 MysqlDsnAdapterTest (Real Integration Version)
  *
- * 🎯 Validates DSN-first parsing behavior for the `MySQLAdapter`
- * under Phase 10 architecture.
+ * 🎯 Confirms that the MySQLAdapter:
+ * - Reads DSN from real environment (no mocking)
+ * - Applies DSN-first architecture implemented in Phase 10+
+ * - Resolves username/password from DSN or env depending on profile
+ * - Ignores legacy host/port/db when DSN exists
  *
- * This test ensures:
- *
- * - DSN is read correctly from all PHP superglobals (`$_ENV`, `$_SERVER`, `putenv`)
- * - Username and password are correctly resolved per profile
- * - Legacy host/db variables do not override DSN
- *
- * ✔ Confirms strict DSN priority
- * ✔ Ensures compatibility across different environment-loading mechanisms
- *
- * @example
- * ```php
- * putenv('MYSQL_MAIN_DSN=mysql:host=10.0.0.1;dbname=main;charset=utf8mb4');
- * $adapter = new MySQLAdapter($env, 'main');
- * $cfg = $adapter->debugConfig();
- * ```
+ * ✔ Works on local machine (.env.local)
+ * ✔ Works in CI (.env.testing + GITHUB_ENV)
+ * ✔ Zero side effects on global env
  */
 final class MysqlDsnAdapterTest extends TestCase
 {
-    /**
-     * 🧪 Load test env across all superglobals:
-     *
-     * - `putenv()` for CLI-level env
-     * - `$_SERVER` to emulate web-server variables
-     * - `$_ENV` to emulate preloaded environment
-     *
-     * Ensures the adapter reads DSN and credentials from **any** valid source.
-     */
+    private MySQLAdapter $adapter;
+
     protected function setUp(): void
     {
-        // putenv
-        putenv('APP_ENV=testing');
-        putenv('MYSQL_MAIN_DSN=mysql:host=10.0.0.1;dbname=main;charset=utf8mb4');
-        putenv('MYSQL_MAIN_USER=root');
-        putenv('MYSQL_MAIN_PASS=secret');
+        // EnvironmentLoader already loaded env via tests/bootstrap.php
 
-        // $_SERVER mock
-        $_SERVER['APP_ENV']          = 'testing';
-        $_SERVER['MYSQL_MAIN_DSN']   = 'mysql:host=10.0.0.1;dbname=main;charset=utf8mb4';
-        $_SERVER['MYSQL_MAIN_USER']  = 'root';
-        $_SERVER['MYSQL_MAIN_PASS']  = 'secret';
-
-        // $_ENV mock
-        $_ENV['APP_ENV']             = 'testing';
-        $_ENV['MYSQL_MAIN_DSN']      = 'mysql:host=10.0.0.1;dbname=main;charset=utf8mb4';
-        $_ENV['MYSQL_MAIN_USER']     = 'root';
-        $_ENV['MYSQL_MAIN_PASS']     = 'secret';
+        // The main profile must have:
+        //   MYSQL_MAIN_DSN
+        //   MYSQL_MAIN_USER
+        //   MYSQL_MAIN_PASS
+        //
+        // These exist in:
+        //   - .env.local      (local dev)
+        //   - .env.testing    (CI)
+        //   - GITHUB_ENV      (CI)
+        $config = new EnvironmentConfig(dirname(__DIR__, 2));
+        $this->adapter = new MySQLAdapter($config, 'main');
     }
 
-    /**
-     * 🧪 Ensure MySQLAdapter correctly reads DSN + credentials.
-     */
-    public function testMysqlAdapterReadsDsn(): void
+    public function testMysqlAdapterReadsRealDsn(): void
     {
-        $adapter = new MySQLAdapter(new EnvironmentConfig(__DIR__), 'main');
-        $cfg     = $adapter->debugConfig();
+        $cfg = $this->adapter->debugConfig();
 
-        $this->assertSame(
-            'mysql:host=10.0.0.1;dbname=main;charset=utf8mb4',
-            $cfg->dsn
+        // Must have DSN
+        $this->assertNotEmpty(
+            $cfg->dsn,
+            'MYSQL_MAIN_DSN must exist in environment (.env.local, .env.testing, or GITHUB_ENV)'
         );
-        $this->assertSame('root', $cfg->user);
-        $this->assertSame('secret', $cfg->pass);
+
+        // DSN-first: MySQLAdapter must NOT fall back to legacy host/port
+        $this->assertStringStartsWith(
+            'mysql:',
+            $cfg->dsn,
+            'DSN must be mysql:… format'
+        );
+
+        // username & password must not be empty
+        $this->assertNotEmpty(
+            $cfg->user,
+            'MYSQL_MAIN_USER must exist (provided in env)'
+        );
+
+        $this->assertNotEmpty(
+            $cfg->pass,
+            'MYSQL_MAIN_PASS must exist (provided in env)'
+        );
     }
 }

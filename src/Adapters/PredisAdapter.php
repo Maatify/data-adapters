@@ -169,4 +169,13 @@ final class PredisAdapter extends BaseAdapter
         $this->connect();
         return $this->connected;
     }
+
+    public function getDriver(): \Predis\Client
+    {
+        if (!$this->isConnected()) {
+            $this->connect();
+        }
+
+        return $this->connection;
+    }
 }

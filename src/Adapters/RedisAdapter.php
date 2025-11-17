@@ -151,4 +151,13 @@ final class RedisAdapter extends BaseAdapter
 
         return $this->connected;
     }
+
+    public function getDriver(): \Redis
+    {
+        if (!$this->isConnected()) {
+            $this->connect();
+        }
+
+        return $this->connection;
+    }
 }

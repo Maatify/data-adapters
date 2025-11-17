@@ -76,11 +76,21 @@ final class MySQLDbalAdapter extends BaseAdapter
             // 1️⃣ URL-style DSN → Full auto-parsed by DBAL
             // --------------------------------------
             if (! empty($cfg->dsn) && str_starts_with($cfg->dsn, 'mysql://')) {
-                $params = [
-                    'url'     => $cfg->dsn,
-                    'driver'  => 'pdo_mysql',
-                    'charset' => 'utf8mb4',
-                ];
+
+                $this->connection = DriverManager::getConnection(
+                    [
+                        'url'      => $cfg->dsn,
+                        'user'     => $cfg->user,
+                        'password' => $cfg->pass,
+                        'driver'   => 'pdo_mysql',
+                        'charset'  => 'utf8mb4',
+                    ],
+                    new Configuration()
+                );
+
+                $this->connection->executeQuery('SELECT 1');
+                $this->connected = true;
+                return;
             }
 
             // --------------------------------------
@@ -126,6 +136,9 @@ final class MySQLDbalAdapter extends BaseAdapter
                 $params,
                 new Configuration()
             );
+
+            print_r($cfg);
+//            print_r($_ENV);
 
             // 🧪 Force connection validation
             $this->connection->executeQuery('SELECT 1');
@@ -185,4 +198,14 @@ final class MySQLDbalAdapter extends BaseAdapter
 
         return $this->connected;
     }
+
+    public function getDriver(): \Doctrine\DBAL\Connection
+    {
+        if (!$this->isConnected()) {
+            $this->connect();
+        }
+
+        return $this->connection;
+    }
+
 }
