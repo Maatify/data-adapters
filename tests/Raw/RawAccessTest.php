@@ -89,7 +89,7 @@ final class RawAccessTest extends TestCase
         /**
          * Mongo test database always exists in CI
          */
-        $_ENV["MONGO_MAIN_DSN"] = "mongodb://127.0.0.1:27017/main";
+        $_ENV["MONGO_MAIN_DSN"] = "mongodb://127.0.0.1:27017/maatify";
 
         $mongo = $this->resolver->resolve('mongo.main');
         $raw   = $mongo->getDriver();
