@@ -46,13 +46,12 @@ final class RawAccessTest extends TestCase
          * We override only the needed keys for this test.
          * CI already has maatify_dev database created.
          */
-
         $_ENV["MYSQL_MAIN_DSN"] =
             "mysql:host=127.0.0.1;port=3306;dbname=maatify;charset=utf8mb4;";
 
         $_ENV["MYSQL_MAIN_USER"] = "root";
-        $_ENV["MYSQL_MAIN_PASS"] = "root";
         $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
+        $_ENV["MYSQL_MAIN_PASS"] = $_ENV['MYSQL_PASS'];
 
         $mysql = $this->resolver->resolve('mysql.main');
         $raw   = $mysql->getDriver();
@@ -68,11 +67,10 @@ final class RawAccessTest extends TestCase
         /**
          * Using maatify_logs which we ensure exists in CI.
          */
+
         $_ENV["MYSQL_LOGS_DSN"] =
-            "mysql://root:root@127.0.0.1:3306/maatify";
+            "mysql://root:" . $_ENV["MYSQL_PASS"] . "@127.0.0.1:3306/maatify";
         $_ENV["MYSQL_LOGS_DRIVER"] = "dbal";
-        $_ENV["MYSQL_LOGS_USER"] = "root";
-        $_ENV["MYSQL_LOGS_PASS"] = "root";
 
         $mysql = $this->resolver->resolve('mysql.logs');
         $raw   = $mysql->getDriver();
@@ -104,7 +102,8 @@ final class RawAccessTest extends TestCase
         /**
          * Redis exists on 6379 in CI.
          */
-        $_ENV["REDIS_MAIN_DSN"] = "redis://127.0.0.1:6379";
+        $urlPass = (!empty($_ENV['REDIS_PASS']) ? ':' . rawurlencode($_ENV["REDIS_PASS"]) . '@' : '');
+        $_ENV["REDIS_MAIN_DSN"] = "redis://" . $urlPass . "127.0.0.1:6379";
 
         $redis = $this->resolver->resolve('redis.main');
         $raw   = $redis->getDriver();
