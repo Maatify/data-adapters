@@ -79,11 +79,14 @@ final class MySQLDbalAdapter extends BaseAdapter
 
                 $this->connection = DriverManager::getConnection(
                     [
-                        'url'      => $cfg->dsn,
+                        'host'     => $dsnParts['host']   ?? $cfg->host,
+                        'port'     => (int)$dsnParts['port'] ?? (int)$cfg->port,
+//                        'url'      => $cfg->dsn,
                         'user'     => $cfg->user,
                         'password' => $cfg->pass,
                         'driver'   => 'pdo_mysql',
                         'charset'  => 'utf8mb4',
+
                     ],
                     new Configuration()
                 );
