@@ -72,7 +72,7 @@ final class RawAccessTest extends TestCase
          * Using maatify_logs which we ensure exists in CI.
          */
         $_ENV["MYSQL_LOGS_DSN"] =
-            "mysql://root:root@127.0.0.1:3306/maatify_logs?unix_socket=";
+            "mysql://root:root@127.0.0.1:3306/maatify_logs?charset=utf8mb4&unix_socket=";
         $_ENV["MYSQL_LOGS_DRIVER"] = "dbal";
 
         $mysql = $this->resolver->resolve('mysql.logs');
