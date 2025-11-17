@@ -51,7 +51,7 @@ final class RawAccessTest extends TestCase
 
         $_ENV["MYSQL_MAIN_USER"] = "root";
         $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
-        $_ENV["MYSQL_MAIN_PASS"] = $_ENV['MYSQL_PASS'];
+        $_ENV["MYSQL_MAIN_PASS"] = $_ENV['MYSQL_PASS'] ?? getenv('MYSQL_PASS');
 
         $mysql = $this->resolver->resolve('mysql.main');
         $raw   = $mysql->getDriver();
@@ -69,7 +69,7 @@ final class RawAccessTest extends TestCase
          */
 
         $_ENV["MYSQL_LOGS_DSN"] =
-            "mysql://root:" . $_ENV["MYSQL_PASS"] . "@127.0.0.1:3306/maatify";
+            "mysql://root:" . ($_ENV["MYSQL_PASS"] ?? getenv('MYSQL_PASS')) . "@127.0.0.1:3306/maatify";
         $_ENV["MYSQL_LOGS_DRIVER"] = "dbal";
 
         $mysql = $this->resolver->resolve('mysql.logs');
