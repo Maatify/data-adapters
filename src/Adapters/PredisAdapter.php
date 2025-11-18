@@ -49,7 +49,6 @@ use Throwable;
  */
 final class PredisAdapter extends BaseAdapter
 {
-
     /** @var \Predis\Client $connection*/
     protected mixed $connection = null;
 
