@@ -215,7 +215,6 @@ jobs:
           echo "📁 Mongo Host: $MONGO_HOST" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-#          echo "#### PHPUnit Results:" >> $GITHUB_STEP_SUMMARY
           tail -n 20 phpunit.log >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -225,8 +224,6 @@ jobs:
             echo "✅ All tests passed successfully." >> $GITHUB_STEP_SUMMARY
           fi
           
-#          echo "#### PHPStan Results:" >> $GITHUB_STEP_SUMMARY
-
           if [ "${{ steps.phpstan.outputs.phpstan_errors }}" -eq 0 ]; then
             echo "🧹 PHPStan: Passed (0 errors)" >> $GITHUB_STEP_SUMMARY
           else
