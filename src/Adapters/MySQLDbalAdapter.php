@@ -50,6 +50,11 @@ use Throwable;
 final class MySQLDbalAdapter extends BaseAdapter
 {
     /**
+     * @var \Doctrine\DBAL\Connection
+     * @phpstan-var \Doctrine\DBAL\Connection
+     */
+    protected mixed $connection;
+    /**
      * 🧠 **Connect using Doctrine DBAL**
      *
      * Supports 3 modes:
@@ -82,11 +87,11 @@ final class MySQLDbalAdapter extends BaseAdapter
                 $dsnParts = MysqlDsnParser::parse($cfg->dsn);
 
                 $params = [
-                    'host'     => $dsnParts['host']     ?? $cfg->host,
+                    'host'     => $this->normalize($dsnParts['host']     ?? $cfg->host),
                     'port'     => isset($dsnParts['port']) ? (int)$dsnParts['port'] : (int)$cfg->port,
-                    'dbname'   => $dsnParts['database'] ?? $cfg->database,   // IMPORTANT!!!
-                    'user'     => $dsnParts['user']     ?? $cfg->user,
-                    'password' => $dsnParts['pass']     ?? $cfg->pass,
+                    'dbname'   => $this->normalize($dsnParts['database'] ?? $cfg->database),   // IMPORTANT!!!
+                    'user'     => $this->normalize($dsnParts['user']     ?? $cfg->user),
+                    'password' => $this->normalize($dsnParts['pass']     ?? $cfg->pass),
                     'driver'   => 'pdo_mysql',
                     'charset'  => 'utf8mb4',
                 ];
@@ -114,11 +119,11 @@ final class MySQLDbalAdapter extends BaseAdapter
                 parse_str($body, $dsnParts);
 
                 $params = [
-                    'host'     => $dsnParts['host']   ?? $cfg->host,
+                    'host'     => $this->normalize($dsnParts['host']   ?? $cfg->host),
                     'port'     => isset($dsnParts['port']) ? (int)$dsnParts['port'] : (int)$cfg->port,
-                    'dbname'   => $dsnParts['dbname'] ?? $cfg->database,
-                    'user'     => $cfg->user,
-                    'password' => $cfg->pass,
+                    'dbname'   => $this->normalize($dsnParts['dbname'] ?? $cfg->database),
+                    'user'     => $this->normalize($cfg->user),
+                    'password' => $this->normalize($cfg->pass),
                     'driver'   => 'pdo_mysql',
                     'charset'  => 'utf8mb4',
                 ];
@@ -129,11 +134,11 @@ final class MySQLDbalAdapter extends BaseAdapter
             // --------------------------------------
             else {
                 $params = [
-                    'host'     => $cfg->host,
+                    'host'     => $this->normalize($cfg->host),
                     'port'     => (int)$cfg->port,
-                    'dbname'   => $cfg->database,
-                    'user'     => $cfg->user,
-                    'password' => $cfg->pass,
+                    'dbname'   => $this->normalize($cfg->database),
+                    'user'     => $this->normalize($cfg->user),
+                    'password' => $this->normalize($cfg->pass),
                     'driver'   => 'pdo_mysql',
                     'charset'  => 'utf8mb4',
                 ];
@@ -180,7 +185,20 @@ final class MySQLDbalAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            return (int)$this->connection?->executeQuery('SELECT 1')->fetchOne() === 1;
+            /** @var \Doctrine\DBAL\Connection $conn */
+            $conn = $this->connection;
+
+            $result = $conn->executeQuery('SELECT 1')->fetchOne();
+
+            if (is_int($result)) {
+                return $result === 1;
+            }
+
+            if (is_string($result)) {
+                return ((int) $result) === 1;
+            }
+
+            return false;
         } catch (Throwable) {
             return false;
         }
@@ -209,13 +227,46 @@ final class MySQLDbalAdapter extends BaseAdapter
         return $this->connected;
     }
 
+    /**
+     * @return \Doctrine\DBAL\Connection
+     */
     public function getDriver(): \Doctrine\DBAL\Connection
     {
-        if (!$this->isConnected()) {
+        if (!$this->isConnected() || $this->connection === null) {
             $this->connect();
         }
 
-        return $this->connection;
+        return $this->connection; // now PHPStan knows it's a DBAL Connection
     }
+
+    /**
+     * @param array<string, mixed>|string|null $value
+     */
+    private function normalize(array|string|null $value): string
+    {
+        // If it's an array, try to extract the first scalar element
+        if (is_array($value)) {
+            $first = reset($value);
+
+            if (is_string($first)) {
+                return $first;
+            }
+
+            if (is_int($first) || is_float($first) || is_bool($first)) {
+                return (string) $first;
+            }
+
+            return '';
+        }
+
+        // If it's already a string
+        if (is_string($value)) {
+            return $value;
+        }
+
+        // null or unsupported types
+        return '';
+    }
+
 
 }
