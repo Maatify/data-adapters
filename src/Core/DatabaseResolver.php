@@ -182,8 +182,9 @@ final class DatabaseResolver implements ResolverInterface
     {
         $driverKey = strtoupper("MYSQL_{$profile}_DRIVER");
 
-        // Default driver = pdo
-        $driver = strtolower($this->config->get($driverKey, 'pdo'));
+        // Default driver = "pdo"
+        $rawDriver = $this->config->get($driverKey, 'pdo');
+        $driver    = strtolower((string) $rawDriver);
 
         $class = $driver === 'dbal'
             ? '\\Maatify\\DataAdapters\\Adapters\\MySQLDbalAdapter'
