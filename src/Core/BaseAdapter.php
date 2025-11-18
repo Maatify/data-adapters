@@ -19,6 +19,11 @@ use JsonException;
 use Maatify\Common\Contracts\Adapter\AdapterInterface;
 use Maatify\Common\DTO\ConnectionConfigDTO;
 use Maatify\Common\Enums\ConnectionTypeEnum;
+use Maatify\DataAdapters\Adapters\MongoAdapter;
+use Maatify\DataAdapters\Adapters\MySQLAdapter;
+use Maatify\DataAdapters\Adapters\MySQLDbalAdapter;
+use Maatify\DataAdapters\Adapters\PredisAdapter;
+use Maatify\DataAdapters\Adapters\RedisAdapter;
 use Maatify\DataAdapters\Core\Config\MongoConfigBuilder;
 use Maatify\DataAdapters\Core\Config\MySqlConfigBuilder;
 use Maatify\DataAdapters\Core\Config\RedisConfigBuilder;
@@ -73,7 +78,7 @@ abstract class BaseAdapter implements AdapterInterface
      *
      * @var string|null
      */
-    protected ?string $profile;
+    protected ?string $profile = null;
 
     /**
      * @param EnvironmentConfig $config  Environment config manager
@@ -102,19 +107,16 @@ abstract class BaseAdapter implements AdapterInterface
      */
     protected function resolveConfig(ConnectionTypeEnum $type): ConnectionConfigDTO
     {
+        $profile = $this->profile ?? 'default';
         return match ($type) {
             ConnectionTypeEnum::MYSQL => (new MySqlConfigBuilder($this->config))
-                ->build($this->profile),
+                ->build($profile),
 
             ConnectionTypeEnum::MONGO => (new MongoConfigBuilder($this->config))
-                ->build($this->profile),
+                ->build($profile),
 
             ConnectionTypeEnum::REDIS => (new RedisConfigBuilder($this->config))
-                ->build($this->profile),
-
-            default => throw new ConnectionException(
-                "Unsupported adapter type: {$type->value}"
-            ),
+                ->build($profile)
         };
     }
 
@@ -181,9 +183,9 @@ abstract class BaseAdapter implements AdapterInterface
     /**
      * Return the underlying client connection (if available).
      *
-     * @return object|null
+     * @return mixed
      */
-    public function getConnection(): ?object
+    public function getConnection(): mixed
     {
         return $this->connection;
     }
@@ -224,16 +226,20 @@ abstract class BaseAdapter implements AdapterInterface
     protected function getTypeEnum(): ConnectionTypeEnum
     {
         return match (true) {
-            $this instanceof \Maatify\DataAdapters\Adapters\MySQLAdapter,
-            $this instanceof \Maatify\DataAdapters\Adapters\MySQLDbalAdapter =>
+            $this instanceof MySQLAdapter,
+            $this instanceof MySQLDbalAdapter =>
             ConnectionTypeEnum::MYSQL,
 
-            $this instanceof \Maatify\DataAdapters\Adapters\MongoAdapter =>
+            $this instanceof MongoAdapter =>
             ConnectionTypeEnum::MONGO,
 
-            $this instanceof \Maatify\DataAdapters\Adapters\RedisAdapter,
-            $this instanceof \Maatify\DataAdapters\Adapters\PredisAdapter =>
+            $this instanceof RedisAdapter,
+            $this instanceof PredisAdapter =>
             ConnectionTypeEnum::REDIS,
+
+            default => throw new ConnectionException(
+                'Unsupported adapter type: adapter: ' . get_class($this)
+            ),
         };
     }
 }

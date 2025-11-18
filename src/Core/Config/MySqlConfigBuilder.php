@@ -116,7 +116,9 @@ final readonly class MySqlConfigBuilder
                 user     : $dsnData['user'] ?? null,
                 pass     : $dsnData['pass'] ?? null,
                 database : $dsnData['database'] ?? null,
-                options  : $dsnData['options'] ?? [],
+                options  : isset($dsnData['options']) && is_array($dsnData['options'])
+                    ? $dsnData['options']
+                    : [],
                 driver   : 'dbal',
                 profile  : $profile
             );
@@ -125,6 +127,16 @@ final readonly class MySqlConfigBuilder
         // ---------------------------------------------------------
         // (2) Legacy fallback environment values
         // ---------------------------------------------------------
+        /** @var array{
+         *     dsn: string|null,
+         *     host: string|null,
+         *     port: string|null,
+         *     user: string|null,
+         *     pass: string|null,
+         *     database: string|null,
+         *     options: mixed
+         * } $legacy
+         */
         $legacy = [
             'dsn'      => null,
             'host'     => $this->config->get("MYSQL_{$upper}_HOST"),
@@ -136,13 +148,24 @@ final readonly class MySqlConfigBuilder
 
         // Parse OPTIONS JSON (optional)
         $optionsJson = $this->config->get("MYSQL_{$upper}_OPTIONS");
-        $legacy['options'] = $optionsJson
+        $legacy['options'] = is_string($optionsJson)
             ? (json_decode($optionsJson, true) ?: [])
             : [];
 
         // ---------------------------------------------------------
         // (3) Registry → DSN → Legacy priority merge
         // ---------------------------------------------------------
+        /** @var array{
+         *     dsn: string|null,
+         *     host: string|null,
+         *     port: string|null|int,
+         *     user: string|null,
+         *     pass: string|null,
+         *     database: string|null,
+         *     options: mixed,
+         *     driver?: string|null
+         * } $merged
+         */
         $merged = $this->config->mergeWithRegistry(
             type    : 'mysql',
             profile : $profile,
@@ -153,7 +176,7 @@ final readonly class MySqlConfigBuilder
         // ---------------------------------------------------------
         // (4) Produce final normalized DTO
         // ---------------------------------------------------------
-        return new ConnectionConfigDTO(
+        /*return new ConnectionConfigDTO(
             dsn      : $merged['dsn']      ?? $dsn,
             host     : $merged['host']     ?? $legacy['host'],
             port     : isset($merged['port']) ? (string)$merged['port'] : $legacy['port'],
@@ -163,7 +186,24 @@ final readonly class MySqlConfigBuilder
             options  : $merged['options']  ?? $legacy['options'],
             driver   : $merged['driver']   ?? 'pdo',
             profile  : $profile
+        );*/
+        $port = $merged['port'] ?? $legacy['port'];
+        $port = is_scalar($port) ? (string)$port : null;
+
+        return new ConnectionConfigDTO(
+            dsn      : is_string($merged['dsn']) ? $merged['dsn'] : $dsn,
+            host     : is_string($merged['host']) ? $merged['host'] : $legacy['host'],
+            port     : $port,
+            user     : is_string($merged['user']) ? $merged['user'] : $legacy['user'],
+            pass     : is_string($merged['pass']) ? $merged['pass'] : $legacy['pass'],
+            database : is_string($merged['database']) ? $merged['database'] : $legacy['database'],
+            options  : is_array($merged['options'])
+                ? $merged['options']
+                : (is_array($legacy['options']) ? $legacy['options'] : []),
+            driver   : is_string($merged['driver'] ?? null) ? $merged['driver'] : 'pdo',
+            profile  : $profile
         );
+
     }
 
     /**

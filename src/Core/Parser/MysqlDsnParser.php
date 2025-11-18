@@ -29,7 +29,14 @@ final class MysqlDsnParser
      *
      * @param string $dsn Raw DSN string.
      *
-     * @return array<string, string|null> Parsed DSN parts.
+     * @return array{
+     *     host?: string|null,
+     *     port?: string|int|null,
+     *     user?: string|null,
+     *     pass?: string|null,
+     *     database?: string|null,
+     *     options?: mixed
+     * }
      */
 
     public static function parse(string $dsn): array

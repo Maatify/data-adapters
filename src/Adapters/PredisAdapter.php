@@ -49,6 +49,10 @@ use Throwable;
  */
 final class PredisAdapter extends BaseAdapter
 {
+
+    /** @var \Predis\Client $connection*/
+    protected mixed $connection = null;
+
     /**
      * 🧠 **Connect using Predis client**
      *
@@ -142,7 +146,8 @@ final class PredisAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            return (bool)$this->connection?->ping();
+            $this->connection->ping();
+            return true;
         } catch (Throwable) {
             return false;
         }

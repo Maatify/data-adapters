@@ -49,6 +49,8 @@ use Throwable;
  */
 final class RedisAdapter extends BaseAdapter
 {
+    /** @var Redis $connection*/
+    protected mixed $connection = null;
     /**
      * 🧠 **Connect using the phpredis extension**
      *
@@ -123,7 +125,7 @@ final class RedisAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            return (bool)$this->connection?->ping();
+            return (bool)$this->connection->ping();
         } catch (Throwable) {
             return false;
         }

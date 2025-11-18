@@ -52,6 +52,8 @@ use Throwable;
  */
 final class MongoAdapter extends BaseAdapter
 {
+    /** @var Client $connection*/
+    protected mixed $connection = null;
     private ?Database $cachedDb = null;
 
     /**
@@ -159,8 +161,7 @@ final class MongoAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            $client = $this->getClient();
-            $db = $client->selectDatabase($this->profile ?? 'admin');
+            $db = $this->connection->selectDatabase($this->profile ?? 'admin');
             $db->command(['ping' => 1]);
             return true;
         } catch (Throwable) {
@@ -209,17 +210,11 @@ final class MongoAdapter extends BaseAdapter
         $cfg = $this->resolveConfig(ConnectionTypeEnum::MONGO);
 
         $dbName = $cfg->database ?: 'admin';
-
-        $client = $this->getClient();
-        return $this->cachedDb = $client->selectDatabase($dbName);
+        return $this->cachedDb = $this->connection->selectDatabase($dbName);
     }
 
     /**
-     * Get the underlying MongoDB client instance.
-     *
-     * @return Client
-     *
-     * @phpstan-return Client
+     * 📌 Optional: return underlying MongoDB\Client
      */
     public function getClient(): Client
     {
@@ -227,18 +222,9 @@ final class MongoAdapter extends BaseAdapter
             $this->connect();
         }
 
-        /** @var Client $client */
-        $client = $this->connection;
-
-        return $client;
+        return $this->connection;
     }
 
-    /**
-     * Get the MongoDB\Database instance as the native driver.
-     *
-     * @return Database
-     * @phpstan-return Database
-     */
     public function getDriver(): Database
     {
         return $this->getDatabase();

@@ -95,6 +95,17 @@ final readonly class MongoConfigBuilder
 
         // Options JSON
         $optionsJson = $this->config->get("MONGO_{$upper}_OPTIONS");
+
+        /**
+         * @var array{
+         *     host: string,
+         *     port: string|int,
+         *     user: string,
+         *     pass: string,
+         *     database: string,
+         *     options: array<int|string, mixed>
+         * } $legacy
+         */
         $legacy['options'] = $optionsJson
             ? (json_decode($optionsJson, true) ?: [])
             : [];
@@ -102,6 +113,17 @@ final readonly class MongoConfigBuilder
         // ---------------------------------------------------------
         // (3) Registry → DSN → Legacy merge
         // ---------------------------------------------------------
+        /**
+         * @var array{
+         *     dsn?: string|null,
+         *     host?: string|null,
+         *     port?: int|string|null,
+         *     user?: string|null,
+         *     pass?: string|null,
+         *     database?: string|null,
+         *     options?: array<int|string, mixed>
+         * } $merged
+         */
         $merged = $this->config->mergeWithRegistry(
             type    : 'mongo',
             profile : $profile,
@@ -115,7 +137,7 @@ final readonly class MongoConfigBuilder
         return new ConnectionConfigDTO(
             dsn      : $merged['dsn']      ?? $dsn,
             host     : $merged['host']     ?? $legacy['host'],
-            port     : isset($merged['port']) ? (string)$merged['port'] : $legacy['port'],
+            port     : (string)($merged['port'] ?? $legacy['port']),
             user     : $merged['user']     ?? $legacy['user'],
             pass     : $merged['pass']     ?? $legacy['pass'],
             database : $merged['database'] ?? $legacy['database'],
