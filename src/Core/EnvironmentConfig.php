@@ -226,25 +226,49 @@ final readonly class EnvironmentConfig
     }
 
     /**
-     * 🧠 **Registry merge logic**
+     * 🧠 Registry merge logic
      *
      * Merge priority:
      * 1. Legacy (lowest)
      * 2. DSN overrides
      * 3. Registry file (highest)
      *
-     * @param string $type    Database type (`mysql`, `redis`, `mongo`)
-     * @param string $profile Connection profile
-     * @param array  $dsn     DSN resolved values
-     * @param array  $legacy  Legacy ENV values
+     * @param string                $type
+     * @param string                $profile
+     * @param array<string,mixed>   $dsn
+     * @param array<string,mixed>   $legacy
      *
      * @return array<string,mixed>
      */
-    public function mergeWithRegistry(string $type, string $profile, array $dsn, array $legacy): array
-    {
+    public function mergeWithRegistry(
+        string $type,
+        string $profile,
+        array $dsn,
+        array $legacy
+    ): array {
         $registry = $this->loadRegistry();
-        $reg = $registry['databases'][$type][$profile] ?? [];
 
+        // Ensure all offsets are safely typed arrays
+        $databases = [];
+        if (isset($registry['databases']) && is_array($registry['databases'])) {
+            $databases = $registry['databases'];
+        }
+
+        $typeBlock = [];
+        if (isset($databases[$type]) && is_array($databases[$type])) {
+            $typeBlock = $databases[$type];
+        }
+
+        $profileBlock = [];
+        if (isset($typeBlock[$profile]) && is_array($typeBlock[$profile])) {
+            $profileBlock = $typeBlock[$profile];
+        }
+
+        /** @var array<string,mixed> $reg */
+        $reg = $profileBlock;
+
+        // All operands guaranteed to be arrays<string,mixed>
         return array_merge($legacy, $dsn, $reg);
     }
+
 }
