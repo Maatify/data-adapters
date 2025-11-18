@@ -49,6 +49,12 @@ use PDOException;
 final class MySQLAdapter extends BaseAdapter
 {
     /**
+     * @var \PDO
+     * @phpstan-var \PDO
+     */
+    protected mixed $connection;
+
+    /**
      * 🧩 **Establish MySQL Connection**
      *
      * 🧠 Priority:
@@ -133,7 +139,8 @@ final class MySQLAdapter extends BaseAdapter
     public function healthCheck(): bool
     {
         try {
-            return (bool)$this->connection?->query('SELECT 1')->fetchColumn();
+            $stmt = $this->connection->query('SELECT 1');
+            return $stmt !== false && (bool) $stmt->fetchColumn();
         } catch (PDOException) {
             return false;
         }
@@ -162,6 +169,10 @@ final class MySQLAdapter extends BaseAdapter
         return $this->connected;
     }
 
+    /**
+     * @return \PDO
+     * @phpstan-return \PDO
+     */
     public function getDriver(): \PDO
     {
         if (!$this->isConnected()) {
@@ -171,6 +182,10 @@ final class MySQLAdapter extends BaseAdapter
         return $this->connection;
     }
 
+    /**
+     * @return \PDO
+     * @phpstan-return \PDO
+     */
     public function raw(): \PDO
     {
         if (! $this->isConnected()) {
