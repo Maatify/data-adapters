@@ -138,10 +138,12 @@ final class DiagnosticService
      */
     public function toJson(): string
     {
-        return json_encode(
+        $json = json_encode(
             ['diagnostics' => $this->collect()],
             JSON_PRETTY_PRINT
         );
+
+        return $json === false ? '{}' : $json;
     }
 
     /**
