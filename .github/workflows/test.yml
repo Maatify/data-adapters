@@ -215,19 +215,17 @@ jobs:
           echo "📁 Mongo Host: $MONGO_HOST" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "#### PHPUnit Results:" >> $GITHUB_STEP_SUMMARY
+#          echo "#### PHPUnit Results:" >> $GITHUB_STEP_SUMMARY
           tail -n 20 phpunit.log >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "#### PHPTESTS Results:" >> $GITHUB_STEP_SUMMARY
-          
           if grep -q "FAILURES!" phpunit.log; then
             echo "❌ Some tests failed." >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ All tests passed successfully." >> $GITHUB_STEP_SUMMARY
           fi
           
-          echo "#### PHPStan Results:" >> $GITHUB_STEP_SUMMARY
+#          echo "#### PHPStan Results:" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ steps.phpstan.outputs.phpstan_errors }}" -eq 0 ]; then
             echo "🧹 PHPStan: Passed (0 errors)" >> $GITHUB_STEP_SUMMARY
@@ -315,8 +313,6 @@ jobs:
             -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
-
-          echo "#### Telegram Notification Results:" >> $GITHUB_STEP_SUMMARY
 
           if [ "$RESPONSE" -ne 200 ]; then
             echo "⚠️ Telegram notification failed (HTTP $RESPONSE)" >> $GITHUB_STEP_SUMMARY
