@@ -20,6 +20,7 @@ use Doctrine\DBAL\DriverManager;
 use Maatify\Common\Enums\ConnectionTypeEnum;
 use Maatify\DataAdapters\Core\BaseAdapter;
 use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
+use Maatify\DataAdapters\Core\Parser\MysqlDsnParser;
 use Throwable;
 
 /**
@@ -77,17 +78,21 @@ final class MySQLDbalAdapter extends BaseAdapter
             // --------------------------------------
             if (! empty($cfg->dsn) && str_starts_with($cfg->dsn, 'mysql://')) {
 
-                $this->connection = DriverManager::getConnection(
-                    [
-                        'host'     => $dsnParts['host']   ?? $cfg->host,
-                        'port'     => (int)$dsnParts['port'] ?? (int)$cfg->port,
-//                        'url'      => $cfg->dsn,
-                        'user'     => $cfg->user,
-                        'password' => $cfg->pass,
-                        'driver'   => 'pdo_mysql',
-                        'charset'  => 'utf8mb4',
+                // Phase 15 unified parser
+                $dsnParts = MysqlDsnParser::parse($cfg->dsn);
 
-                    ],
+                $params = [
+                    'host'     => $dsnParts['host']     ?? $cfg->host,
+                    'port'     => isset($dsnParts['port']) ? (int)$dsnParts['port'] : (int)$cfg->port,
+                    'dbname'   => $dsnParts['database'] ?? $cfg->database,   // IMPORTANT!!!
+                    'user'     => $dsnParts['user']     ?? $cfg->user,
+                    'password' => $dsnParts['pass']     ?? $cfg->pass,
+                    'driver'   => 'pdo_mysql',
+                    'charset'  => 'utf8mb4',
+                ];
+
+                $this->connection = DriverManager::getConnection(
+                    $params,
                     new Configuration()
                 );
 
