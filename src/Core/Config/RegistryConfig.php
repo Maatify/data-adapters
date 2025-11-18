@@ -125,7 +125,7 @@ final class RegistryConfig
             return $this->registry;
         }
 
-        // No registry configured → empty result (safe fallback)
+        // No registry configured → empty array (always array<string,mixed>)
         if (! $this->path) {
             return $this->registry = [];
         }
@@ -135,13 +135,22 @@ final class RegistryConfig
             throw new Exception("Unable to read registry file: {$this->path}");
         }
 
+        /** @var array<string,mixed>|null $data */
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
-        if (! isset($data['databases'])) {
+        // Guarantee array type (avoid mixed/null propagation)
+        if (! is_array($data)) {
+            throw new Exception('Invalid registry: root JSON structure must be an object');
+        }
+
+        if (! array_key_exists('databases', $data)) {
             throw new Exception("Invalid registry format: missing 'databases' root node");
         }
 
-        return $this->registry = $data;
+        // Safe assignment: always array<string,mixed>
+        $this->registry = $data;
+
+        return $this->registry;
     }
 
     /**
