@@ -78,18 +78,23 @@ final readonly class RedisConfigBuilder
         $upper  = strtoupper($profile);
         $prefix = "REDIS_{$upper}_";
 
-        // ---------------------------------------------------------
-        // (1) Legacy fallback (lowest priority)
-        // ---------------------------------------------------------
+        // ---------------------------------------------------------------------
+        // (1) Legacy fallback (typed strictly)
+        // ---------------------------------------------------------------------
+
+        $legacyHost = $this->config->get($prefix . 'HOST');
+        $legacyPort = $this->config->get($prefix . 'PORT');
+        $legacyPass = $this->config->get($prefix . 'PASS');
+        $legacyDb   = $this->config->get($prefix . 'DB');
+
         $legacy = [
             'dsn'      => null,
-            'host'     => $this->config->get($prefix . 'HOST'),
-            'port'     => (string)$this->config->get($prefix . 'PORT'),
-            'pass'     => $this->config->get($prefix . 'PASS'),
-            'database' => $this->config->get($prefix . 'DB'),
+            'host'     => is_string($legacyHost) ? $legacyHost : null,
+            'port'     => is_scalar($legacyPort) ? (string)$legacyPort : null,
+            'pass'     => is_string($legacyPass) ? $legacyPass : null,
+            'database' => is_scalar($legacyDb) ? (string)$legacyDb : null,
             'options'  => [],
         ];
-
         // ---------------------------------------------------------
         // (2) DSN resolution (middle priority)
         // ---------------------------------------------------------
@@ -102,10 +107,10 @@ final readonly class RedisConfigBuilder
 
             $dsn = [
                 'dsn'      => $dsnVal,
-                'host'     => $parsed['host'] ?? null,
-                'port'     => $parsed['port'] ?? null,
-                'pass'     => $parsed['pass'] ?? null,
-                'database' => $parsed['db']   ?? null,
+                'host'     => $parsed['host'],
+                'port'     => $parsed['port'],
+                'pass'     => $parsed['pass'],
+                'database' => $parsed['db'],
             ];
         }
 
@@ -119,20 +124,34 @@ final readonly class RedisConfigBuilder
             legacy  : $legacy
         );
 
-        // ---------------------------------------------------------
-        // (4) Build FULL DTO (matching MySQL/Mongo builder structure)
-        // ---------------------------------------------------------
+        // ---------------------------------------------------------------------
+        // (4) Final strict normalization
+        // ---------------------------------------------------------------------
+        $finalDsn      = isset($merged['dsn']) && is_string($merged['dsn']) ? $merged['dsn'] : $dsnVal;
+        $finalHost     = isset($merged['host']) && is_string($merged['host']) ? $merged['host'] : $legacy['host'];
+        $finalPort     = isset($merged['port']) && is_scalar($merged['port']) ? (string)$merged['port'] : $legacy['port'];
+        $finalPass     = isset($merged['pass']) && is_string($merged['pass']) ? $merged['pass'] : $legacy['pass'];
+        $finalDatabase = isset($merged['database']) && is_scalar($merged['database']) ? (string)$merged['database'] : $legacy['database'];
+
+        $options = $merged['options'] ?? $legacy['options'];
+        $finalOptions = is_array($options) ? $options : [];
+
+        // ---------------------------------------------------------------------
+        // (5) Return DTO exactly matching signature
+        // ---------------------------------------------------------------------
         return new ConnectionConfigDTO(
-            dsn      : $merged['dsn']      ?? $dsnVal,
-            host     : $merged['host']     ?? $legacy['host'],
-            port     : isset($merged['port']) ? (string)$merged['port'] : $legacy['port'],
-            user     : null, // Redis username intentionally unsupported
-            pass     : $merged['pass']     ?? $legacy['pass'],
-            database : $merged['database'] ?? $legacy['database'],
-            options  : $merged['options']  ?? $legacy['options'],
+            dsn      : is_string($finalDsn) ? $finalDsn : null,
+            host     : $finalHost,
+            port     : $finalPort,
+            user     : null,
+            pass     : $finalPass,
+            database : $finalDatabase,
+            options  : $finalOptions,
             driver   : 'redis',
             profile  : $profile
         );
+
+
     }
 
     /**
@@ -153,17 +172,24 @@ final readonly class RedisConfigBuilder
      *
      * @param string $dsn Redis DSN string
      *
-     * @return array<string, string|null> Parsed values
+     *  Parse redis:// DSN safely.
+     *
+     * @return array{
+     *      host: string|null,
+     *      port: string|null,
+     *      pass: string|null,
+     *      db:   string|null
+     *  }
      */
     private function parseRedisDsn(string $dsn): array
     {
         $url = parse_url($dsn);
 
         return [
-            'host' => $url['host'] ?? null,
-            'port' => $url['port'] ?? null,
-            'pass' => $url['pass'] ?? null,
-            'db'   => isset($url['path']) ? ltrim($url['path'], '/') : null,
+            'host' => is_string($url['host'] ?? null) ? $url['host'] : null,
+            'port' => isset($url['port']) ? (string)$url['port'] : null,
+            'pass' => is_string($url['pass'] ?? null) ? $url['pass'] : null,
+            'db'   => is_string($url['path'] ?? null) ? ltrim($url['path'], '/') : null,
         ];
     }
 }
