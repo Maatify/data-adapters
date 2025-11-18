@@ -124,14 +124,27 @@ final class AdapterMetricsCollector
      */
     public function record(string $adapter, string $operation, float $latencyMs, bool $success): void
     {
-        // 🔹 Initialize bucket reference
+        // Create bucket on first use
+        if (!isset($this->metrics[$adapter][$operation])) {
+            $this->metrics[$adapter][$operation] = [
+                'latency' => [],
+                'success' => 0,
+                'fail'    => 0,
+            ];
+        }
+
+        // Reference for convenience
         $bucket = &$this->metrics[$adapter][$operation];
 
-        // 📈 Store latency and increment success/failure counters
+        // Add latency
         $bucket['latency'][] = $latencyMs;
-        $bucket['success'] ??= 0;
-        $bucket['fail'] ??= 0;
-        $success ? $bucket['success']++ : $bucket['fail']++;
+
+        // Increment counters
+        if ($success) {
+            $bucket['success']++;
+        } else {
+            $bucket['fail']++;
+        }
     }
 
     /**

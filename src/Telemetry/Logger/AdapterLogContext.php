@@ -78,13 +78,18 @@ final class AdapterLogContext
         bool $success,
         ?string $message = null
     ): array {
-        return [
+        $context = [
             'adapter'   => $adapter,
             'operation' => $operation,
             'latency'   => round($latencyMs, 3) . ' ms',
             'status'    => $success ? 'success' : 'fail',
-            'message'   => $message,
-            'timestamp' => date('c'), // ISO 8601 timestamp for consistency across logs
+            'timestamp' => date('c'),
         ];
+
+        if ($message !== null) {
+            $context['message'] = $message;
+        }
+
+        return $context;
     }
 }
