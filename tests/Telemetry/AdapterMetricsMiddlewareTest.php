@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -81,7 +82,7 @@ final class AdapterMetricsMiddlewareTest extends TestCase
     public function testMeasureRecordsSuccessAndLatency(): void
     {
         // 🧩 Perform a mock successful operation
-        $result = $this->middleware->measure('redis', 'get', fn() => 'ok');
+        $result = $this->middleware->measure('redis', 'get', fn () => 'ok');
 
         // ✅ Verify returned result
         $this->assertSame('ok', $result);

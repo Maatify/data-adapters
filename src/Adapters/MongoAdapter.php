@@ -15,12 +15,12 @@ declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Adapters;
 
+use Maatify\Common\Enums\ConnectionTypeEnum;
+use Maatify\DataAdapters\Core\BaseAdapter;
+use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
 use MongoDB\Client;
 use MongoDB\Database;
 use Throwable;
-use Maatify\DataAdapters\Core\BaseAdapter;
-use Maatify\DataAdapters\Core\Exceptions\ConnectionException;
-use Maatify\Common\Enums\ConnectionTypeEnum;
 
 /**
  * 🧩 **Class MongoAdapter**
@@ -52,7 +52,6 @@ use Maatify\Common\Enums\ConnectionTypeEnum;
  */
 final class MongoAdapter extends BaseAdapter
 {
-
     private ?Database $cachedDb = null;
 
     /**
@@ -103,7 +102,7 @@ final class MongoAdapter extends BaseAdapter
             $this->connected = true;
         } catch (Throwable $e) {
             throw new ConnectionException(
-                "Mongo connection failed: " . $e->getMessage()
+                'Mongo connection failed: ' . $e->getMessage()
             );
         }
     }

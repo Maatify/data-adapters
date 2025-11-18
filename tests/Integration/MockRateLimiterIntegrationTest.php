@@ -18,7 +18,6 @@ namespace Maatify\DataAdapters\Tests\Integration;
 use Exception;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -69,7 +68,7 @@ final class MockRateLimiterIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // ⚙️ Act: Resolve Redis adapter
-        $redis = $resolver->resolve("REDIS");
+        $redis = $resolver->resolve('REDIS');
 
         // ✅ Assert: Check adapter method availability
         $this->assertTrue(

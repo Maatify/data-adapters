@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -14,9 +15,9 @@ declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Tests\Phase10;
 
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Adapters\MongoAdapter;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 **MongoDsnAdapterTest (Real Integration Version)**

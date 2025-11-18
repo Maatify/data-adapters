@@ -58,7 +58,8 @@ final class DiagnosticService
     public function __construct(
         private readonly EnvironmentConfig $config,
         private readonly DatabaseResolver  $resolver
-    ) {}
+    ) {
+    }
 
     /**
      * 🧩 **Register adapters for diagnostics**

@@ -36,4 +36,6 @@ use RuntimeException;
  *
  * @package Maatify\DataAdapters\Core\Exceptions
  */
-final class ConnectionException extends RuntimeException {}
+final class ConnectionException extends RuntimeException
+{
+}

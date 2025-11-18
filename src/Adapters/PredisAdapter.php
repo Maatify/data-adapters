@@ -98,7 +98,7 @@ final class PredisAdapter extends BaseAdapter
                     $client->auth($cfg->pass);
                 } catch (Throwable $e) {
                     throw new ConnectionException(
-                        "Predis authentication failed: " . $e->getMessage()
+                        'Predis authentication failed: ' . $e->getMessage()
                     );
                 }
             }
@@ -110,7 +110,7 @@ final class PredisAdapter extends BaseAdapter
                 $client->ping();
             } catch (Throwable $e) {
                 throw new ConnectionException(
-                    "Predis connection failed: " . $e->getMessage()
+                    'Predis connection failed: ' . $e->getMessage()
                 );
             }
 
@@ -119,7 +119,7 @@ final class PredisAdapter extends BaseAdapter
 
         } catch (Throwable $e) {
             throw new ConnectionException(
-                "Predis connection failed: " . $e->getMessage()
+                'Predis connection failed: ' . $e->getMessage()
             );
         }
     }

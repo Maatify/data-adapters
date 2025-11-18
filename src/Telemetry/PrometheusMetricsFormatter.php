@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -62,7 +63,8 @@ final readonly class PrometheusMetricsFormatter
      */
     public function __construct(
         private AdapterMetricsCollector $collector
-    ) {}
+    ) {
+    }
 
     /**
      * 🧾 **Render Prometheus Metrics Output**

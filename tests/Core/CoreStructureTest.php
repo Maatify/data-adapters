@@ -16,8 +16,8 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Core;
 
 use Exception;
-use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
+use Maatify\DataAdapters\Core\EnvironmentConfig;
 use PHPUnit\Framework\TestCase;
 
 /**

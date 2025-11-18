@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -15,10 +16,10 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Raw;
 
 use Doctrine\DBAL\Connection;
-use MongoDB\Database;
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
+use MongoDB\Database;
+use PHPUnit\Framework\TestCase;
 
 final class RawAccessTest extends TestCase
 {
@@ -46,12 +47,12 @@ final class RawAccessTest extends TestCase
          * We override only the needed keys for this test.
          * CI already has maatify_dev database created.
          */
-        $_ENV["MYSQL_MAIN_DSN"] =
-            "mysql:host=127.0.0.1;port=3306;dbname=maatify;charset=utf8mb4;";
+        $_ENV['MYSQL_MAIN_DSN'] =
+            'mysql:host=127.0.0.1;port=3306;dbname=maatify;charset=utf8mb4;';
 
-        $_ENV["MYSQL_MAIN_USER"] = "root";
-        $_ENV["MYSQL_MAIN_DRIVER"] = "pdo";
-        $_ENV["MYSQL_MAIN_PASS"] = $_ENV['MYSQL_PASS'] ?? getenv('MYSQL_PASS');
+        $_ENV['MYSQL_MAIN_USER'] = 'root';
+        $_ENV['MYSQL_MAIN_DRIVER'] = 'pdo';
+        $_ENV['MYSQL_MAIN_PASS'] = $_ENV['MYSQL_PASS'] ?? getenv('MYSQL_PASS');
 
         $mysql = $this->resolver->resolve('mysql.main');
         $raw   = $mysql->getDriver();
@@ -68,9 +69,9 @@ final class RawAccessTest extends TestCase
          * Using maatify_logs which we ensure exists in CI.
          */
 
-        $_ENV["MYSQL_LOGS_DSN"] =
-            "mysql://root:" . ($_ENV["MYSQL_PASS"] ?? getenv('MYSQL_PASS')) . "@127.0.0.1:3306/maatify";
-        $_ENV["MYSQL_LOGS_DRIVER"] = "dbal";
+        $_ENV['MYSQL_LOGS_DSN'] =
+            'mysql://root:' . ($_ENV['MYSQL_PASS'] ?? getenv('MYSQL_PASS')) . '@127.0.0.1:3306/maatify';
+        $_ENV['MYSQL_LOGS_DRIVER'] = 'dbal';
 
         $mysql = $this->resolver->resolve('mysql.logs');
         $raw   = $mysql->getDriver();
@@ -86,7 +87,7 @@ final class RawAccessTest extends TestCase
         /**
          * Mongo test database always exists in CI
          */
-        $_ENV["MONGO_MAIN_DSN"] = "mongodb://127.0.0.1:27017/maatify";
+        $_ENV['MONGO_MAIN_DSN'] = 'mongodb://127.0.0.1:27017/maatify';
 
         $mongo = $this->resolver->resolve('mongo.main');
         $raw   = $mongo->getDriver();
@@ -102,8 +103,8 @@ final class RawAccessTest extends TestCase
         /**
          * Redis exists on 6379 in CI.
          */
-        $urlPass = (!empty($_ENV['REDIS_PASS']) ? ':' . rawurlencode($_ENV["REDIS_PASS"]) . '@' : '');
-        $_ENV["REDIS_MAIN_DSN"] = "redis://" . $urlPass . "127.0.0.1:6379";
+        $urlPass = (!empty($_ENV['REDIS_PASS']) ? ':' . rawurlencode($_ENV['REDIS_PASS']) . '@' : '');
+        $_ENV['REDIS_MAIN_DSN'] = 'redis://' . $urlPass . '127.0.0.1:6379';
 
         $redis = $this->resolver->resolve('redis.main');
         $raw   = $redis->getDriver();

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -12,9 +14,9 @@
 
 namespace Maatify\DataAdapters\Tests\Integration;
 
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🔥 Real MySQL Dual Connection Test
@@ -42,14 +44,14 @@ final class RealMysqlDualConnectionTest extends TestCase
         $pass = $configLoader->get('MYSQL_PASS');
 
         $this->assertNotEmpty($host, 'Missing MYSQL_HOST in .env');
-        $this->assertNotEmpty($db,   'Missing MYSQL_DB in .env');
+        $this->assertNotEmpty($db, 'Missing MYSQL_DB in .env');
 
         // -----------------------------
         // 2) Clean old DSNs
         // -----------------------------
-        putenv("MYSQL_DSN");
-        putenv("MYSQL_MAIN_DSN");
-        putenv("MYSQL_DEFAULT_DSN");
+        putenv('MYSQL_DSN');
+        putenv('MYSQL_MAIN_DSN');
+        putenv('MYSQL_DEFAULT_DSN');
 
         // -----------------------------
         // 3) Set DSN for the tested driver
@@ -70,7 +72,7 @@ final class RealMysqlDualConnectionTest extends TestCase
         // -----------------------------
         // 5) Resolve and connect
         // -----------------------------
-        $adapter = $resolver->resolve("mysql");
+        $adapter = $resolver->resolve('mysql');
         $adapter->connect();
 
         // -----------------------------

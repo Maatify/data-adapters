@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -63,7 +64,8 @@ final readonly class MySqlConfigBuilder
      */
     public function __construct(
         private EnvironmentConfig $config
-    ) {}
+    ) {
+    }
 
     /**
      * 🧠 **Build a fully resolved MySQL profile configuration**
@@ -106,18 +108,18 @@ final readonly class MySqlConfigBuilder
         if ($dsn && str_starts_with($dsn, 'mysql://')) {
             $this->validateDoctrineDsn($dsn, $profile);
 
-                // Doctrine DSN MUST override everything
-                return new ConnectionConfigDTO(
-                    dsn      : $dsn,
-                    host     : $dsnData['host'] ?? null,
-                    port     : isset($dsnData['port']) ? (string)$dsnData['port'] : null,
-                    user     : $dsnData['user'] ?? null,
-                    pass     : $dsnData['pass'] ?? null,
-                    database : $dsnData['database'] ?? null,
-                    options  : $dsnData['options'] ?? [],
-                    driver   : 'dbal',
-                    profile  : $profile
-                );
+            // Doctrine DSN MUST override everything
+            return new ConnectionConfigDTO(
+                dsn      : $dsn,
+                host     : $dsnData['host'] ?? null,
+                port     : isset($dsnData['port']) ? (string)$dsnData['port'] : null,
+                user     : $dsnData['user'] ?? null,
+                pass     : $dsnData['pass'] ?? null,
+                database : $dsnData['database'] ?? null,
+                options  : $dsnData['options'] ?? [],
+                driver   : 'dbal',
+                profile  : $profile
+            );
         }
 
         // ---------------------------------------------------------

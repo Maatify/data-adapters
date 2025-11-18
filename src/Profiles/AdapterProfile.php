@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -84,7 +85,7 @@ final readonly class AdapterProfile implements ProfileInterface
         $profile = strtolower(trim($profile));
 
         if ($profile === '') {
-            throw new InvalidArgumentException("Profile name cannot be empty.");
+            throw new InvalidArgumentException('Profile name cannot be empty.');
         }
 
         if (! preg_match('/^[a-z0-9._-]+$/', $profile)) {

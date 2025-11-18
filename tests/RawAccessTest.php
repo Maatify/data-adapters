@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -14,9 +15,9 @@ declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
+use Maatify\DataAdapters\Core\EnvironmentConfig;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 Raw Access Integration Test
@@ -57,7 +58,7 @@ final class RawAccessTest extends TestCase
         $mysql = $this->resolver->resolve('mysql.logs', autoConnect: true);
         $driver = $mysql->getDriver();
 
-//        $this->assertInstanceOf(\PDO::class, $driver);
+        //        $this->assertInstanceOf(\PDO::class, $driver);
         $this->assertInstanceOf(\Doctrine\DBAL\Connection::class, $driver);
     }
 

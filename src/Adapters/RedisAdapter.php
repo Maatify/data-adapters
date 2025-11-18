@@ -92,7 +92,7 @@ final class RedisAdapter extends BaseAdapter
             // -----------------------------------------
             $pong = $client->ping();
             if ($pong === false) {
-                throw new ConnectionException("Redis did not respond to PING.");
+                throw new ConnectionException('Redis did not respond to PING.');
             }
 
             $this->connection = $client;
@@ -100,7 +100,7 @@ final class RedisAdapter extends BaseAdapter
 
         } catch (Throwable $e) {
             throw new ConnectionException(
-                "Redis connection failed: " . $e->getMessage()
+                'Redis connection failed: ' . $e->getMessage()
             );
         }
     }

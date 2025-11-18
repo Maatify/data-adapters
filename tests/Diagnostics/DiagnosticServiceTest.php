@@ -19,7 +19,6 @@ use Exception;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Diagnostics\DiagnosticService;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -67,9 +66,9 @@ final class DiagnosticServiceTest extends TestCase
         // 🧠 Create diagnostic service and register adapter types
         $service = new DiagnosticService($config, $resolver);
         $service->register([
-            "redis",
-            "mongo",
-            "mysql",
+            'redis',
+            'mongo',
+            'mysql',
         ]);
 
         // 🧩 Collect diagnostics

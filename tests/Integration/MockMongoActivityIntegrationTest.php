@@ -18,7 +18,6 @@ namespace Maatify\DataAdapters\Tests\Integration;
 use Exception;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -68,7 +67,7 @@ final class MockMongoActivityIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // ⚙️ Act: Resolve the Mongo adapter
-        $mongo = $resolver->resolve("MONGO");
+        $mongo = $resolver->resolve('MONGO');
 
         // ✅ Assert: Verify essential methods exist
         $this->assertTrue(

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -42,7 +43,7 @@ final class RealRedisConnectionTest extends TestCase
         // Arrange
         $config   = new EnvironmentConfig(dirname(__DIR__, 2));
         $resolver = new DatabaseResolver($config);
-        $adapter  = $resolver->resolve("redis.main");  // IMPORTANT after Phase 13
+        $adapter  = $resolver->resolve('redis.main');  // IMPORTANT after Phase 13
 
         // Act
         $adapter->connect();

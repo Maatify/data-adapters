@@ -96,8 +96,8 @@ final class MySQLDbalAdapter extends BaseAdapter
                     new Configuration()
                 );
 
-//                print_r($cfg);
-//                print_r($_ENV);
+                //                print_r($cfg);
+                //                print_r($_ENV);
                 $this->connection->executeQuery('SELECT 1');
                 $this->connected = true;
                 return;
@@ -156,7 +156,7 @@ final class MySQLDbalAdapter extends BaseAdapter
             $this->connected = true;
         } catch (Throwable $e) {
             throw new ConnectionException(
-                "MySQL DBAL connection failed: " . $e->getMessage(),
+                'MySQL DBAL connection failed: ' . $e->getMessage(),
                 previous: $e
             );
         }

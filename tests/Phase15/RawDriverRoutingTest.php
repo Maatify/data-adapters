@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -15,26 +16,25 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Phase15;
 
 use Maatify\DataAdapters\Adapters\MySQLAdapter;
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
+use PHPUnit\Framework\TestCase;
 
 final class RawDriverRoutingTest extends TestCase
 {
-
     /**
      * @runInSeparateProcess
      */
     public function testDbalRoutePicking(): void
     {
-        $_ENV["APP_ENV"] = "testing";
-        $_ENV["MYSQL_REPORTING_DSN"] = "mysql://root:pass@127.0.0.1:3306/reportdb";
-        $_ENV["MYSQL_REPORTING_DRIVER"] = "dbal";
+        $_ENV['APP_ENV'] = 'testing';
+        $_ENV['MYSQL_REPORTING_DSN'] = 'mysql://root:pass@127.0.0.1:3306/reportdb';
+        $_ENV['MYSQL_REPORTING_DRIVER'] = 'dbal';
 
         $resolver = new DatabaseResolver(new EnvironmentConfig(dirname(__DIR__, 2)));
-        $adapter = $resolver->resolve("mysql.reporting");
+        $adapter = $resolver->resolve('mysql.reporting');
 
-//        $this->assertInstanceOf(\Doctrine\DBAL\Connection::class, $adapter->getDriver());
+        //        $this->assertInstanceOf(\Doctrine\DBAL\Connection::class, $adapter->getDriver());
 
         $this->assertInstanceOf(
             \Maatify\DataAdapters\Adapters\MySQLDbalAdapter::class,
@@ -47,16 +47,16 @@ final class RawDriverRoutingTest extends TestCase
      */
     public function testPdoRoutePicking(): void
     {
-        $_ENV["APP_ENV"] = "testing";
+        $_ENV['APP_ENV'] = 'testing';
 
-        $_ENV["MYSQL_BILLING_DSN"]  = "mysql:host=127.0.0.1;dbname=billing";
-        $_ENV["MYSQL_BILLING_USER"] = "root";
-        $_ENV["MYSQL_BILLING_PASS"] = "root";
+        $_ENV['MYSQL_BILLING_DSN']  = 'mysql:host=127.0.0.1;dbname=billing';
+        $_ENV['MYSQL_BILLING_USER'] = 'root';
+        $_ENV['MYSQL_BILLING_PASS'] = 'root';
 
         $resolver = new DatabaseResolver(new EnvironmentConfig(dirname(__DIR__, 2)));
-        $adapter = $resolver->resolve("mysql.billing");
+        $adapter = $resolver->resolve('mysql.billing');
 
         $this->assertInstanceOf(MySQLAdapter::class, $adapter);
-//        $this->assertInstanceOf(\PDO::class, $adapter->getDriver());
+        //        $this->assertInstanceOf(\PDO::class, $adapter->getDriver());
     }
 }

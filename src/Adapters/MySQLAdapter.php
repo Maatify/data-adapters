@@ -110,7 +110,7 @@ final class MySQLAdapter extends BaseAdapter
 
         } catch (PDOException $e) {
             throw new ConnectionException(
-                "MySQL connection failed: " . $e->getMessage()
+                'MySQL connection failed: ' . $e->getMessage()
             );
         }
     }

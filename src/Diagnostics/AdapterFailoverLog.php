@@ -120,7 +120,7 @@ final class AdapterFailoverLog
     {
         // 🔹 Compose a structured log line
         $line = sprintf(
-            "[%s] [%s] %s%s",
+            '[%s] [%s] %s%s',
             date('Y-m-d H:i:s'),
             strtoupper($adapter),
             $message,

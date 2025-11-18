@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -11,6 +12,7 @@
  */
 
 declare(strict_types=1);
+
 namespace Maatify\DataAdapters\Contracts;
 
 use Maatify\Common\Contracts\Adapter\AdapterInterface;

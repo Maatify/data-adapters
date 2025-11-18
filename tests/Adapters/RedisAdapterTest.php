@@ -16,8 +16,8 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Adapters;
 
 use Exception;
-use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Core\DatabaseResolver;
+use Maatify\DataAdapters\Core\EnvironmentConfig;
 use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 
@@ -60,7 +60,7 @@ final class RedisAdapterTest extends TestCase
         $resolver = new DatabaseResolver(new EnvironmentConfig(dirname(__DIR__, 3)));
 
         // ⚙️ Resolve Redis adapter (auto-selects Redis or Predis)
-        $adapter = $resolver->resolve("redis");
+        $adapter = $resolver->resolve('redis');
 
         // ✅ Assert that the resolved adapter exposes the expected method
         $this->assertTrue(

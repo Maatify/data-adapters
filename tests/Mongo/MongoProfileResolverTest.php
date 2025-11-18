@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -18,7 +19,6 @@ use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
-use ReflectionException;
 
 /**
  * 🧪 MongoProfileResolverTest (Real Integration Version)

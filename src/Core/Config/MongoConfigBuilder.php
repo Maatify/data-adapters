@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -51,7 +52,8 @@ final readonly class MongoConfigBuilder
      */
     public function __construct(
         private EnvironmentConfig $config
-    ) {}
+    ) {
+    }
 
     /**
      * 🧩 **Build full MongoDB configuration for a given profile**

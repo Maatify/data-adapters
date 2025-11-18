@@ -60,7 +60,8 @@ final class DatabaseResolver implements ResolverInterface
      */
     public function __construct(
         private readonly EnvironmentConfig $config
-    ) {}
+    ) {
+    }
 
     /**
      * 🧠 **Resolve a database route**

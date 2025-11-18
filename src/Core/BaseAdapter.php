@@ -225,14 +225,14 @@ abstract class BaseAdapter implements AdapterInterface
     {
         return match (true) {
             $this instanceof \Maatify\DataAdapters\Adapters\MySQLAdapter,
-                $this instanceof \Maatify\DataAdapters\Adapters\MySQLDbalAdapter =>
+            $this instanceof \Maatify\DataAdapters\Adapters\MySQLDbalAdapter =>
             ConnectionTypeEnum::MYSQL,
 
             $this instanceof \Maatify\DataAdapters\Adapters\MongoAdapter =>
             ConnectionTypeEnum::MONGO,
 
             $this instanceof \Maatify\DataAdapters\Adapters\RedisAdapter,
-                $this instanceof \Maatify\DataAdapters\Adapters\PredisAdapter =>
+            $this instanceof \Maatify\DataAdapters\Adapters\PredisAdapter =>
             ConnectionTypeEnum::REDIS,
         };
     }

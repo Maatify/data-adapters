@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -14,8 +15,8 @@ declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Tests\Registry;
 
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\Config\RegistryConfig;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 RegistryConfigTest (Improved & Stable)

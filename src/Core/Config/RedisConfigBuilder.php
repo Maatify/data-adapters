@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -54,7 +55,8 @@ final readonly class RedisConfigBuilder
      */
     public function __construct(
         private EnvironmentConfig $config
-    ) {}
+    ) {
+    }
 
     /**
      * 🧠 **Build Redis configuration for a specific profile**

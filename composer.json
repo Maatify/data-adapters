@@ -61,11 +61,14 @@
     "mongodb/mongodb": "^2.0",
     "predis/predis": "^2.3",
     "maatify/rate-limiter": "dev-main",
-    "doctrine/dbal": "^4.3"
-
+    "doctrine/dbal": "^4.3",
+    "friendsofphp/php-cs-fixer": "^3.89",
+    "phpstan/phpstan": "^1.11"
   },
   "scripts": {
-    "test": "phpunit --configuration phpunit.xml.dist"
+    "test": "phpunit --configuration phpunit.xml.dist",
+    "analyse": "phpstan analyse src --level=max",
+    "format": "php-cs-fixer fix"
   },
   "minimum-stability": "stable",
   "prefer-stable": true

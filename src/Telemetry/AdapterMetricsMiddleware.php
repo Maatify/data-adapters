@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Library     maatify/data-adapters
@@ -65,7 +66,8 @@ final readonly class AdapterMetricsMiddleware
      */
     public function __construct(
         private AdapterMetricsCollector $collector
-    ) {}
+    ) {
+    }
 
     /**
      * 🧩 **Measure an Operation’s Execution Time and Record Metrics**

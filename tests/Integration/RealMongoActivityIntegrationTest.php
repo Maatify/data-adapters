@@ -15,10 +15,9 @@ declare(strict_types=1);
 namespace Maatify\DataAdapters\Tests\Integration;
 
 use Exception;
-use PHPUnit\Framework\TestCase;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
+use PHPUnit\Framework\TestCase;
 
 /**
  * 🧪 **Class RealMongoActivityIntegrationTest**
@@ -61,7 +60,7 @@ final class RealMongoActivityIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // 🧩 Resolve the Mongo adapter
-        $mongo = $resolver->resolve("mongo.main");
+        $mongo = $resolver->resolve('mongo.main');
 
         // ✅ Establish actual connection
         $mongo->connect();

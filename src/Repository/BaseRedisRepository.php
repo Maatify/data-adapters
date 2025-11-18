@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @copyright   ©2025 Maatify.dev
  * @Liberary    maatify/data-adapters
@@ -21,5 +22,7 @@ abstract class BaseRedisRepository
 {
     use ProvidesRawAccessTrait;
 
-    public function __construct(protected AdapterInterface $adapter) {}
+    public function __construct(protected AdapterInterface $adapter)
+    {
+    }
 }

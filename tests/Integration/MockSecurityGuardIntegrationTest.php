@@ -18,7 +18,6 @@ namespace Maatify\DataAdapters\Tests\Integration;
 use Exception;
 use Maatify\DataAdapters\Core\DatabaseResolver;
 use Maatify\DataAdapters\Core\EnvironmentConfig;
-use Maatify\DataAdapters\Enums\AdapterTypeEnum;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -69,7 +68,7 @@ final class MockSecurityGuardIntegrationTest extends TestCase
         $resolver = new DatabaseResolver($config);
 
         // ⚙️ Act: Resolve MySQL adapter without auto-connection
-        $mysql = $resolver->resolve("MYSQL");
+        $mysql = $resolver->resolve('MYSQL');
 
         // ✅ Assert: Validate structural integrity and method availability
         $this->assertTrue(
