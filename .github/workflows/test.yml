@@ -263,11 +263,11 @@ jobs:
           STATUS="✅ Tests passed successfully!"
           COLOR="🟢"
           
-          HEADER="Maatify CI Report"
+          HEADER="Maatify CI Report (maatify/data-adapters)"
           if grep -q "FAILURES!" phpunit.log || [ "${{ job.status }}" != "success" ]; then
             STATUS="❌ Some tests failed. Please review the log."
             COLOR="🔴"
-            HEADER="Maatify CI Alert"
+            HEADER="Maatify CI Alert (maatify/data-adapters)"
           fi
 
           PROJECT="maatify/data-adapters"
