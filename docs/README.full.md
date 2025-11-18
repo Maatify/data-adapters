@@ -1455,25 +1455,143 @@ Full documentation:
 
 ---
 
-# 📜 **Changelog Summary (v1.0.0 → v1.1.0)**
 
-| Phase  | Title                                     | Key Additions                                                                                                        |
-|--------|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| 1      | Environment Setup                         | Composer, CI, Docker                                                                                                 |
-| 2      | Core Interfaces                           | AdapterInterface, BaseAdapter                                                                                        |
-| 3      | Implementations                           | Redis, Predis, Mongo, MySQL                                                                                          |
-| 4      | Diagnostics                               | Health checks, failover log                                                                                          |
-| 4.1    | Hybrid Logging                            | Env-aware log paths                                                                                                  |
-| 4.2    | DI Logger                                 | AdapterLoggerInterface                                                                                               |
-| 5      | Integration                               | Unified adapter testing                                                                                              |
-| 7      | Telemetry                                 | Prometheus metrics                                                                                                   |
-| 8      | Release                                   | Docs + Packagist                                                                                                     |
-| 9      | Remove Fallback                           | Removed Redis fallback subsystem                                                                                     |
-| 10     | DSN Support                               | Full DSN parsing + string routing for all adapters                                                                   |
-| 11     | Multi-Profile MySQL                       | Dynamic MySQL profiles + MySqlConfigBuilder                                                                          |
-| 12     | Multi-Profile MongoDB                     | MongoConfigBuilder + DSN parsing + resolver caching                                                                  |
-| **13** | **Dynamic Registry + Unified Builders**   | RegistryConfig + Redis/Mongo/MySQL unified builder architecture + resolver merge                                     |
-| **15** | **Raw Driver Access + DSN Stabilization** | Unified `getDriver()` layer for PDO/DBAL/Mongo/Redis + strict DSN parsing + Doctrine URL fixes + real-driver routing |
+---
+
+# 🧱 **Phase 16 — MySQL DBAL Stability Patch + DSN Hardening**
+
+### 🎯 Goal
+
+Stabilize DBAL MySQL connections across all environments (Local, Docker, GitHub CI).
+Fix Doctrine DSN parsing issues, enforce TCP-only connections, and ensure consistent configuration merging across MySQL builders and adapters.
+
+---
+
+### ✅ Implemented Tasks
+
+* Enforced **TCP mode** by disabling unix_socket fallback
+* Forced all DBAL connections to use `127.0.0.1` instead of `localhost`
+* Rewrote DSN sanitizer to preserve `?` inside passwords
+* Improved Doctrine URL DSN parsing (supports unescaped symbols)
+* Patched `MySQLDbalAdapter` for CI-safe initialization
+* Updated `RawAccessTest` to support DSN overrides in CI
+* Normalized DSN & legacy merging in `MySqlConfigBuilder`
+* Ensured consistent routing in `DatabaseResolver` before `getDriver()`
+
+---
+
+### 🐞 Fixed
+
+* DBAL socket fallback causing CI error:
+
+  `SQLSTATE[HY000] [2002] No such file or directory`
+* Doctrine URL parsing failures for special-character passwords
+* Incorrect DSN field extraction (host/user/pass/port)
+* Legacy parser edge-case causing missing fields
+* PDO vs DBAL DSN mismatch
+* Sanitizer stripping values after `?`
+
+---
+
+### 🔄 Updated
+
+* `MySQLDbalAdapter` connection builder
+* `MySqlConfigBuilder` merging algorithm
+* `MysqlDsnParser` sanitization logic
+* `RawAccessTest` DSN injection
+* Resolver routing order before driver creation
+
+---
+
+### 📁 Documentation
+
+Full details:
+`/docs/phases/README.phase16.md`
+
+---
+
+# 🧱 **Phase 17 — Project-Wide PHPStan Level-Max Compliance**
+
+### 🎯 Goal
+
+Achieve **100% PHPStan Level Max compliance** across the entire codebase.
+Enforce strict typing, eliminate mixed access, fix return types, and normalize adapter/config builder behavior.
+
+---
+
+### ✅ Implemented Tasks
+
+* Removed all mixed-type method calls in adapters and resolvers
+* Eliminated unsafe nullsafe operators on non-nullable properties
+* Normalized DSN parser into strict array-shape outputs
+* Strengthened config builders with correct typed merging
+* Fixed BaseAdapter return type (getConnection/getDriver)
+* Ensured PDO & DBAL adapters return correct driver type in PHPDoc
+* Patched MongoAdapter strict return of `MongoDB\Client`
+* Updated EnvironmentConfig & RegistryConfig safe array access
+* Fixed `strtolower(null)` in `DatabaseResolver`
+* Corrected RedisConfigBuilder’s PHPDoc mismatches
+* Standardized DTO construction and typing
+* Updated all tests to match strict-typing rules
+
+---
+
+### 🐞 Fixed
+
+* Mixed-type access across multiple layers
+* Non-exhaustive `match()` blocks in enums
+* Nullable violations in adapter methods
+* PDOStatement|false errors (`fetchColumn()` issues)
+* DBAL executeQuery() on mixed connection
+* DSN parser returning inconsistent structures
+* Registry & environment config missing type checks
+* Incorrect getDriver() method in all adapters
+* Legacy fallback paths bypassing type validation
+
+---
+
+### 🔄 Updated
+
+* `BaseAdapter` typing logic
+* MySQL Adapter (PDO) driver narrowing
+* MySQLDbalAdapter driver enforcement
+* MongoAdapter strict typing
+* RedisConfigBuilder type logic
+* MysqlDsnParser strict array-shape output
+* EnvironmentConfig, RegistryConfig merging
+* DatabaseResolver routing & type validation
+* All PHPUnit tests (raw access, DSN, integration tests)
+
+---
+
+### 📁 Documentation
+
+Full details:
+`/docs/phases/README.phase17.md`
+
+---
+
+# 📜 **Changelog Summary (v1.0.0 → v1.2.2)**
+
+| Phase  | Title                                 | Key Additions                                                                                                        |
+|--------|---------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| 1      | Environment Setup                     | Composer, CI, Docker                                                                                                 |
+| 2      | Core Interfaces                       | AdapterInterface, BaseAdapter                                                                                        |
+| 3      | Implementations                       | Redis, Predis, Mongo, MySQL                                                                                          |
+| 4      | Diagnostics                           | Health checks, failover log                                                                                          |
+| 4.1    | Hybrid Logging                        | Env-aware log paths                                                                                                  |
+| 4.2    | DI Logger                             | AdapterLoggerInterface                                                                                               |
+| 5      | Integration                           | Unified adapter testing                                                                                              |
+| 7      | Telemetry                             | Prometheus metrics                                                                                                   |
+| 8      | Release                               | Docs + Packagist                                                                                                     |
+| 9      | Remove Fallback                       | Removed Redis fallback subsystem                                                                                     |
+| 10     | DSN Support                           | Full DSN parsing + string routing for all adapters                                                                   |
+| 11     | Multi-Profile MySQL                   | Dynamic MySQL profiles + MySqlConfigBuilder                                                                          |
+| 12     | Multi-Profile MongoDB                 | MongoConfigBuilder + DSN parsing + resolver caching                                                                  |
+| 13     | Dynamic Registry + Unified Builders   | RegistryConfig + Redis/Mongo/MySQL unified builder architecture + resolver merge                                     |
+| 15     | Raw Driver Access + DSN Stabilization | Unified `getDriver()` layer for PDO/DBAL/Mongo/Redis + strict DSN parsing + Doctrine URL fixes + real-driver routing |
+| 16     | DBAL Stability Patch + DSN Hardening  | TCP-only mode, DSN sanitizer fixes, CI-safe DBAL initialization                                                      |
+| **17** | **PHPStan Level-Max Compliance**      | Full strict typing across all adapters, builders, resolvers, and config systems                                      |
 
 ---
 
@@ -1530,25 +1648,26 @@ echo $result; // 1
 ---
 
 # 🧭 **Project Summary (Updated)**
-| Phase  | Status | Description                              |
-|--------|--------|------------------------------------------|
-| 1      | ✅      | Environment Setup                        |
-| 2      | ✅      | Core Interfaces & Structure              |
-| 3      | ✅      | Adapters Implementation                  |
-| 3.5    | ✅      | Smoke Tests                              |
-| 4      | ✅      | Diagnostics Layer                        |
-| 4.1    | ✅      | Hybrid Logging                           |
-| 4.2    | ✅      | DI Logger                                |
-| 5      | ✅      | Integration Tests                        |
-| 7      | ✅      | Observability & Metrics                  |
-| 8      | ✅      | Documentation & Release                  |
-| 9      | ✅      | Remove Fallback                          |
-| 10     | ✅      | DSN Support                              |
-| 11     | ✅      | Multi-Profile MySQL                      |
-| 12     | ✅      | Multi-Profile MongoDB                    |
-| **13** | 🟢     | **Dynamic Registry + Unified Builders**  |
-| **15** | 🟢     | **Raw Driver Layer + DSN Stabilization** |
-
+| Phase  | Status | Description                                 |
+|--------|--------|---------------------------------------------|
+| 1      | ✅      | Environment Setup                           |
+| 2      | ✅      | Core Interfaces & Structure                 |
+| 3      | ✅      | Adapters Implementation                     |
+| 3.5    | ✅      | Smoke Tests                                 |
+| 4      | ✅      | Diagnostics Layer                           |
+| 4.1    | ✅      | Hybrid Logging                              |
+| 4.2    | ✅      | DI Logger                                   |
+| 5      | ✅      | Integration Tests                           |
+| 7      | ✅      | Observability & Metrics                     |
+| 8      | ✅      | Documentation & Release                     |
+| 9      | ✅      | Remove Fallback                             |
+| 10     | ✅      | DSN Support                                 |
+| 11     | ✅      | Multi-Profile MySQL                         |
+| 12     | ✅      | Multi-Profile MongoDB                       |
+| **13** | 🟢     | **Dynamic Registry + Unified Builders**     |
+| **15** | 🟢     | **Raw Driver Layer + DSN Stabilization**    |
+| 16     | 🟢     | MySQL DBAL Stability Patch + DSN Hardening  |
+| 17     | 🟢     | PHPStan Level-Max Static Analysis Hardening |
 
 ---
 
@@ -1576,6 +1695,22 @@ echo $result; // 1
 ✓ **All raw-access tests passing** (MySQL/Mongo/Redis)
 ✓ **Real MySQL dual-driver test enabled** and stable (`MYSQL_DSN` + `MYSQL_MAIN_DSN`)
 ✓ **Architecture ready for Failover Routing (Phase 16)**
+
+---
+
+# 🪄 **Final Result After Phase 17**
+
+✓ MySQL DBAL connections fully stable across CI, Docker, macOS, Linux
+✓ Doctrine-style DSNs now parsed correctly with special characters
+✓ DSN + Registry + Legacy merge pipeline fully deterministic
+✓ Zero socket fallback errors in GitHub Actions
+✓ Strict typing enforced across **100% of the codebase**
+✓ All adapters return correct driver types (PDO/DBAL/Mongo/Redis)
+✓ Full PHPStan Level Max compliance
+✓ Legacy DSN parser fully replaced with normalized builder logic
+✓ EnvironmentConfig and RegistryConfig type-safe
+✓ All adapters fully aligned with strict-typing ecosystem standards
+✓ Codebase now ready for Phase 18 (Failover Routing 2.0 or you define next)
 
 ---
 

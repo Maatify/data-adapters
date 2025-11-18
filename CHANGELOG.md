@@ -17,9 +17,46 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-# ⭐ **[1.2.0] — 2025-11-17**
+# ⭐ **[1.2.2] — 2025-11-18**
+
+### 🚀 Phase 17 — Project-Wide PHPStan Level-Max Compliance
+
+### Added
+
+* Enforced **PHPStan Level Max** across the entire project.
+* Introduced strict type guarantees for all adapters, builders, resolvers, and config layers.
+* Added new unit tests validating strict-typing behavior for DSN parsing, Mongo, MySQL (PDO/DBAL), Redis, and Registry merging.
+
+### Changed
+
+* Removed all mixed-type access patterns across adapters and config builders.
+* Replaced nullable or ambiguous return types with strict typed signatures.
+* Updated `getDriver()` implementations to consistently return concrete driver types (PDO, DBAL Connection, MongoDB\Database, Redis/Predis).
+* Strengthened DSN parsers with array-shape guarantees.
+* Standardized merge logic in `EnvironmentConfig` and `RegistryConfig`.
+
+### Fixed
+
+* Resolved multiple PHPStan violations:
+
+    * Non-exhaustive `match()` expressions
+    * `PDOStatement|false` return handling
+    * `executeQuery()` on mixed DBAL driver
+    * DSN parsing inconsistencies (missing host/user/pass/port)
+    * Nullsafe operator usage on non-nullable objects
+* Fixed `strtolower(null)` inside `DatabaseResolver`.
+
+### Notes
+
+* 100% backward compatible.
+* No API changes; this is a purely internal quality & safety improvement.
+* Library is now fully aligned with strict TYPOLOGY standards across Maatify repositories.
+
+---
 
 ## [1.2.1] — 2025-11-17
+### 🚀 Phase 16 — MySQL DBAL Stability Patch + DSN Hardening
+
 ### Fixed
 - Forced TCP mode for MySQL DBAL by disabling unix_socket fallback.
 - Resolved `SQLSTATE[HY000] [2002] No such file or directory` affecting GitHub CI runs.
@@ -37,6 +74,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+# ⭐ **[1.2.0] — 2025-11-17**
 ## 🚀 **Phase 15 — Raw Driver Layer + Full DSN Stabilization**
 
 ### Added

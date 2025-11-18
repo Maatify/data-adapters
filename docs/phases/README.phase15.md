@@ -1,12 +1,12 @@
 # 📘 **Phase 15 — Raw Access Layer + DSN Stabilization**
 
-**Version:** 1.2.0
-**Base Version:** 1.2.0
-**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))
-**Project:** maatify/data-adapters
-**Module:** Data Adapters
-**Date:** 2025-11-17
-**Status:** ✅ Completed
+**Version:** 1.2.0  
+**Base Version:** 1.2.0  
+**Maintainer:** Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))  
+**Project:** maatify/data-adapters  
+**Module:** Data Adapters  
+**Date:** 2025-11-17  
+**Status:** ✅ Completed  
 
 ---
 
