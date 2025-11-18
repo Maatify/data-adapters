@@ -15,19 +15,60 @@ declare(strict_types=1);
 
 namespace Maatify\DataAdapters\Core\Parser;
 
+/**
+ * 🧩 **MysqlDsnParser**
+ *
+ * 🎯 Responsible for parsing both **Doctrine-style** and **PDO-style** MySQL DSN strings
+ * into a normalized associative array.
+ *
+ * Supported formats:
+ * - `mysql://user:pass@host:3306/database`
+ * - `mysql:host=127.0.0.1;port=3306;dbname=test`
+ *
+ * This utility ensures consistent extraction of host, port, database, username,
+ * and password regardless of DSN syntax.
+ *
+ * ---
+ *
+ * ### ✔️ Example Usage
+ * ```php
+ * use Maatify\DataAdapters\Core\Parser\MysqlDsnParser;
+ *
+ * $dsn = "mysql://user:secret@localhost:3306/mydb";
+ * $parsed = MysqlDsnParser::parse($dsn);
+ *
+ * // Result:
+ * // [
+ * //   'host' => 'localhost',
+ * //   'port' => '3306',
+ * //   'user' => 'user',
+ * //   'pass' => 'secret',
+ * //   'database' => 'mydb',
+ * // ]
+ * ```
+ *
+ * ---
+ *
+ * @package Maatify\DataAdapters\Core\Parser
+ */
 final class MysqlDsnParser
 {
     /**
      * 🧠 **Parse MySQL DSN (PDO or Doctrine-style)**
      *
-     * Supports:
-     * - Doctrine DSN:
-     *   `mysql://user:pass@host:3306/dbname`
+     * Extracts connection components from supported DSN formats and returns them
+     * as a clean, normalized array.
      *
-     * - PDO DSN:
-     *   `mysql:host=127.0.0.1;port=3306;dbname=test`
+     * ---
      *
-     * @param string $dsn Raw DSN string.
+     * ### 🔹 Supported DSN Inputs
+     * - `mysql://user:pass@host:port/dbname` (Doctrine style)
+     * - `mysql:host=127.0.0.1;port=3306;dbname=test` (PDO style)
+     *
+     * ---
+     *
+     * @param string $dsn
+     *     The raw DSN string provided by configuration.
      *
      * @return array{
      *     host?: string|null,
@@ -37,52 +78,80 @@ final class MysqlDsnParser
      *     database?: string|null,
      *     options?: mixed
      * }
+     *     A normalized array of parsed properties. Missing components are returned as `null`.
+     *
+     * ---
+     *
+     * ### ✔️ Example
+     * ```php
+     * $config = MysqlDsnParser::parse("mysql:host=db;port=3306;dbname=shop");
+     * ```
      */
-
     public static function parse(string $dsn): array
     {
-        // Remove query string (?charset=..)
+        // 🧹 Remove query parameters while keeping only the database segment.
+        // preg_replace may return string|null
         $clean = preg_replace('#/([A-Za-z0-9_\-]+)\?.*$#', '/$1', $dsn);
+        $clean = is_string($clean) ? $clean : $dsn;
+
         // ---------------------------------------------
-        // Doctrine: mysql://user:pass@host:port/db
-        // SPECIAL FIX → Allow ANY password symbols safely
+        // 🎯 Doctrine style:
+        // Format: mysql://user:pass@host:port/db
         // ---------------------------------------------
         if (str_starts_with($clean, 'mysql://')) {
 
-            // Universal safe regex for ANY password symbols
-            if (!preg_match(
+            $matches = [];
+
+            // Extract components using a named-regex.
+            $ok = preg_match(
                 '#^mysql://(?P<user>[^:/]+):(?P<pass>.+)@(?P<host>[^:/]+):(?P<port>[0-9]+)/(?P<db>[A-Za-z0-9_\-]+)$#',
                 $clean,
-                $m
-            )) {
+                $matches
+            );
+
+            // If it does not match, return empty array.
+            if ($ok !== 1) {
                 return [];
             }
 
+            // Return normalized structure
             return [
-                'host'     => $m['host'],
-                'port'     => $m['port'],
-                'user'     => $m['user'],
-                'pass'     => $m['pass'],
-                'database' => $m['db'],
+                'host'     => $matches['host'],
+                'port'     => $matches['port'],
+                'user'     => $matches['user'],
+                'pass'     => $matches['pass'],
+                'database' => $matches['db'],
             ];
         }
 
         // ---------------------------------------------
-        // PDO DSN: mysql:host=...;port=...;dbname=...
+        // 🎯 PDO DSN:
+        // Format: mysql:host=...;port=...;dbname=...
         // ---------------------------------------------
-        $clean = str_replace('mysql:', '', $clean);
+
+        // Ensure $clean is a string before str_replace()
+        $clean = str_replace('mysql:', '', (string)$clean);
+
+        // Break into key=value pairs
         $pairs = explode(';', $clean);
 
         $out = [];
         foreach ($pairs as $pair) {
             if (!str_contains($pair, '=')) {
-                continue;
+                continue; // Skip invalid fragments
             }
 
             [$key, $value] = explode('=', $pair, 2);
-            $out[strtolower(trim($key))] = trim($value);
+
+            $key   = strtolower(trim($key));
+            $value = trim($value);
+
+            if ($key !== '') {
+                $out[$key] = $value; // Normalize into associative array
+            }
         }
 
+        // Final normalized return structure for PDO DSN
         return [
             'host'     => $out['host']   ?? null,
             'port'     => $out['port']   ?? null,
