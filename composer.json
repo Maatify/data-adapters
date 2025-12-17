@@ -31,7 +31,7 @@
 
   "require": {
     "php": ">=8.2",
-    "maatify/common": "^1.0"
+    "maatify/common": "^2.0"
   },
 
   "suggest": {
@@ -57,7 +57,10 @@
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.89",
     "phpstan/phpstan": "^2.0",
-    "phpunit/phpunit": "^11.0"
+    "phpunit/phpunit": "^11.0",
+    "mongodb/mongodb": "^2.0",
+    "predis/predis": "^2.3",
+    "doctrine/dbal": "^4.3"
   },
   "scripts": {
     "test": "phpunit --configuration phpunit.no-coverage.xml.dist",
