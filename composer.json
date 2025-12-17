@@ -1,75 +1,79 @@
 {
   "name": "maatify/data-adapters",
-  "homepage": "https://github.com/Maatify/data-adapters",
-  "title": "Maatify Data Adapters — Unified Data Connectivity & Diagnostics Layer",
-  "description": "Unified data connectivity and diagnostics layer for Redis, MySQL, and MongoDB with automatic fallback recovery, telemetry-ready metrics, and environment auto-detection. Forms the foundation of the Maatify Data Infrastructure.",
-  "keywords": [
-    "maatify",
-    "data adapters",
-    "database resolver",
-    "redis adapter",
-    "mysql adapter",
-    "mongodb adapter",
-    "predis fallback",
-    "fallback recovery",
-    "diagnostics",
-    "metrics",
-    "telemetry",
-    "observability",
-    "connection pooling",
-    "phpredis",
-    "pdo",
-    "doctrine dbal",
-    "maatify bootstrap",
-    "maatify common",
-    "maatify ecosystem"
-  ],
   "type": "library",
   "license": "MIT",
+
+  "description": "DI-first infrastructure adapters providing explicit ownership wrappers around real database and cache drivers.",
+
+  "keywords": [
+    "maatify",
+    "data-adapters",
+    "dependency-injection",
+    "pdo",
+    "doctrine-dbal",
+    "redis",
+    "predis",
+    "mongodb",
+    "infrastructure",
+    "di-boundary"
+  ],
+
+  "homepage": "https://www.maatify.dev",
+
   "authors": [
     {
-      "name": "Maatify.dev",
-      "email": "support@maatify.dev"
+      "name": "Mohamed Abdulalim",
+      "email": "mohamed@maatify.dev",
+      "homepage": "https://www.maatify.dev",
+      "role": "Lead Architect"
     }
   ],
+
   "require": {
-    "php": ">=8.4",
-    "maatify/bootstrap": "^1.0",
+    "php": ">=8.2",
     "maatify/common": "^1.0"
   },
+
   "suggest": {
-    "ext-redis": "or high-performance native RedisAdapter",
-    "ext-pdo": "Required for MySQLAdapter (PDO driver)",
-    "ext-mongodb": "Required for MongoAdapter",
-    "mongodb/mongodb": "Required only if you plan to use MongoAdapter for MongoDB integration.",
-    "predis/predis": "Used as fallback when ext-redis is unavailable",
-    "doctrine/dbal": "Optional advanced SQL driver for MySQLDbalAdapter"
+    "ext-pdo": "Required to use MySQLPDOAdapter",
+    "doctrine/dbal": "Required to use MySQLDBALAdapter",
+    "ext-redis": "Required to use RedisExtAdapter",
+    "predis/predis": "Required to use RedisPredisAdapter",
+    "mongodb/mongodb": "Required to use MongoDatabaseAdapter"
   },
+
   "autoload": {
     "psr-4": {
       "Maatify\\DataAdapters\\": "src/"
     }
   },
+
   "autoload-dev": {
     "psr-4": {
       "Maatify\\DataAdapters\\Tests\\": "tests/"
     }
   },
+
   "require-dev": {
-    "phpunit/phpunit": "^10.0",
-    "vlucas/phpdotenv": "^5.6",
-    "mongodb/mongodb": "^2.0",
-    "predis/predis": "^2.3",
-    "maatify/rate-limiter": "dev-main",
-    "doctrine/dbal": "^4.3",
     "friendsofphp/php-cs-fixer": "^3.89",
-    "phpstan/phpstan": "^1.11"
+    "phpstan/phpstan": "^2.0",
+    "phpunit/phpunit": "^11.0"
   },
   "scripts": {
-    "test": "phpunit --configuration phpunit.xml.dist",
+    "test": "phpunit --configuration phpunit.no-coverage.xml.dist",
+    "test:coverage": "XDEBUG_MODE=coverage phpunit --configuration phpunit.xml.dist",
     "analyse": "phpstan analyse src --level=max",
-    "format": "php-cs-fixer fix"
+    "format": "php-cs-fixer fix",
+    "ci": [
+      "@analyse",
+      "@test"
+    ]
   },
+
   "minimum-stability": "stable",
-  "prefer-stable": true
+  "prefer-stable": true,
+
+  "config": {
+    "sort-packages": true
+  }
 }

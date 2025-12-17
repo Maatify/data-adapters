@@ -1,0 +1,26 @@
+parameters:
+  level: max
+
+  paths:
+    - src
+
+  checkMissingCallableSignature: true
+  checkExplicitMixed: true
+
+  reportUnmatchedIgnoredErrors: true
+
+  phpVersion: 80200
+
+  inferPrivatePropertyTypeFromConstructor: true
+  treatPhpDocTypesAsCertain: true
+
+  scanFiles: []
+
+  excludePaths:
+    analyse:
+      - tests/*
+
+rules:
+  - PHPStan\Rules\Generics\ClassAncestorsRule
+  - PHPStan\Rules\Generics\FunctionSignatureVarianceRule
+  - PHPStan\Rules\Generics\MethodSignatureVarianceRule

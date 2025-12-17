@@ -1,16 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" bootstrap="tests/bootstrap.php" colors="true" executionOrder="depends,defects" beStrictAboutTestsThatDoNotTestAnything="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" cacheDirectory=".phpunit.cache">
+
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+
+        bootstrap="vendor/autoload.php"
+        colors="true"
+        executionOrder="random"
+        failOnRisky="true"
+        failOnWarning="true"
+        cacheDirectory=".phpunit.cache"
+>
   <testsuites>
-    <testsuite name="Maatify DataAdapters Test Suite">
-      <directory suffix="Test.php">tests</directory>
+    <testsuite name="Maatify Data Adapters">
+      <directory>tests</directory>
     </testsuite>
   </testsuites>
-  <php>
-    <env name="APP_ENV" value="testing"/>
-  </php>
+
+  <!-- ========================== -->
+  <!-- Source Directories         -->
+  <!-- ========================== -->
   <source>
     <include>
       <directory suffix=".php">src</directory>
     </include>
+
+    <exclude>
+      <directory>vendor</directory>
+    </exclude>
   </source>
+
+  <!-- ========================== -->
+  <!-- Coverage Reports           -->
+  <!-- ========================== -->
+  <coverage>
+    <report>
+      <text outputFile="php://stdout"/>
+    </report>
+  </coverage>
+
+  <!-- ========================== -->
+  <!-- PHP Runtime                -->
+  <!-- ========================== -->
+  <php>
+    <!-- No env, no IO, deterministic tests -->
+    <ini name="zend.assertions" value="1"/>
+    <ini name="assert.exception" value="1"/>
+  </php>
 </phpunit>
