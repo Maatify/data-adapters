@@ -1,70 +1,167 @@
 {
-  "phase": "phase1",
-  "version": "2.0.0",
-  "description": "Initial contract validation phase. No real adapters or factories are exposed.",
-
-  "public_api": {
-    "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface": {
-      "type": "interface",
-      "origin": "external",
-      "package": "maatify/common",
-      "docblock": {
-        "template": "TDriver of object"
-      },
-      "methods": {
-        "getDriver": {
-          "visibility": "public",
-          "return_type": "object",
-          "docblock_return": "TDriver",
-          "arguments": [],
-          "notes": [
-            "Returns the owned driver instance",
-            "No runtime metadata",
-            "No API unification"
-          ]
-        }
-      }
-    },
-
-    "Maatify\\DataAdapters\\TestDoubles\\DummyAdapter": {
-      "type": "class",
-      "origin": "internal",
-      "visibility": "public",
-      "purpose": "Contract verification only (Phase 1 test double)",
-      "implements": [
-        "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<object>"
-      ],
-      "constructor": {
-        "visibility": "public",
-        "arguments": [
-          {
-            "name": "driver",
-            "type": "object"
+  "phases": [
+    {
+      "phase": "phase1",
+      "version": "2.0.0",
+      "description": "Initial contract validation phase. No real adapters or factories are exposed.",
+      "public_api": {
+        "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface": {
+          "type": "interface",
+          "origin": "external",
+          "package": "maatify/common",
+          "docblock": {
+            "template": "TDriver of object"
+          },
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object",
+              "docblock_return": "TDriver",
+              "arguments": [],
+              "notes": [
+                "Returns the owned driver instance",
+                "No runtime metadata",
+                "No API unification"
+              ]
+            }
           }
-        ]
-      },
-      "methods": {
-        "getDriver": {
+        },
+        "Maatify\\DataAdapters\\TestDoubles\\DummyAdapter": {
+          "type": "class",
+          "origin": "internal",
           "visibility": "public",
-          "return_type": "object",
-          "arguments": [],
-          "notes": [
-            "Returns the injected driver instance",
-            "No side effects",
-            "Used only for contract testing"
-          ]
+          "purpose": "Contract verification only (Phase 1 test double)",
+          "implements": [
+            "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<object>"
+          ],
+          "constructor": {
+            "visibility": "public",
+            "arguments": [
+              {
+                "name": "driver",
+                "type": "object"
+              }
+            ]
+          },
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object",
+              "arguments": [],
+              "notes": [
+                "Returns the injected driver instance",
+                "No side effects",
+                "Used only for contract testing"
+              ]
+            }
+          }
+        }
+      },
+      "explicitly_absent": [
+        "Factories",
+        "Configuration DTOs",
+        "MySQL adapters",
+        "Redis adapters",
+        "MongoDB adapters",
+        "Environment handling",
+        "Runtime logic"
+      ]
+    },
+    {
+      "phase": "phaseE",
+      "version": "2.0.0",
+      "public_api": {
+        "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLPDOAdapter": {
+          "type": "class",
+          "implements": [
+            "Maatify\\DataAdapters\\Contracts\\Adapter\\AdapterInterface<PDO>"
+          ],
+          "constructor": [
+            {
+              "name": "driver",
+              "type": "PDO"
+            }
+          ],
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object"
+            }
+          }
+        },
+        "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLDBALAdapter": {
+          "type": "class",
+          "implements": [
+            "Maatify\\DataAdapters\\Contracts\\Adapter\\AdapterInterface<Doctrine\\DBAL\\Connection>"
+          ],
+          "constructor": [
+            {
+              "name": "driver",
+              "type": "Doctrine\\DBAL\\Connection"
+            }
+          ],
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object"
+            }
+          }
+        },
+        "Maatify\\DataAdapters\\Adapters\\Redis\\RedisAdapter": {
+          "type": "class",
+          "implements": [
+            "Maatify\\DataAdapters\\Contracts\\Adapter\\AdapterInterface<Redis>"
+          ],
+          "constructor": [
+            {
+              "name": "driver",
+              "type": "Redis"
+            }
+          ],
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object"
+            }
+          }
+        },
+        "Maatify\\DataAdapters\\Adapters\\Redis\\RedisPredisAdapter": {
+          "type": "class",
+          "implements": [
+            "Maatify\\DataAdapters\\Contracts\\Adapter\\AdapterInterface<Predis\\Client>"
+          ],
+          "constructor": [
+            {
+              "name": "driver",
+              "type": "Predis\\Client"
+            }
+          ],
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object"
+            }
+          }
+        },
+        "Maatify\\DataAdapters\\Adapters\\Mongo\\MongoDatabaseAdapter": {
+          "type": "class",
+          "implements": [
+            "Maatify\\DataAdapters\\Contracts\\Adapter\\AdapterInterface<MongoDB\\Database>"
+          ],
+          "constructor": [
+            {
+              "name": "driver",
+              "type": "MongoDB\\Database"
+            }
+          ],
+          "methods": {
+            "getDriver": {
+              "visibility": "public",
+              "return_type": "object"
+            }
+          }
         }
       }
     }
-  },
-
-  "explicitly_absent": [
-    "Factories",
-    "Configuration DTOs",
-    "MySQL adapters",
-    "Redis adapters",
-    "MongoDB adapters",
-    "Environment handling",
-    "Runtime logic"
   ]
 }
