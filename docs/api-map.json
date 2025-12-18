@@ -162,6 +162,275 @@
           }
         }
       }
+    },
+    {
+      "version": "2.0.0",
+      "package": "maatify/data-adapters",
+
+      "public_api": {
+        "interfaces": {
+          "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface": {
+            "origin": "maatify/common",
+            "type": "interface",
+            "template": "TDriver of object",
+            "methods": {
+              "getDriver": {
+                "visibility": "public",
+                "args": [],
+                "return": "object",
+                "docblock_return": "TDriver",
+                "notes": [
+                  "Returns the owned concrete driver instance",
+                  "Acts strictly as a DI boundary",
+                  "Does not unify or proxy driver APIs"
+                ]
+              }
+            }
+          }
+        },
+
+        "adapters": {
+          "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLPDOAdapter": {
+            "type": "class",
+            "implements": [
+              "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<PDO>"
+            ],
+            "constructor": {
+              "visibility": "public",
+              "args": [
+                {
+                  "name": "driver",
+                  "type": "PDO"
+                }
+              ]
+            },
+            "methods": {
+              "getDriver": {
+                "visibility": "public",
+                "args": [],
+                "return": "object"
+              }
+            }
+          },
+
+          "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLDBALAdapter": {
+            "type": "class",
+            "implements": [
+              "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<Doctrine\\DBAL\\Connection>"
+            ],
+            "constructor": {
+              "visibility": "public",
+              "args": [
+                {
+                  "name": "driver",
+                  "type": "Doctrine\\DBAL\\Connection"
+                }
+              ]
+            },
+            "methods": {
+              "getDriver": {
+                "visibility": "public",
+                "args": [],
+                "return": "object"
+              }
+            }
+          },
+
+          "Maatify\\DataAdapters\\Adapters\\Redis\\RedisAdapter": {
+            "type": "class",
+            "implements": [
+              "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<Redis>"
+            ],
+            "constructor": {
+              "visibility": "public",
+              "args": [
+                {
+                  "name": "driver",
+                  "type": "Redis"
+                }
+              ]
+            },
+            "methods": {
+              "getDriver": {
+                "visibility": "public",
+                "args": [],
+                "return": "object"
+              }
+            }
+          },
+
+          "Maatify\\DataAdapters\\Adapters\\Redis\\RedisPredisAdapter": {
+            "type": "class",
+            "implements": [
+              "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<Predis\\Client>"
+            ],
+            "constructor": {
+              "visibility": "public",
+              "args": [
+                {
+                  "name": "driver",
+                  "type": "Predis\\Client"
+                }
+              ]
+            },
+            "methods": {
+              "getDriver": {
+                "visibility": "public",
+                "args": [],
+                "return": "object"
+              }
+            }
+          },
+
+          "Maatify\\DataAdapters\\Adapters\\Mongo\\MongoDatabaseAdapter": {
+            "type": "class",
+            "implements": [
+              "Maatify\\Common\\Contracts\\Adapter\\AdapterInterface<MongoDB\\Database>"
+            ],
+            "constructor": {
+              "visibility": "public",
+              "args": [
+                {
+                  "name": "driver",
+                  "type": "MongoDB\\Database"
+                }
+              ]
+            },
+            "methods": {
+              "getDriver": {
+                "visibility": "public",
+                "args": [],
+                "return": "object"
+              }
+            }
+          }
+        },
+
+        "factories": {
+          "Maatify\\DataAdapters\\Factories\\MySQLAdapterFactory": {
+            "type": "class",
+            "methods": {
+              "fromPDO": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "pdo",
+                    "type": "PDO"
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLPDOAdapter"
+              },
+              "fromDBAL": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "connection",
+                    "type": "Doctrine\\DBAL\\Connection"
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLDBALAdapter"
+              },
+              "fromPDOFactory": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "pdoFactory",
+                    "type": "callable():PDO",
+                    "static_enforced": true
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\MySQL\\MySQLPDOAdapter",
+                "notes": [
+                  "Deferred PDO creation via callable",
+                  "Callable return type enforced by PHPStan"
+                ]
+              }
+            }
+          },
+
+          "Maatify\\DataAdapters\\Factories\\RedisAdapterFactory": {
+            "type": "class",
+            "methods": {
+              "fromRedis": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "redis",
+                    "type": "Redis"
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\Redis\\RedisAdapter"
+              },
+              "fromPredis": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "client",
+                    "type": "Predis\\Client"
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\Redis\\RedisPredisAdapter"
+              },
+              "fromRedisFactory": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "redisFactory",
+                    "type": "callable():Redis",
+                    "static_enforced": true
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\Redis\\RedisAdapter"
+              }
+            }
+          },
+
+          "Maatify\\DataAdapters\\Factories\\MongoAdapterFactory": {
+            "type": "class",
+            "methods": {
+              "fromDatabase": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "database",
+                    "type": "MongoDB\\Database"
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\Mongo\\MongoDatabaseAdapter"
+              },
+              "fromDatabaseFactory": {
+                "visibility": "public",
+                "args": [
+                  {
+                    "name": "databaseFactory",
+                    "type": "callable():MongoDB\\Database",
+                    "static_enforced": true
+                  }
+                ],
+                "return": "Maatify\\DataAdapters\\Adapters\\Mongo\\MongoDatabaseAdapter"
+              }
+            }
+          }
+        },
+
+        "exceptions": {
+          "Maatify\\DataAdapters\\Exceptions\\AdapterCreationException": {
+            "type": "exception",
+            "extends": "RuntimeException",
+            "purpose": "Typed infrastructure boundary for adapter factory failures"
+          }
+        }
+      },
+
+      "explicitly_absent": [
+        "Environment variable access",
+        "Runtime auto-detection or switching",
+        "Unified database or cache APIs",
+        "Repository or query abstractions",
+        "Connection pooling or health checks",
+        "Retry, fallback, or failover logic"
+      ]
     }
+
   ]
 }
