@@ -38,12 +38,13 @@ class MongoAdapterFactoryTest extends TestCase
         $originalException = new RuntimeException('fail');
         $factory = fn () => throw $originalException;
 
-        try {
-            MongoAdapterFactory::fromDatabaseFactory($factory);
-            $this->fail('AdapterCreationException was not thrown');
-        } catch (AdapterCreationException $e) {
-            $this->assertSame('Failed to create MongoDB adapter', $e->getMessage());
-            $this->assertSame($originalException, $e->getPrevious());
-        }
+        $expectedException = new AdapterCreationException(
+            'Failed to create MongoDB adapter',
+            $originalException
+        );
+
+        $this->expectExceptionObject($expectedException);
+
+        MongoAdapterFactory::fromDatabaseFactory($factory);
     }
 }
