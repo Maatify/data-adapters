@@ -211,6 +211,31 @@ Do NOT use it if you want:
 * [Lifecycle](docs/05-lifecycle.md)
 * [Factories](docs/06-factories.md)
 * [Dependency Policy & Matrix](docs/07-dependencies.md)
+
+---
+
+## Examples
+
+The following examples demonstrate **explicit, real-world usage**
+of `maatify/data-adapters` with supported drivers.
+
+These examples are intentionally minimal:
+- No frameworks
+- No helpers
+- No bootstrap logic
+- Explicit driver creation and adapter usage
+
+### MySQL
+- [PDO Example](examples/mysql/pdo.php)
+- [Doctrine DBAL Example](examples/mysql/dbal.php)
+
+### Redis
+- [ext-redis Example](examples/redis/ext-redis.php)
+- [Predis Example](examples/redis/predis.php)
+
+### MongoDB
+- [MongoDB Database Example](examples/mongo/database.php)
+
 ---
 
 ## 🪪 License
