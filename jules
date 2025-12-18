@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -e
+
+docker run --rm \
+  -v "$(pwd)":/app \
+  -w /app \
+  megyptm/jules-php \
+  vendor/bin/phpunit "$@"
