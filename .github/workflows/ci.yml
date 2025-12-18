@@ -1,0 +1,234 @@
+name: Run Adapter Tests
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      GH_START_ISO: ${{ github.event.head_commit.timestamp }}
+      APP_ENV: testing
+
+      # Redis
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_PASS: ""
+      REDIS_MAIN_DSN: "redis://127.0.0.1:6379"
+      REDIS_QUEUE_DSN: "redis://127.0.0.1:6379"
+      REDIS_SESSIONS_DSN: "redis://127.0.0.1:6379/2"
+      REDIS_CACHE_DSN: "redis://127.0.0.1:6379/2"
+      REDIS_ANALYTICS_DSN: "redis://127.0.0.1:6380"
+
+      # Mongo
+      MONGO_HOST: 127.0.0.1
+      MONGO_PORT: 27017
+      MONGO_USER: ""
+      MONGO_PASS: ""
+      MONGO_DB: maatify
+      MONGO_AUTH_SOURCE: admin
+      MONGO_MAIN_DSN: "mongodb://127.0.0.1:27017/maatify"
+      MONGO_LOGS_DSN: "mongodb://127.0.0.1:27017/logs"
+      MONGO_ACTIVITY_DSN: "mongodb://127.0.0.1:27017/activity"
+
+      # MySQL
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASS: root
+      MYSQL_DB: maatify_dev
+      MYSQL_DRIVER: dbal
+
+      MYSQL_DSN: "mysql:host=127.0.0.1;dbname=maatify_dev;charset=utf8mb4"
+      MYSQL_MAIN_DSN: "mysql:host=127.0.0.1;dbname=maatify_main;charset=utf8mb4"
+      MYSQL_MAIN_USER: root
+      MYSQL_MAIN_PASS: root
+      MYSQL_DEV_DSN: "mysql:host=127.0.0.1;dbname=maatify_dev;charset=utf8mb4"
+      MYSQL_BILLING_DSN: "mysql:host=127.0.0.1;dbname=maatify_billing;charset=utf8mb4"
+      MYSQL_LOGS_DSN: "mysql://root:root@127.0.0.1:3306/maatify_logs"
+      MYSQL_LOGS_DRIVER: dbal
+
+      DB_REGISTRY_PATH: tests/fixtures/database_registry.json
+
+    services:
+      redis:
+        image: redis:7
+        ports: [ "6379:6379" ]
+
+      mongo:
+        image: mongo:7
+        ports: [ "27017:27017" ]
+
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: maatify_dev
+          MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+        ports:
+          - "3306:3306"
+
+    steps:
+      # ---------------------------------------------
+      # 1) Checkout
+      # ---------------------------------------------
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ---------------------------------------------
+      # 2) PHP Setup (WITH COVERAGE)
+      # ---------------------------------------------
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: pcov
+          extensions: mbstring, intl, pdo, pdo_mysql, redis, mongodb
+          tools: composer
+
+      # ---------------------------------------------
+      # 3) Cache Composer
+      # ---------------------------------------------
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache
+            ~/.cache/composer
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - run: composer config -g github-oauth.github.com "${{ github.token }}"
+
+      # ---------------------------------------------
+      # 4) Install Dependencies
+      # ---------------------------------------------
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - run: composer dump-autoload --optimize
+
+      - run: sudo apt-get update && sudo apt-get install -y jq bc
+
+      # ---------------------------------------------
+      # 5) Debug Services
+      # ---------------------------------------------
+      - name: 🔍 Debug Connections
+        continue-on-error: true
+        run: |
+          redis-cli -h $REDIS_HOST ping || true
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "SELECT 1" || true
+          mongo --host $MONGO_HOST --port $MONGO_PORT --eval "db.runCommand({ ping: 1 })" || true
+
+      # ---------------------------------------------
+      # 6) Wait for MySQL
+      # ---------------------------------------------
+      - run: |
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 --silent && break
+            sleep 2
+          done
+
+      - run: |
+          docker exec "${{ job.services.mysql.id }}" \
+            mysql -uroot -proot -e \
+            "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
+
+      - run: |
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_main;"
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_logs;"
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_dev;"
+          mysql -h $MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASS -e "CREATE DATABASE IF NOT EXISTS maatify_test;"
+
+      # ---------------------------------------------
+      # 7) PHPStan (non blocking)
+      # ---------------------------------------------
+      - name: Run PHPStan
+        id: phpstan
+        run: |
+          set +e
+          composer analyse > phpstan.log
+          ERRORS=$(grep -Eo "Found ([0-9]+) errors" phpstan.log | grep -Eo "[0-9]+" || echo 0)
+          echo "phpstan_errors=$ERRORS" >> $GITHUB_OUTPUT
+
+      # ---------------------------------------------
+      # 8) PHPUnit WITH COVERAGE
+      # ---------------------------------------------
+      - name: 🧪 Run PHPUnit
+        run: |
+          vendor/bin/phpunit \
+            --configuration phpunit.xml.dist \
+            --coverage-clover coverage.xml \
+            --coverage-html coverage \
+            | tee phpunit.log
+
+      # ---------------------------------------------
+      # 9) Extract Coverage %
+      # ---------------------------------------------
+      - name: Extract Coverage
+        id: coverage
+        run: |
+          COV=$(php -r '
+            $x=@simplexml_load_file("coverage.xml");
+            $m=$x->project->metrics;
+            echo (int)round(((int)$m["coveredstatements"]/(int)$m["statements"])*100);
+          ')
+          echo "coverage=$COV" >> $GITHUB_OUTPUT
+
+      # ---------------------------------------------
+      # 10) Coverage Badge
+      # ---------------------------------------------
+      - run: |
+          echo "{\"schemaVersion\":1,\"label\":\"coverage\",\"message\":\"${{ steps.coverage.outputs.coverage }}%\",\"color\":\"9C27B0\"}" > coverage-badge.json
+
+      - if: github.event_name == 'push'
+        run: |
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git fetch origin
+          git checkout badges || git checkout --orphan badges
+          git reset --hard
+          cp coverage-badge.json coverage.json
+          git add coverage.json
+          git commit -m "Update coverage to ${{ steps.coverage.outputs.coverage }}%" || true
+          git push origin badges --force
+
+      # ---------------------------------------------
+      # 11) Summary
+      # ---------------------------------------------
+      - if: always()
+        run: |
+          echo "### 🧾 Adapter Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Coverage: ${{ steps.coverage.outputs.coverage }}%" >> $GITHUB_STEP_SUMMARY
+          echo "🧹 PHPStan Errors: ${{ steps.phpstan.outputs.phpstan_errors }}" >> $GITHUB_STEP_SUMMARY
+          tail -n 20 phpunit.log >> $GITHUB_STEP_SUMMARY
+
+      # ---------------------------------------------
+      # 12) Telegram
+      # ---------------------------------------------
+      - if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_CI_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CI_CHAT_ID }}
+        run: |
+          STATUS="✅ Adapter Tests Passed"
+          COLOR="🟢"
+          grep -q "FAILURES!" phpunit.log && STATUS="❌ Tests Failed" && COLOR="🔴"
+
+          MESSAGE="📢 <b>Maatify CI Report</b>
+
+          ${COLOR} ${STATUS}
+
+          🧹 <b>PHPStan:</b> ${{ steps.phpstan.outputs.phpstan_errors }} errors
+          📊 <b>Coverage:</b> ${{ steps.coverage.outputs.coverage }}%
+
+          🔗 <a href='${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}'>View CI</a>"
+
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$MESSAGE" --arg pm HTML '{chat_id:$chat_id,text:$text,parse_mode:$pm}')"
