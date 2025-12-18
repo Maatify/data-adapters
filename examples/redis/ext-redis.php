@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../../vendor/autoload.php';
-
 use Maatify\DataAdapters\Adapters\Redis\RedisAdapter;
+use Redis;
 
 // Create Redis explicitly
 $redis = new Redis();

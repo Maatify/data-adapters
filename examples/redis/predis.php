@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../../vendor/autoload.php';
-
 use Maatify\DataAdapters\Adapters\Redis\RedisPredisAdapter;
 use Predis\Client;
 

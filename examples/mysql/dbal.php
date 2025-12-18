@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../../vendor/autoload.php';
-
 use Doctrine\DBAL\DriverManager;
 use Maatify\DataAdapters\Adapters\MySQL\MySQLDBALAdapter;
 
+// DBAL connection creation is the application's responsibility
 // Create DBAL Connection explicitly
 $connection = DriverManager::getConnection([
     'dbname' => 'test_db',
