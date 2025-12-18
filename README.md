@@ -210,7 +210,7 @@ Do NOT use it if you want:
 * [Misuse Traps](docs/04-misuse-traps.md)
 * [Lifecycle](docs/05-lifecycle.md)
 * [Factories](docs/06-factories.md)
-
+* [Dependency Policy & Matrix](docs/07-dependencies.md)
 ---
 
 ## 🪪 License

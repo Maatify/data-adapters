@@ -37,7 +37,7 @@
   "suggest": {
     "ext-pdo": "Required to use MySQLPDOAdapter",
     "doctrine/dbal": "Required to use MySQLDBALAdapter",
-    "ext-redis": "Required to use RedisExtAdapter",
+    "ext-redis": "Required to use RedisAdapter (ext-redis)",
     "predis/predis": "Required to use RedisPredisAdapter",
     "mongodb/mongodb": "Required to use MongoDatabaseAdapter"
   },
