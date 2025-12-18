@@ -57,13 +57,14 @@ class RedisAdapterFactoryTest extends TestCase
         $originalException = new RuntimeException('fail');
         $factory = fn () => throw $originalException;
 
-        $expectedException = new AdapterCreationException(
-            'Failed to create ext-redis adapter',
-            $originalException
-        );
+        $this->expectException(AdapterCreationException::class);
+        $this->expectExceptionMessage('Failed to create ext-redis adapter');
 
-        $this->expectExceptionObject($expectedException);
-
-        RedisAdapterFactory::fromRedisFactory($factory);
+        try {
+            RedisAdapterFactory::fromRedisFactory($factory);
+        } catch (AdapterCreationException $e) {
+            $this->assertSame($originalException, $e->getPrevious());
+            throw $e;
+        }
     }
 }

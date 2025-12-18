@@ -49,13 +49,14 @@ class MySQLAdapterFactoryTest extends TestCase
         $originalException = new RuntimeException('fail');
         $factory = fn () => throw $originalException;
 
-        $expectedException = new AdapterCreationException(
-            'Failed to create PDO-based MySQL adapter',
-            $originalException
-        );
+        $this->expectException(AdapterCreationException::class);
+        $this->expectExceptionMessage('Failed to create PDO-based MySQL adapter');
 
-        $this->expectExceptionObject($expectedException);
-
-        MySQLAdapterFactory::fromPDOFactory($factory);
+        try {
+            MySQLAdapterFactory::fromPDOFactory($factory);
+        } catch (AdapterCreationException $e) {
+            $this->assertSame($originalException, $e->getPrevious());
+            throw $e;
+        }
     }
 }
