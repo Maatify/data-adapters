@@ -110,7 +110,7 @@ Each optional dependency is declared as:
   "predis/predis": "Required for RedisPredisAdapter",
   "mongodb/mongodb": "Required for MongoDatabaseAdapter"
 }
-````
+```
 
 This is **not optional documentation**.
 It is part of the dependency contract.
