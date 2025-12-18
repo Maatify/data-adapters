@@ -7,7 +7,15 @@ and follows the principles of [Keep a Changelog](https://keepachangelog.com/en/1
 
 ---
 
-## [2.0.0] — 2025-XX-XX
+## [2.0.1] — 2025-12-18
+
+### 🧹 Fixed
+- Remove leftover `.env` files from the repository
+- Clarify that the library does not rely on environment variables
+
+---
+
+## [2.0.0] — 2025-12-18
 
 ### ⚠️ BREAKING CHANGE
 
