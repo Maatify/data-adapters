@@ -1,48 +1,79 @@
 # 🤝 Contributing to maatify/data-adapters
 
-Thank you for considering contributing to **maatify/data-adapters**!  
-This project is part of the **Maatify.dev Ecosystem**, and we welcome contributions that improve reliability, performance, and developer experience.
+Thank you for considering contributing to **maatify/data-adapters**.
 
-This document explains how to report issues, request features, and submit pull requests in a clean and professional workflow.
+This library is part of the **Maatify.dev Ecosystem** and follows a **strict architectural philosophy**:
+it provides **DI-first infrastructure adapters only**, with **no abstraction, no magic, and no runtime behavior**.
+
+This document explains how to report issues, propose changes, and submit pull requests
+in a way that respects the project’s scope and guarantees long-term stability.
 
 ---
 
-# 🐛 1. Reporting Issues
+## 🧭 Project Scope (Important)
+
+Before contributing, please understand what this project **is** and **is not**.
+
+### ✔️ In Scope
+
+* Infrastructure adapters (MySQL, Redis, MongoDB)
+* Dependency Injection boundaries
+* Explicit driver ownership
+* Factories for explicit construction
+* Documentation, examples, and tests
+* Static analysis improvements
+
+### ❌ Out of Scope
+
+* Repositories or query abstractions
+* Unified APIs across drivers
+* Configuration loading or `.env` handling
+* Auto-detection or runtime switching
+* Failover, retry, pooling, or telemetry
+* Framework integrations (Laravel, Symfony, etc.)
+
+Any contribution that violates this scope **will not be accepted**.
+
+---
+
+## 🐛 Reporting Issues
 
 If you encounter a bug or unexpected behavior:
 
-1. Search existing issues first  
-2. If not found, open a new issue and include:
-   - Clear title  
-   - Steps to reproduce  
-   - Expected vs actual behavior  
-   - Your `.env` adapter settings (without sensitive values)  
-   - PHP version and OS  
+1. Search existing issues first
+2. If not found, open a new issue including:
 
-👉 Create an issue:  
-https://github.com/Maatify/data-adapters/issues
+   * A clear and descriptive title
+   * Steps to reproduce
+   * Expected vs actual behavior
+   * PHP version and operating system
+   * Driver type involved (PDO, DBAL, Redis, MongoDB)
 
----
-
-# 🌟 2. Feature Requests
-
-We love ideas that improve the core:
-
-- MySQL connectivity
-- Redis auto-detection & failover logic
-- MongoDB support
-- Diagnostics & telemetry
-- Multi-profile enhancements
-
-When submitting a feature request:
-
-1. Explain the problem it solves  
-2. Suggest possible API or behavior  
-3. Include code samples if possible  
+👉 Open an issue:
+[https://github.com/Maatify/data-adapters/issues](https://github.com/Maatify/data-adapters/issues)
 
 ---
 
-# 🔧 3. Development Setup
+## 🌟 Feature Requests
+
+Feature requests are welcome **only if they align with the project scope**.
+
+Good examples:
+
+* Supporting a new infrastructure driver
+* Improving adapter type safety
+* Improving factory ergonomics without adding magic
+* Documentation or example improvements
+
+When submitting a request:
+
+1. Explain the problem it solves
+2. Describe the proposed API explicitly
+3. Avoid suggestions involving auto-configuration or abstraction
+
+---
+
+## 🔧 Development Setup
 
 Clone the repository:
 
@@ -50,13 +81,9 @@ Clone the repository:
 git clone https://github.com/Maatify/data-adapters.git
 cd data-adapters
 composer install
-````
-
-Copy environment file:
-
-```bash
-cp .env.example .env
 ```
+
+> ⚠️ This library does **not** use environment variables or `.env` files.
 
 Run tests:
 
@@ -64,142 +91,135 @@ Run tests:
 vendor/bin/phpunit
 ```
 
-Run coding standards:
+Run static analysis:
 
 ```bash
-composer run lint
+composer run analyse
+```
+
+Run formatting:
+
+```bash
+composer run format
 ```
 
 ---
 
-# 🧪 4. Testing Guidelines
+## 🧪 Testing Guidelines
 
-* All new features **must** include tests
-* Existing tests **must** pass before submitting a PR
-* Avoid hardcoding DB credentials
-* Prefer mock tests unless testing DB connectivity
+* All new behavior **must** be covered by tests
+* Existing tests **must pass**
+* Tests must be deterministic
+* No real databases or services in tests
+* Prefer mocks and test doubles
 
-Test locations:
+Test structure:
 
 ```
 tests/
  ├─ Adapters/
- ├─ Core/
- ├─ Diagnostics/
- └─ Integration/
+ ├─ Factories/
+ ├─ Contracts/
+ └─ TestDoubles/
 ```
 
 ---
 
-# 🧱 5. Coding Standards
+## 🧱 Coding Standards
 
-This project follows:
+This project enforces:
 
+* **PHP >= 8.4**
 * **PSR-12**
-* **Strict types**
-* **Maatify naming conventions**
-* **No global state**
-* All classes must be `final` unless extension is intentional
-* Use dependency injection when possible
-
-Before opening a PR:
-
-```bash
-composer run lint-fix
-```
+* `declare(strict_types=1)` everywhere
+* Explicit typing (no mixed APIs)
+* No global state
+* All classes must be `final` unless explicitly justified
+* Dependency Injection only (no service locators)
 
 ---
 
-# 🚀 6. Submitting Pull Requests (PR Guidelines)
+## 🚀 Submitting Pull Requests
 
 ### ✔️ PR Checklist
 
-* [ ] Code follows PSR-12
-* [ ] Code is fully typed (`declare(strict_types=1)`)
-* [ ] No breaking changes unless discussed
-* [ ] All tests pass
-* [ ] New tests added (if needed)
-* [ ] Documentation updated
+* [ ] Change aligns with documented scope
+* [ ] Code is fully typed and strict
+* [ ] No API changes without discussion
+* [ ] Tests added or updated
+* [ ] All tests and static analysis pass
+* [ ] Documentation updated if applicable
 * [ ] Commits are clean and meaningful
 
 ### ✔️ PR Flow
 
 1. Fork the repository
-2. Create feature branch:
+
+2. Create a branch:
 
    ```bash
-   git checkout -b feature/my-new-feature
+   git checkout -b feature/my-change
    ```
-3. Commit changes with clear messages
+
+3. Commit your changes
+
 4. Push and open a Pull Request
-5. Request review from **Mohamed Abdulalim** or Maatify.dev maintainers
+
+5. Request review from project maintainers
 
 ---
 
-# 🧩 7. Commit Message Format
+## 🧩 Commit Message Format
 
 Recommended:
 
 ```
-feat: add multi-profile MySQL support
-fix: resolve Redis auto-fallback error
-refactor: improve EnvironmentConfig structure
-test: add coverage for DatabaseResolver
-docs: update telemetry documentation
+feat: add mongo database adapter
+fix: correct redis adapter type hint
+docs: improve usage examples
+test: add adapter factory coverage
 ```
 
-Avoid vague messages like “update”, “fix”, or “stuff”.
+Avoid vague messages like `update` or `fix stuff`.
 
 ---
 
-# 📦 8. Branch Naming Convention
+## 📦 Branch Naming Convention
 
 ```
-feature/<feature-name>
-bugfix/<issue-number>
-hotfix/<quick-fix>
-docs/<documentation-update>
-```
-
-Examples:
-
-```
-feature/mysql-profiles
-bugfix/redis-connection-timeout
-docs/improve-readme
+feature/<description>
+bugfix/<issue-id>
+docs/<description>
+test/<description>
 ```
 
 ---
 
-# 🔐 9. Security Issues
+## 🔐 Security Issues
 
-If you discover a security vulnerability, **do not** open a public issue.
+If you discover a security vulnerability, **do not open a public issue**.
 
-Email directly:
+Report it privately to:
 
 📧 **[security@maatify.dev](mailto:security@maatify.dev)**
 
-The team will respond within 72 hours.
-
-See `SECURITY.md` for full policy.
+Please see `SECURITY.md` for the full policy.
 
 ---
 
-# ❤️ 10. Thank You
+## ❤️ Thank You
 
-Your help makes this library stronger!
-Every contribution improves the Maatify ecosystem and helps developers around the world.
+Your contribution helps keep the Maatify ecosystem clean, predictable,
+and professional.
 
 ---
 
-**© 2025 Maatify.dev**  
-Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))** — https://www.maatify.dev
-
-📘 Full documentation & source code:  
-https://github.com/Maatify/data-adapters
+© 2025 Maatify.dev
+Engineered by **Mohamed Abdulalim ([@megyptm](https://github.com/megyptm))**
+[https://www.maatify.dev](https://www.maatify.dev)
 
 ---
 
 <p align="center">
-  <sub><span style="color:#777">Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</span></sub>
+  <sub>Built with ❤️ by <a href="https://www.maatify.dev">Maatify.dev</a> — Unified Ecosystem for Modern PHP Libraries</sub>
 </p>
